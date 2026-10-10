@@ -1,0 +1,40 @@
+# .github/workflows/ci.yml — run every tox env on pull requests and on
+# pushes to main. One matrix leg per env, so a failure names its check.
+
+name: Python / Django
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  tox:
+    name: tox
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        toxenv: [fmt, lint, mypy, django-checks, migrations, test]
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v7
+
+      - name: Set up Python (3.14)
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.14"
+
+      - name: Install and run tox
+        run: |
+          pip install tox tox-uv
+          tox -e ${{ matrix.toxenv }}

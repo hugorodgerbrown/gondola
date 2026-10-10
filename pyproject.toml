@@ -1,0 +1,144 @@
+[project]
+name = "resort-planner"
+version = "0.1.0"
+description = "Plan who is skiing at which resort on which day, and meet up."
+authors = [{ name = "Hugo Rodger-Brown" }]
+requires-python = ">=3.14,<4"
+readme = "README.md"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.14",
+]
+dependencies = [
+    "Django>=6.0.7,<7",
+    "python-decouple>=3.8,<4",
+    "dj-database-url>=3.1.2,<4",
+    "psycopg[binary]>=3.3.4,<4",
+    "whitenoise>=6.12.0,<7",
+    "gunicorn>=26.0.0,<27",
+]
+
+[dependency-groups]
+# Purpose-scoped groups map 1:1 to tox envs (each env syncs only its own
+# group via tox-uv). `dev` composes them all for a local `uv sync`.
+test = [
+    "coverage>=7,<8",
+    "pytest>=9.0.3,<10",
+    "pytest-cov>=7.1.0,<8",
+    "pytest-django>=4.12.0,<5",
+    "factory-boy>=3.3.3,<4",
+    "freezegun>=1.5.5,<2",
+]
+type = [
+    "mypy>=2.3.0,<2.5",
+    "django-stubs>=6.0.2,<7",
+    # mypy also checks tests/, so it needs the test-authoring packages.
+    {include-group = "test"},
+]
+lint = [
+    # Pinned EXACT so `uv lock --upgrade` can't float ruff ahead of the
+    # pre-commit pin. Bump this and .pre-commit-config.yaml's rev together.
+    "ruff==0.16.10",
+]
+dev = [
+    "pre-commit>=4.6.1,<5",
+    "tox>=4.52.1,<5",
+    "tox-uv>=1.0,<2",
+    {include-group = "test"},
+    {include-group = "type"},
+    {include-group = "lint"},
+]
+
+[tool.uv]
+package = false
+default-groups = ["dev"]
+
+[tool.mypy]
+plugins = ["mypy_django_plugin.main"]
+python_version = "3.14"
+strict = false
+strict_optional = true
+ignore_missing_imports = true
+follow_imports = "silent"
+warn_return_any = true
+warn_unused_configs = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_unreachable = true
+disallow_untyped_defs = true
+
+[[tool.mypy.overrides]]
+module = ["*.migrations.*", "*.settings.*"]
+ignore_errors = true
+
+[tool.django-stubs]
+django_settings_module = "config.settings.development"
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "config.settings.development"
+pythonpath = ["."]
+testpaths = ["tests"]
+django_debug_mode = "keep"
+
+[tool.coverage.run]
+branch = true
+omit = [
+    "*/migrations/*",
+    "config/*",
+    "manage.py",
+]
+
+[tool.coverage.report]
+fail_under = 90
+show_missing = true
+exclude_lines = [
+    "pragma: no cover",
+    "if TYPE_CHECKING:",
+    "if __name__ == .__main__.",
+]
+
+[tool.ruff]
+line-length = 88
+extend-exclude = ["*.md"]
+
+[tool.ruff.lint]
+select = [
+    "A",   # flake8 builtins
+    "C9",  # mccabe
+    "D",   # pydocstyle
+    "E",   # pycodestyle (errors)
+    "F",   # Pyflakes
+    "I",   # isort
+    "S",   # flake8-bandit
+    "T2",  # flake8-print
+    "W",   # pycodestyle (warnings)
+]
+ignore = [
+    "D203",  # 1 blank line required before class docstring
+    "D212",  # Multi-line docstring summary should start at the first line
+    "D213",  # Multi-line docstring summary should start at the second line
+]
+
+[tool.ruff.lint.isort]
+combine-as-imports = true
+
+[tool.ruff.lint.mccabe]
+max-complexity = 8
+
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = ["D"]
+"*tests/*" = [
+    "D1",    # Missing docstrings
+    "D205",  # 1 blank line required between summary line and description
+    "D400",  # First line should end with a period
+    "D401",  # First line should be in imperative mood
+    "D415",  # First line should end with a period, question mark, or exclamation point
+    "E501",  # Line too long
+    "S101",  # Use of assert detected
+    "S105",  # Possible hardcoded password
+    "S106",  # Possible hardcoded password
+]
+"*/migrations/*" = [
+    "D1",    # Missing docstrings
+    "E501",  # Line too long
+]

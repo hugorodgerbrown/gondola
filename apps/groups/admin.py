@@ -1,0 +1,77 @@
+"""apps/groups/admin.py — Admin for groups, plan days and meet-ups."""
+
+from django.contrib import admin
+
+from .models import Group, MeetUp, MeetUpParticipant, Membership, PlanDay
+
+
+class MembershipInline(admin.TabularInline):
+    """Members shown on their group's page."""
+
+    model = Membership
+    extra = 0
+    autocomplete_fields = ["user"]
+
+
+@admin.register(Group)
+class GroupAdmin(admin.ModelAdmin):
+    """Admin for ``Group``."""
+
+    list_display = ["name", "owner", "created_at"]
+    search_fields = ["name", "owner__email"]
+    autocomplete_fields = ["owner"]
+    readonly_fields = ["uuid", "invite_token", "created_at", "updated_at"]
+    inlines = [MembershipInline]
+
+
+@admin.register(Membership)
+class MembershipAdmin(admin.ModelAdmin):
+    """Admin for ``Membership``."""
+
+    list_display = ["user", "group", "role", "created_at"]
+    list_filter = ["role"]
+    search_fields = ["user__email", "group__name"]
+    autocomplete_fields = ["user", "group"]
+    readonly_fields = ["uuid", "created_at", "updated_at"]
+
+
+@admin.register(PlanDay)
+class PlanDayAdmin(admin.ModelAdmin):
+    """Admin for ``PlanDay``."""
+
+    list_display = ["user", "date", "status", "resort", "is_private"]
+    list_filter = ["status", "is_private"]
+    search_fields = ["user__email", "resort__name"]
+    date_hierarchy = "date"
+    autocomplete_fields = ["user", "resort"]
+    readonly_fields = ["uuid", "created_at", "updated_at"]
+
+
+class MeetUpParticipantInline(admin.TabularInline):
+    """Participants shown on their meet-up's page."""
+
+    model = MeetUpParticipant
+    extra = 0
+    autocomplete_fields = ["user"]
+
+
+@admin.register(MeetUp)
+class MeetUpAdmin(admin.ModelAdmin):
+    """Admin for ``MeetUp``."""
+
+    list_display = ["resort", "date", "group", "organiser", "start_time"]
+    search_fields = ["group__name", "resort__name", "organiser__email"]
+    date_hierarchy = "date"
+    autocomplete_fields = ["group", "organiser", "resort"]
+    readonly_fields = ["uuid", "share_token", "created_at", "updated_at"]
+    inlines = [MeetUpParticipantInline]
+
+
+@admin.register(MeetUpParticipant)
+class MeetUpParticipantAdmin(admin.ModelAdmin):
+    """Admin for ``MeetUpParticipant``."""
+
+    list_display = ["user", "meetup", "created_at"]
+    search_fields = ["user__email"]
+    autocomplete_fields = ["user", "meetup"]
+    readonly_fields = ["uuid", "created_at", "updated_at"]
