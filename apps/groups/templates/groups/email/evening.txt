@@ -1,0 +1,13 @@
+{% autoescape off %}{{ digest.day|date:"l j F" }}: who's where tomorrow
+{% for line in digest.meetups %}
+{{ line.meetup.organiser }}'s meet-up ({{ line.meetup.group.name }}): {{ line.meetup.resort.name }}{% if line.meetup.start_time %} at {{ line.meetup.start_time|time:"H:i" }}{% endif %}. {{ line.going }} going{% if line.is_going %}, you included{% endif %}.
+{{ line.url }}
+{% endfor %}{% for section in digest.groups %}{% if section.lines %}
+{{ section.group.name }}
+{% for line in section.lines %}- {{ line.resort_name }}: {{ line.people }}
+{% endfor %}See the whole week: {{ section.url }}
+{% endif %}{% endfor %}
+--
+You get this because you're in a group on {{ SITE_NAME }} and have plans tomorrow.
+Stop these evening emails: {{ stop_url }}
+{% endautoescape %}

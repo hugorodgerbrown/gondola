@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}No signal · {{ SITE_NAME }}{% endblock %}
+{% block content %}
+  <div class="heading">
+    <span class="eyebrow">Offline</span>
+    <h1 class="title">No signal</h1>
+    <p class="lede">This page needs a connection. Pages you opened recently still work. Try again when you have signal.</p>
+  </div>
+  <button type="button" class="button" onclick="location.reload()">Try again</button>
+{% endblock %}

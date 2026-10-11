@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}Groups · {{ SITE_NAME }}{% endblock %}
+{% block content %}
+  <div class="heading">
+    <span class="eyebrow">Groups</span>
+    <h1 class="title">Your groups</h1>
+    <p class="lede">Everyone in a group sees each other's names and days.</p>
+  </div>
+  {% if groups %}
+    <ul class="list card">
+      {% for group in groups %}
+        <li>
+          <a class="row row--link" href="{% url 'planning:group_detail' group.uuid %}">
+            <span class="row__main">
+              <span class="row__label">{{ group.name }}</span>
+              <span class="row__note">{{ group.member_count }} member{{ group.member_count|pluralize }}{% if group.owner_id == user.pk %} · you own it{% endif %}</span>
+            </span>
+            <span class="icon-button" aria-hidden="true">{% include "includes/icons/chevron-right.html" %}</span>
+          </a>
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <div class="card empty">
+      <p>You're not in a group yet. Start one and send the invite link to your group chat, or open an invite link a friend sent you.</p>
+    </div>
+  {% endif %}
+  <form method="post" class="card card--padded">
+    {% csrf_token %}
+    <span class="eyebrow">Start a group</span>
+    {% if form.errors %}<ul class="errors">{% for error in form.name.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
+    <div class="field">
+      <label for="{{ form.name.id_for_label }}" class="visually-hidden">Group name</label>
+      {{ form.name }}
+    </div>
+    <button type="submit" class="button button--block">Start group</button>
+  </form>
+{% endblock %}

@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block title %}Who's where · {{ board.group.name }} · {{ SITE_NAME }}{% endblock %}
+{% block content %}
+  <div class="heading">
+    <span class="eyebrow">Who's where · {{ board.start|date:"j M" }}–{{ board.end|date:"j M" }}</span>
+    <h1 class="title"><a href="{% url 'planning:group_detail' board.group.uuid %}" style="text-decoration:none">{{ board.group.name }}</a></h1>
+  </div>
+
+  <div class="card board" tabindex="0" aria-label="Who's where, scrolls sideways">
+    <table>
+      <caption class="visually-hidden">Where each member of {{ board.group.name }} plans to ski, {{ board.start|date:"j F" }} to {{ board.end|date:"j F" }}</caption>
+      <thead>
+        <tr>
+          <th scope="col" class="board__name" aria-label="Person"></th>
+          {% for day in board.days %}
+            <th scope="col"{% if day.is_today %} class="is-today"{% endif %}>
+              <a href="{% url 'planning:map' %}?date={{ day.date|date:'Y-m-d' }}" aria-label="{{ day.date|date:'l j F' }} on the map"><span>{{ day.date|date:"D" }}</span><span>{{ day.date|date:"j" }}</span></a>
+            </th>
+          {% endfor %}
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in board.rows %}
+          <tr{% if row.is_me %} class="board__me"{% endif %}>
+            <th scope="row" class="board__name">{% if row.is_me %}You{% else %}{{ row.person }}{% endif %}</th>
+            {% for cell in row.cells %}
+              <td{% if cell.quiet %} class="is-quiet"{% endif %} title="{{ cell.title }}">{% if cell.private %}<span class="board__lock">{{ cell.text }}{% include "includes/icons/lock.html" %}<span class="visually-hidden">private</span></span>{% else %}{{ cell.text }}{% endif %}</td>
+            {% endfor %}
+          </tr>
+        {% endfor %}
+        <tr>
+          <th scope="row" class="board__name small muted">Meet-up</th>
+          {% for day in board.days %}
+            <td>
+              {% if day.meetup %}
+                <a class="board__meetup board__meetup--set" href="{% url 'planning:meetup' day.meetup.share_token %}" aria-label="Meet-up at {{ day.meetup.resort.name }} on {{ day.date|date:'D j' }}">{{ day.meetup.resort.display_code }}</a>
+              {% else %}
+                <a class="board__meetup board__meetup--add" href="{% url 'planning:meetup_new' board.group.uuid %}?date={{ day.date|date:'Y-m-d' }}" aria-label="Propose a meet-up on {{ day.date|date:'D j' }}">{% include "includes/icons/plus.html" %}</a>
+              {% endif %}
+            </td>
+          {% endfor %}
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="pager">
+    <a href="?start={{ board.previous_start|date:'Y-m-d' }}">← {{ board.previous_start|date:"j" }}–{{ board.start|date:"j M" }}</a>
+    <a href="?start={{ board.next_start|date:'Y-m-d' }}">{{ board.next_start|date:"j" }}–{{ board.next_end|date:"j M" }} →</a>
+  </div>
+
+  <dl class="legend">
+    <dt>VERB</dt><dd>Resort code. Tap a day to see it on the map.</dd>
+    <dt>?</dt><dd>Not sure yet</dd>
+    <dt>–</dt><dd>Not skiing</dd>
+    <dt>blank</dt><dd>Hasn't said</dd>
+  </dl>
+  <a href="{% url 'planning:my_days' %}" class="small">Change my days →</a>
+{% endblock %}

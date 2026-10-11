@@ -1,0 +1,9 @@
+{# A sheet's grip, eyebrow, title and close button. Pass eyebrow and title. #}
+<div class="sheet__grip" aria-hidden="true"></div>
+<div class="heading-row">
+  <div class="heading">
+    {% if eyebrow %}<span class="eyebrow">{{ eyebrow }}</span>{% endif %}
+    <h2 class="title">{{ title }}</h2>
+  </div>
+  <button type="button" class="icon-button" data-close-sheet aria-label="Close">{% include "includes/icons/close.html" %}</button>
+</div>

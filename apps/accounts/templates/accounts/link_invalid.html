@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}Link not valid · {{ SITE_NAME }}{% endblock %}
+{% block content %}
+  <div class="heading">
+    <span class="eyebrow">Link</span>
+    <h1 class="title">{{ reason }}</h1>
+    <p class="lede">Links work once, for 30 minutes. Ask for a new one and use the newest email.</p>
+  </div>
+  <a class="button" href="{% url 'accounts:sign_in' %}">Send a new link</a>
+{% endblock %}

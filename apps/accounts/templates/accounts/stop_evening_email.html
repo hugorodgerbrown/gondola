@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}Evening email · {{ SITE_NAME }}{% endblock %}
+{% block content %}
+  <div class="heading">
+    <span class="eyebrow">Evening email</span>
+    {% if done %}
+      <h1 class="title">Stopped</h1>
+      <p class="lede">We won't send {{ person.email }} the evening email any more. You can turn it back on from your account.</p>
+    {% else %}
+      <h1 class="title">Stop the evening email?</h1>
+      <p class="lede">For {{ person.email }}. Sign-in emails still arrive when you ask for them.</p>
+    {% endif %}
+  </div>
+  {% if not done %}
+    <form method="post">
+      {% csrf_token %}
+      <button type="submit" class="button button--block">Stop these emails</button>
+    </form>
+  {% endif %}
+{% endblock %}

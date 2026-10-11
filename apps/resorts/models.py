@@ -92,3 +92,13 @@ class Resort(BaseModel):
     def to_string(self) -> str:
         """Return the resort name."""
         return self.name
+
+    @property
+    def display_code(self) -> str:
+        """Return the board code, or the name's first letters if none is set."""
+        return self.code or "".join(c for c in self.name if c.isalpha())[:5].upper()
+
+    @property
+    def is_placed(self) -> bool:
+        """Return whether the resort has a coordinate for the map."""
+        return self.latitude is not None and self.longitude is not None

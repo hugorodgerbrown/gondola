@@ -1,0 +1,5 @@
+Open this link to sign in to {{ SITE_NAME }}:
+
+{{ link }}
+
+It works once, for 30 minutes. If you didn't ask for it, ignore this email.

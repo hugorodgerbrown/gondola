@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}{{ meetup.resort.name }} · {{ meetup.date|date:"D j M" }} · {{ SITE_NAME }}{% endblock %}
+{% block description %}{{ meetup.organiser }}'s meet-up for {{ meetup.group.name }}: {{ meetup.resort.name }} on {{ meetup.date|date:"l j F" }}{% if meetup.start_time %} at {{ meetup.start_time|time:"H:i" }}{% endif %}. {{ going|length }} going.{% endblock %}
+{% block og %}
+  <meta property="og:title" content="{{ meetup.resort.name }} · {{ meetup.date|date:'D j M' }}{% if meetup.start_time %} · {{ meetup.start_time|time:'H:i' }}{% endif %}">
+  <meta property="og:description" content="{{ meetup.organiser }}'s meet-up for {{ meetup.group.name }}. {{ going|length }} going.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="{{ share_url }}">
+{% endblock %}
+{% block head %}{% if meetup.has_meeting_pin %}<link rel="stylesheet" href="{% static 'vendor/maplibre-gl-4.7.1.css' %}">{% endif %}{% endblock %}
+{% block content %}
+  <div class="heading">
+    <span class="eyebrow">{{ meetup.organiser }}'s meet-up · {{ meetup.date|date:"D j M Y" }}</span>
+    <h1 class="title title--large">{{ meetup.resort.name }}</h1>
+    <p class="muted">{{ meetup.group.name }}{% if meetup.start_time %} · {{ meetup.start_time|time:"H:i" }}{% endif %}{% if meetup.has_meeting_pin %} · meeting point below{% endif %}</p>
+  </div>
+
+  {% if meetup.has_meeting_pin %}
+    <div class="pin-picker" data-meetup-map data-style-url="{{ map_style_url }}" data-outline-url="{% static 'vendor/switzerland.geojson' %}"
+         data-lat="{{ meetup.meeting_latitude }}" data-lng="{{ meetup.meeting_longitude }}"
+         data-pin-svg="{% filter force_escape %}{% include 'includes/meeting_pin.html' %}{% endfilter %}"></div>
+    <a class="small" href="https://www.google.com/maps/search/?api=1&query={{ meetup.meeting_latitude }},{{ meetup.meeting_longitude }}" target="_blank" rel="noopener">Open the meeting point in Maps →</a>
+  {% endif %}
+
+  <section class="card card--padded">
+    <div style="display:flex;align-items:baseline;gap:8px"><span class="mono" style="font-size:22px">{{ going|length }}</span><span class="muted">going</span></div>
+    {% if show_names %}
+      <div>{% for participant in going %}<div class="friend-line"><span>{% if participant.user_id == user.pk %}You{% else %}{{ participant.user }}{% endif %}</span>{% if participant.user_id == meetup.organiser_id %}<span class="tag">Organiser</span>{% endif %}</div>{% endfor %}</div>
+    {% endif %}
+
+    {% if not is_open %}
+      <p class="small muted">This meet-up has passed.</p>
+    {% elif is_going %}
+      <button type="button" class="button button--block" data-share-url="{{ share_url }}" data-share-title="{{ meetup.resort.name }} · {{ meetup.date|date:'D j M' }}">Share the meet-up link</button>
+      {% if meetup.organiser_id != user.pk %}
+        <form method="post" action="{% url 'planning:meetup_leave' meetup.share_token %}">
+          {% csrf_token %}
+          <button type="submit" class="button button--secondary button--block">I can't make it</button>
+        </form>
+      {% endif %}
+    {% elif user.is_authenticated %}
+      <form method="post" action="{% url 'planning:meetup_join' meetup.share_token %}">
+        {% csrf_token %}
+        <button type="submit" class="button button--block">I'm going</button>
+      </form>
+      <p class="small muted">Going sets {{ meetup.date|date:"l j F" }} to {{ meetup.resort.name }} in your days{% if not is_member %} and adds you to {{ meetup.group.name }}, whose members will see your name and days{% else %}, and {{ meetup.group.name }} sees your name on the list{% endif %}.</p>
+    {% else %}
+      <a class="button button--block" href="{% url 'accounts:sign_in' %}?next={{ request.path|urlencode }}">Sign in to join</a>
+      <p class="small muted">Joining sets {{ meetup.date|date:"l j F" }} to {{ meetup.resort.name }} in your days, and {{ meetup.group.name }} will see your name on the list.</p>
+    {% endif %}
+  </section>
+
+  {% if is_member %}
+    <a class="small" href="{% url 'planning:board' meetup.group.uuid %}?start={{ meetup.date|date:'Y-m-d' }}">See who's where that week →</a>
+  {% endif %}
+  {% if can_cancel and is_open %}
+    <form method="post" action="{% url 'planning:meetup_cancel' meetup.share_token %}">
+      {% csrf_token %}
+      <button type="submit" class="link-button muted">Cancel this meet-up</button>
+    </form>
+  {% endif %}
+{% endblock %}
+{% block scripts %}
+  {% if meetup.has_meeting_pin %}
+    <script src="{% static 'vendor/maplibre-gl-4.7.1.js' %}"></script>
+    <script src="{% static 'js/map.js' %}"></script>
+  {% endif %}
+{% endblock %}

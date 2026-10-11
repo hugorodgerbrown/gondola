@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}Join {{ group.name }} · {{ SITE_NAME }}{% endblock %}
+{% block description %}{{ group.owner }} invited you to {{ group.name }}: see who's skiing where, and meet up.{% endblock %}
+{% block og %}
+  <meta property="og:title" content="Join {{ group.name }}">
+  <meta property="og:description" content="{{ group.owner }} invited you. Say which days you're skiing and where, and see who's where.">
+  <meta property="og:type" content="website">
+{% endblock %}
+{% block content %}
+  <div class="heading hero">
+    <span class="eyebrow">Group invite</span>
+    <h1 class="title title--large">Join {{ group.name }}</h1>
+    <p class="lede" style="font-size:16px">{{ group.owner }} invited you. Members say which days they're skiing and where, so the group can see who's where and agree a resort to meet at.</p>
+  </div>
+  <section class="card card--padded">
+    <span class="eyebrow">When you join</span>
+    <ul class="steps">
+      <li>You see the {{ member_count }} member{{ member_count|pluralize }}' names and the days they've planned.</li>
+      <li>They see your name and the days you plan, except days you keep private.</li>
+      <li>You can leave at any time.</li>
+    </ul>
+    {% if user.is_authenticated %}
+      <form method="post" action="{% url 'planning:join' group.invite_token %}">
+        {% csrf_token %}
+        <button type="submit" class="button button--block">Join {{ group.name }}</button>
+      </form>
+    {% else %}
+      <a class="button button--block" href="{% url 'accounts:sign_in' %}?next={{ request.path|urlencode }}">Sign in to join</a>
+      <span class="small muted" style="text-align:center">New here? Signing in creates your account with just your email.</span>
+    {% endif %}
+  </section>
+{% endblock %}

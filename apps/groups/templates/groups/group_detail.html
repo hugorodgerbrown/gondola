@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block title %}{{ group.name }} · {{ SITE_NAME }}{% endblock %}
+{% block content %}
+  <div class="heading">
+    <span class="eyebrow">Group · {{ members|length }} member{{ members|length|pluralize }}</span>
+    <h1 class="title">{{ group.name }}</h1>
+  </div>
+
+  <nav class="tiles" aria-label="This group">
+    <a class="card tile" href="{% url 'planning:board' group.uuid %}"><strong>Who's where</strong><span class="small muted">This week, by day</span></a>
+    <a class="card tile" href="{% url 'planning:my_days' %}"><strong>My days</strong><span class="small muted">Where you're skiing</span></a>
+  </nav>
+
+  <section class="card card--padded" aria-labelledby="invite-heading">
+    <span class="eyebrow" id="invite-heading">Invite link</span>
+    <p class="small muted">Anyone with this link can join and will see everyone's names and planned days.</p>
+    <code class="mono small" style="display:block;padding:10px 12px;background:var(--sunk);border-radius:var(--radius-control);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ invite_link }}</code>
+    <div class="actions">
+      <button type="button" class="button button--small" data-share-url="{{ invite_link }}" data-share-title="Join {{ group.name }}">Share invite link</button>
+      {% if is_owner %}
+        <form method="post" action="{% url 'planning:reset_invite' group.uuid %}" style="flex:0 0 auto">
+          {% csrf_token %}
+          <button type="submit" class="button button--secondary button--small">Reset link</button>
+        </form>
+      {% endif %}
+    </div>
+  </section>
+
+  <section class="heading" aria-labelledby="members-heading">
+    <span class="eyebrow" id="members-heading">Members</span>
+    <ul class="list card">
+      {% for person, membership in members %}
+        <li class="row">
+          <span class="row__main"><span>{% if person.pk == user.pk %}You{% else %}{{ person }}{% endif %}</span></span>
+          {% if membership.role == "owner" %}<span class="tag">Owner</span>{% endif %}
+          <span class="mono small muted">{{ membership.created_at|date:"j M" }}</span>
+          {% if is_owner and person.pk != user.pk %}
+            <form method="post" action="{% url 'planning:remove_member' group.uuid person.uuid %}">
+              {% csrf_token %}
+              <button type="submit" class="icon-button" aria-label="Remove {{ person }}">{% include "includes/icons/close.html" %}</button>
+            </form>
+          {% endif %}
+        </li>
+      {% endfor %}
+    </ul>
+  </section>
+
+  {% if is_owner %}
+    <a class="small muted" href="{% url 'planning:delete_group' group.uuid %}">Delete this group</a>
+  {% else %}
+    <form method="post" action="{% url 'planning:leave_group' group.uuid %}">
+      {% csrf_token %}
+      <button type="submit" class="link-button muted">Leave this group</button>
+    </form>
+  {% endif %}
+{% endblock %}

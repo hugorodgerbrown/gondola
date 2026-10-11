@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}Delete your account · {{ SITE_NAME }}{% endblock %}
+{% block content %}
+  <div class="heading">
+    <span class="eyebrow">Your account</span>
+    <h1 class="title">Delete your account?</h1>
+    <p class="lede">This deletes your days, your meet-ups and the groups you own, for everyone in them. It can't be undone.</p>
+  </div>
+  <form method="post" class="actions">
+    {% csrf_token %}
+    <a class="button button--secondary" href="{% url 'accounts:settings' %}">Keep it</a>
+    <button type="submit" class="button button--danger">Delete</button>
+  </form>
+{% endblock %}

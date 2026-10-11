@@ -56,6 +56,8 @@ def _resort_fields(row: dict[str, str]) -> dict[str, object]:
     """Map a sheet row to Resort field values."""
     return {
         "name": row["name"].strip(),
+        # Optional column: a sheet without it leaves codes blank.
+        "code": row.get("code", "").strip().upper(),
         "canton": row["canton"].strip(),
         "latitude": _float_or_none(row["latitude"]),
         "longitude": _float_or_none(row["longitude"]),
