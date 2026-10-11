@@ -72,10 +72,25 @@
     return radio && radio.value !== "keep" ? radio : null;
   }
 
+  function clear(radio) {
+    radio.checked = false;
+    radio.dispatchEvent(new Event("change", { bubbles: true }));
+  }
+
+  // Note whether the radio was already picked before the tap checks it.
   document.addEventListener("pointerdown", function (event) {
     const radio = clearableRadio(event);
     if (radio) {
       radio.dataset.wasChecked = radio.checked ? "1" : "";
+    }
+  });
+
+  // Space on the picked radio clears it too (the browser does nothing).
+  document.addEventListener("keydown", function (event) {
+    const radio = event.key === " " ? clearableRadio(event) : null;
+    if (radio && event.target === radio && radio.checked) {
+      event.preventDefault();
+      clear(radio);
     }
   });
 
@@ -85,8 +100,7 @@
       return; // A click on the label arrives again on the radio itself.
     }
     if (radio.dataset.wasChecked) {
-      radio.checked = false;
-      radio.dispatchEvent(new Event("change", { bubbles: true }));
+      clear(radio);
     }
     radio.dataset.wasChecked = "";
   });

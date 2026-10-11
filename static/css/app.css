@@ -581,6 +581,21 @@ fieldset.field {
   background: var(--sunk);
 }
 
+/* A picked row in a clearable list shows an ×: tapping it again clears it. */
+[data-clearable] .choice:has(input:checked):not(:has(input[value="keep"]))::after {
+  content: "\00d7";
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 18px;
+  line-height: 1;
+  color: var(--text-2);
+  background: var(--rule);
+}
+
 .choice__main {
   flex: 1;
   min-width: 0;

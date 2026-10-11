@@ -40,7 +40,7 @@
       <p class="help">No friends have picked a resort for {% if span > 1 %}these days{% else %}this day{% endif %} yet.</p>
     {% endif %}
     <label for="resort-search" class="visually-hidden">Search resorts</label>
-    <input id="resort-search" class="input input--search" type="search" name="q" placeholder="{% if friends or elsewhere %}Somewhere else? {% endif %}Search resorts (optional)" autocomplete="off"
+    <input id="resort-search" class="input input--search" type="search" name="q" placeholder="{% if friends or elsewhere %}Somewhere else? Search resorts{% else %}Search resorts (optional){% endif %}" autocomplete="off"
            hx-get="{% url 'planning:resort_search' %}" hx-trigger="input changed delay:200ms, search" hx-target="#resort-results" hx-include="this" hx-sync="this:replace">
     <div id="resort-results" class="choices" role="radiogroup" aria-label="Search results" data-clearable hidden></div>
   </div>
