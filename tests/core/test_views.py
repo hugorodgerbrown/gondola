@@ -18,6 +18,8 @@ def test_home_signed_out(client: Client) -> None:
     assert response.status_code == 200
     assert b"Get started" in response.content
     assert b"<title>Gondola</title>" in response.content
+    # A picture of the board shows what the app does before anyone signs in.
+    assert b"img/home-board" in response.content
     # app.js drops the cached pages of whoever was signed in.
     assert b"data-forget-pages" in response.content
 

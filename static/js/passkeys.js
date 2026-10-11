@@ -111,7 +111,13 @@
       if (typeof PKC.isConditionalMediationAvailable !== 'function') return;
       if (!(await PKC.isConditionalMediationAvailable())) return;
       conditional = new AbortController();
-      signIn(section, 'conditional', conditional.signal).catch((error) => showError(section, describe(error)));
+      signIn(section, 'conditional', conditional.signal).catch((error) => {
+        // The autofill request starts on page load, before anyone has
+        // asked for a passkey. A browser that can't offer one says
+        // NotSupportedError; that is no reason to greet them with an error.
+        if (error && error.name === 'NotSupportedError') return;
+        showError(section, describe(error));
+      });
     }
 
     section.querySelector('[data-passkey-button]').addEventListener('click', () => {

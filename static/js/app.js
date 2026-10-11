@@ -11,6 +11,7 @@
  * signed-out front page drops them again, which covers a sign-out posted
  * from a page loaded before this script had the handler. ``onSwipe`` turns
  * a sideways swipe into "previous" or "next", for the month calendars.
+ * An open "…" row menu closes on a tap anywhere else.
  */
 (function () {
   "use strict";
@@ -60,6 +61,14 @@
       keep.remove();
     }
   }
+
+  document.addEventListener("click", function (event) {
+    document.querySelectorAll("details.row-menu[open]").forEach(function (menu) {
+      if (!menu.contains(event.target)) {
+        menu.open = false;
+      }
+    });
+  });
 
   document.addEventListener("input", dropKeep);
   document.addEventListener("change", dropKeep);

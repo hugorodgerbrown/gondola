@@ -21,6 +21,7 @@
   --pass-magic: #7c3aed;
   /* A meet-up on My days: an amber dot, apart from your own (blue) days. */
   --meetup: #d97706;
+  --meetup-soft: rgba(217, 119, 6, 0.16);
   --danger: #b42318;
   --ok: #067647;
   --map-ground: #e9e7e1;
@@ -157,9 +158,8 @@ textarea {
   gap: 2px;
   text-decoration: none;
   color: var(--text-3);
-  font: 500 11px var(--font-mono);
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+  font: 500 11px var(--font-sans);
+  letter-spacing: 0.01em;
 }
 
 .tabbar a[aria-current="page"] {
@@ -280,7 +280,7 @@ textarea {
 }
 
 .row__date--today {
-  color: var(--accent);
+  color: var(--text-1);
 }
 
 .row__label {
@@ -513,7 +513,7 @@ fieldset.field {
 .check input {
   width: 22px;
   height: 22px;
-  accent-color: var(--accent);
+  accent-color: var(--text-1);
   flex-shrink: 0;
 }
 
@@ -582,7 +582,7 @@ fieldset.field {
   width: 18px;
   height: 18px;
   margin: 0;
-  accent-color: var(--accent);
+  accent-color: var(--text-1);
   flex-shrink: 0;
 }
 
@@ -725,7 +725,8 @@ fieldset.field {
   border-top: 0;
   border-bottom: 1px solid var(--rule);
   padding: 0;
-  min-width: 44px;
+  /* Seven days and a name fit a 390px phone without scrolling. */
+  min-width: 36px;
 }
 
 .board thead a {
@@ -746,7 +747,10 @@ fieldset.field {
 }
 
 .board thead .is-today a span + span {
-  color: var(--accent);
+  padding: 0 6px;
+  border-radius: 999px;
+  background: var(--text-1);
+  color: var(--card);
 }
 
 .board__name {
@@ -755,11 +759,11 @@ fieldset.field {
   z-index: 1;
   background: var(--card);
   text-align: left;
-  padding: 0 8px 0 12px;
+  padding: 0 6px 0 12px;
   height: 44px;
   font: 400 14px var(--font-sans);
   white-space: nowrap;
-  max-width: 96px;
+  max-width: 80px;
   overflow: hidden;
   text-overflow: ellipsis;
 }
@@ -802,9 +806,9 @@ fieldset.field {
 .board__meetup {
   display: inline-grid;
   place-items: center;
-  width: 40px;
-  height: 38px;
-  margin: 7px 0;
+  width: 32px;
+  height: 32px;
+  margin: 6px 0;
   border-radius: var(--radius-control);
   text-decoration: none;
 }
@@ -1044,8 +1048,8 @@ fieldset.field {
 }
 
 .calendar__day--today {
-  color: var(--accent);
-  box-shadow: inset 0 0 0 1.5px var(--accent);
+  color: var(--text-1);
+  box-shadow: inset 0 0 0 1.5px var(--text-1);
 }
 
 .calendar__day--selected,
@@ -1132,7 +1136,7 @@ fieldset.field {
   background: rgba(255, 255, 255, 0.9);
   border: 0.5px solid var(--rule-strong);
   box-shadow: var(--shadow-float);
-  font: 500 12px var(--font-mono);
+  font: 500 13px var(--font-sans);
   text-decoration: none;
   white-space: nowrap;
 }
@@ -1341,8 +1345,8 @@ fieldset.field {
 }
 
 .pin--meetup .pin__dot {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 4px var(--accent-soft);
+  border-color: var(--meetup);
+  box-shadow: 0 0 0 4px var(--meetup-soft);
 }
 
 .pin--selected .pin__dot {
@@ -1732,4 +1736,72 @@ a.mday.mday--skiing.mday--picked:hover {
 /* Room under the page so the bar never covers the last week. */
 .has-select-bar .page {
   padding-bottom: calc(var(--tabbar-height) + 104px);
+}
+
+/* --- Row menu ------------------------------------------------------------ */
+
+/* A row's less common actions (remove a member) sit behind a "…" button,
+   so the destructive one is never the loudest thing on the row. */
+.row-menu {
+  position: relative;
+}
+
+.row-menu > summary {
+  list-style: none;
+  cursor: pointer;
+}
+
+.row-menu > summary::-webkit-details-marker {
+  display: none;
+}
+
+.row-menu__panel {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 4px);
+  z-index: 5;
+  min-width: 180px;
+  padding: 4px;
+  background: var(--card);
+  border: 1px solid var(--rule-strong);
+  border-radius: var(--radius-control);
+  box-shadow: var(--shadow-float);
+}
+
+.row-menu__item {
+  display: block;
+  width: 100%;
+  padding: 10px 12px;
+  border: 0;
+  border-radius: 6px;
+  background: none;
+  text-align: left;
+  cursor: pointer;
+}
+
+.row-menu__item:hover {
+  background: var(--sunk);
+}
+
+.row-menu__item--danger {
+  color: var(--danger);
+}
+
+/* --- Front page ---------------------------------------------------------- */
+
+.hero__logo {
+  display: block;
+  width: 64px;
+  height: 64px;
+  border-radius: 16px;
+  margin-bottom: 8px;
+}
+
+.hero-picture {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: var(--radius-card);
+  border: 1px solid var(--rule);
+  box-shadow: var(--shadow-float);
 }

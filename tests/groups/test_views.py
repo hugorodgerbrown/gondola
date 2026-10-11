@@ -438,6 +438,19 @@ def test_group_detail_is_members_only(client: Client, crew: Crew) -> None:
     assert b"Leave this group" in page.content
 
 
+def test_group_detail_owner_removes_members_from_a_menu(
+    client: Client, crew: Crew
+) -> None:
+    """Remove sits behind each member's "…" menu, never on the row itself."""
+    url = reverse("planning:group_detail", kwargs={"group_uuid": crew.group.uuid})
+    client.force_login(crew.sam)
+    html = client.get(url).content.decode()
+    assert (
+        html.count('<details class="row-menu">') == crew.group.memberships.count() - 1
+    )
+    assert f"Remove {crew.anna}</button>" in html
+
+
 def test_reset_invite(client: Client, crew: Crew) -> None:
     url = reverse("planning:reset_invite", kwargs={"group_uuid": crew.group.uuid})
     old = crew.group.invite_token
