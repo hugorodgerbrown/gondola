@@ -266,9 +266,22 @@
       });
     }
 
+    // The server already read ?date= (a bad one shows today); write the day
+    // it showed back into the URL, so Back never returns to a bad value.
+    const shownDate = container.dataset.date;
+    const startUrl = new URL(window.location.href);
+    if (startUrl.searchParams.has("date") && startUrl.searchParams.get("date") !== shownDate) {
+      history.replaceState(history.state, "", viewUrl(shownDate, container.dataset.pass || ""));
+    }
+
+    function isDay(value) {
+      return /^\d{4}-\d{2}-\d{2}$/.test(value || "") && !isNaN(localDate(value).getTime());
+    }
+
     window.addEventListener("popstate", function () {
       const params = new URL(window.location.href).searchParams;
-      showView(params.get("date") || todayIso, params.get("pass") || "");
+      const date = params.get("date");
+      showView(isDay(date) ? date : shownDate, params.get("pass") || "");
     });
 
     map.on("load", function () { loadPins(true); });

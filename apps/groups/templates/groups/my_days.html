@@ -36,7 +36,7 @@
   </nav>
   <ol class="list card" aria-label="{{ start|date:'j F' }} to {{ end|date:'j F' }}">
     {% for day, plan in rows %}
-      <li>{% include "groups/partials/day_row.html" %}</li>
+      <li>{% include "groups/partials/day_row.html" with window_from=window_from %}</li>
     {% endfor %}
   </ol>
   {% if elsewhere %}
@@ -44,7 +44,7 @@
       <span class="eyebrow" id="elsewhere-heading">Your other plans</span>
       <ol class="list card">
         {% for plan in elsewhere %}
-          <li>{% include "groups/partials/day_row.html" with day=plan.date plan=plan long_date=True %}</li>
+          <li>{% include "groups/partials/day_row.html" with day=plan.date plan=plan long_date=True window_from=window_from %}</li>
         {% endfor %}
       </ol>
     </section>

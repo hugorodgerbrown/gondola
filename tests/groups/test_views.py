@@ -88,6 +88,25 @@ def test_my_days_window_stays_plannable(
         assert response.context["next_start"] is None
 
 
+def test_plain_forms_keep_the_fortnight(sam: Client, crew: Crew) -> None:
+    """Without JavaScript, saving or clearing a day returns to its fortnight."""
+    far = plans.today() + datetime.timedelta(days=60)
+    page = sam.get(reverse("planning:my_days"), {"from": far.isoformat()})
+    day_url = reverse("planning:day", kwargs={"day": far})
+    assert f'href="{day_url}?from={far.isoformat()}"'.encode() in page.content
+    sheet = sam.get(day_url, {"from": far.isoformat()})
+    assert f'name="from" value="{far.isoformat()}"'.encode() in sheet.content
+    back = f"{reverse('planning:my_days')}?from={far.isoformat()}"
+    saved = sam.post(day_url, {"status": S.NOT_SURE, "from": far.isoformat()})
+    assert saved["Location"] == back
+    cleared = sam.post(
+        reverse("planning:day_clear", kwargs={"day": far}), {"from": far.isoformat()}
+    )
+    assert cleared["Location"] == back
+    # The first fortnight needs nothing carried.
+    assert sam.get(reverse("planning:my_days")).context["window_from"] is None
+
+
 def test_my_days_without_groups(client: Client, crew: Crew) -> None:
     client.force_login(crew.outsider)
     assert b"Nobody sees these yet" in client.get(reverse("planning:my_days")).content

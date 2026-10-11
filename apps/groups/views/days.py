@@ -68,9 +68,24 @@ def my_days(request: HttpRequest) -> HttpResponse:
             "elsewhere": [plan for plan in upcoming if plan.date not in shown],
             "last_day": last,
             "marks": plan_marks(upcoming),
+            # Only a later fortnight needs carrying through a plain form post.
+            "window_from": start if start > first else None,
             "groups": list(Group.objects.for_user(user).order_by("name")),
         },
     )
+
+
+def _window_from(request: HttpRequest) -> datetime.date | None:
+    """Return the My days fortnight a sheet was opened from, if not the first."""
+    value = request.POST.get("from") or request.GET.get("from")
+    start = window_start(parse_day(value)) if value else None
+    return start if start and start > today() else None
+
+
+def _my_days_url(window_from: datetime.date | None) -> str:
+    """Return My days, at the fortnight the person was looking at."""
+    url = reverse("planning:my_days")
+    return f"{url}?from={window_from.isoformat()}" if window_from else url
 
 
 def _initial(plan: PlanDay | None) -> dict[str, object]:
@@ -114,7 +129,7 @@ def day(request: HttpRequest, day: datetime.date) -> HttpResponse:
             note=data["note"],
             is_private=data["is_private"],
         )
-        return refresh(request, reverse("planning:my_days"))
+        return refresh(request, _my_days_url(_window_from(request)))
     friends, elsewhere = _resort_choices(request, day, plan)
     selected = form["resort"].value()
     return render_sheet(
@@ -128,6 +143,7 @@ def day(request: HttpRequest, day: datetime.date) -> HttpResponse:
             "elsewhere": elsewhere,
             "selected": str(selected) if selected else "",
             "groups_count": Group.objects.for_user(user).count(),
+            "window_from": _window_from(request),
         },
     )
 
@@ -137,7 +153,7 @@ def day(request: HttpRequest, day: datetime.date) -> HttpResponse:
 def day_clear(request: HttpRequest, day: datetime.date) -> HttpResponse:
     """Forget what the person said about a day."""
     clear_plan(current_user(request), day)
-    return refresh(request, reverse("planning:my_days"))
+    return refresh(request, _my_days_url(_window_from(request)))
 
 
 @login_required
