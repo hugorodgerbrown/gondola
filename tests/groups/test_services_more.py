@@ -104,6 +104,8 @@ def test_map_pins_and_pass_filter(crew: Crew) -> None:
     assert hidden.name not in pins
     assert pins["Zermatt"]["friends"] == 2 and pins["Zermatt"]["meetup"]
     assert pins["Verbier"]["mine"] and pins["Verbier"]["friends"] == 0
+    assert pins["Verbier"]["passes"] == ["magic-pass"]
+    assert pins["Zermatt"]["passes"] == []
     other = ResortFactory.create(name="Elsewhere")
     on_pass = {p["name"] for p in resort_map.map_pins(crew.sam, crew.day, "magic-pass")}
     assert on_pass == {"Verbier", "Zermatt"}  # Zermatt kept: friends are there
@@ -161,3 +163,11 @@ def test_recipients_respect_opt_out(crew: Crew) -> None:
     plans.set_plan(crew.sam, crew.day, S.NOT_SURE)
     meetups.propose_meetup(crew.group, crew.anna, crew.day, crew.verbier)
     assert set(evening.recipients(crew.day)) == {crew.anna, crew.ben}
+
+
+def test_resort_index_lists_placed_resorts(crew: Crew) -> None:
+    ResortFactory.create(name="Unplaced", latitude=None, longitude=None)
+    index = {r["name"]: r for r in resort_map.resort_index()}
+    assert "Unplaced" not in index
+    assert index["Verbier"]["id"] == str(crew.verbier.uuid)
+    assert index["Verbier"]["lat"] == crew.verbier.latitude

@@ -7,6 +7,7 @@ override what differs. Secrets come from the environment via
 """
 
 from pathlib import Path
+from urllib.parse import urlsplit
 
 import dj_database_url
 from decouple import Csv, config
@@ -107,6 +108,15 @@ LOGIN_REDIRECT_URL = "planning:map"
 # How long an emailed sign-in link works, in seconds.
 SIGN_IN_LINK_MAX_AGE = 60 * 30
 
+# Passkeys (WebAuthn). A passkey belongs to one domain, the relying party,
+# and the browser checks the page's origin against it. Both default to
+# SITE_URL, so a passkey works on the site's own address and nowhere else.
+WEBAUTHN_RP_ID = config("WEBAUTHN_RP_ID", default=urlsplit(SITE_URL).hostname or "")
+WEBAUTHN_ORIGIN = config(
+    "WEBAUTHN_ORIGIN",
+    default=f"{urlsplit(SITE_URL).scheme}://{urlsplit(SITE_URL).netloc}",
+)
+
 # Django 6.1's MAILERS replaces the EMAIL_* settings. Production sends
 # through SMTP (a relay such as Resend); development prints to the console.
 MAILERS = {
@@ -127,8 +137,14 @@ DEFAULT_FROM_EMAIL = config("DEFAULT_FROM_EMAIL", default="planner@localhost")
 
 # The basemap. Any MapLibre style URL; empty draws the built-in plain map
 # (Switzerland's outline only), which is also the fallback when it fails.
+# The default is swisstopo's winter base map, which needs no key.
+# It covers Switzerland only, which is every resort here.
 MAP_STYLE_URL = config(
-    "MAP_STYLE_URL", default="https://tiles.openfreemap.org/styles/positron"
+    "MAP_STYLE_URL",
+    default=(
+        "https://vectortiles.geo.admin.ch/styles/"
+        "ch.swisstopo.basemap-winter.vt/style.json"
+    ),
 )
 
 LOGGING = {

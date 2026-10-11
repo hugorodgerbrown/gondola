@@ -137,6 +137,12 @@ def test_map_page(sam: Client, crew: Crew) -> None:
     assert b"Magic Pass" in response.content
     assert b"map/resort/RESORT/" in response.content
     assert b"Friends show up here" not in response.content
+    # The pass chips swap pins in place, the day arrows keep the pass, and
+    # the search box has every resort to match against.
+    assert b'data-pass-chip="magic-pass"' in response.content
+    assert response.content.count(b"data-day-link") == 2
+    assert b'id="resort-index"' in response.content
+    assert b"Verbier" in response.content
 
 
 def test_map_page_bad_date_is_today(sam: Client) -> None:
