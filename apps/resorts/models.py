@@ -61,7 +61,11 @@ class Resort(BaseModel):
         blank=True,
         help_text="Short code for the who's-where board, 3 to 5 letters.",
     )
-    canton = models.CharField(max_length=2, blank=True)
+    canton = models.CharField(
+        max_length=5,
+        blank=True,
+        help_text="Canton code, or two joined by a slash for a resort that spans both.",
+    )
     latitude = models.FloatField(null=True, blank=True)
     longitude = models.FloatField(null=True, blank=True)
     website = models.URLField(blank=True)

@@ -79,3 +79,17 @@ def test_bad_rows_are_reported_and_skipped(tmp_path: Path) -> None:
     assert "Broken" in result.errors[0]
     assert "unknown pass" in result.errors[1]
     assert list(Resort.objects.values_list("name", flat=True)) == ["Verbier"]
+
+
+def test_resort_spanning_two_cantons_keeps_both() -> None:
+    import_sheets(commit=True)
+    assert Resort.objects.get(name="Lötschental").canton == "BE/VS"
+
+
+def test_value_too_long_for_its_column_is_skipped(tmp_path: Path) -> None:
+    result = _import(
+        tmp_path, f"{UUID_A}\tVerbier\tVALAIS\t46.09\t7.22\t\t\n", commit=True
+    )
+    assert result.resorts_created == 0
+    assert "canton" in result.errors[0]
+    assert not Resort.objects.exists()
