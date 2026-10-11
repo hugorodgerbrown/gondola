@@ -35,13 +35,28 @@ def test_full_sign_up_flow(client: Client) -> None:
     assert b"hugo@example.com" in page.content
     assert b"Open the sign-in link" in page.content  # DEBUG shows the link
     welcome = client.get(_link_from_outbox())
-    assert welcome["Location"] == f"{reverse('accounts:welcome')}?next=/days/"
+    assert welcome["Location"] == f"{reverse('accounts:welcome')}?next=%2Fdays%2F"
     assert client.get(welcome["Location"]).status_code == 200
     done = client.post(
         reverse("accounts:welcome"), {"display_name": " Hugo ", "next": "/days/"}
     )
     assert done["Location"] == "/days/"
     assert User.objects.get(email="hugo@example.com").display_name == "Hugo"
+
+
+def test_new_account_keeps_every_query_parameter_of_next(client: Client) -> None:
+    next_url = "/map/?date=2027-01-16&pass=magic-pass"
+    client.post(
+        reverse("accounts:sign_in"), {"email": "new@example.com", "next": next_url}
+    )
+    welcome = client.get(_link_from_outbox())
+    page = client.get(welcome["Location"])
+    assert page.status_code == 200
+    done = client.post(
+        reverse("accounts:welcome"),
+        {"display_name": "New", "next": page.context["next_url"]},
+    )
+    assert done["Location"] == next_url
 
 
 def test_welcome_requires_a_name(client: Client) -> None:

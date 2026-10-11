@@ -321,6 +321,28 @@ def test_propose_meetup_saves(sam: Client, crew: Crew) -> None:
     assert meetup.start_time == datetime.time(9) and not meetup.has_meeting_pin
 
 
+def test_propose_meetup_goes_to_the_existing_one(sam: Client, crew: Crew) -> None:
+    meetup = meetups.propose_meetup(crew.group, crew.anna, crew.day, crew.verbier)
+    url = reverse("planning:meetup_new", kwargs={"group_uuid": crew.group.uuid})
+    response = sam.get(url, {"date": crew.day.isoformat()})
+    assert response["Location"] == reverse(
+        "planning:meetup", kwargs={"token": meetup.share_token}
+    )
+
+
+def test_propose_meetup_shows_a_lost_race(
+    sam: Client, crew: Crew, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    meetups.propose_meetup(crew.group, crew.anna, crew.day, crew.verbier)
+    monkeypatch.setattr("apps.groups.views.meetups.meetup_on", lambda *a: None)
+    url = reverse("planning:meetup_new", kwargs={"group_uuid": crew.group.uuid})
+    response = sam.post(
+        url, {"date": crew.day.isoformat(), "resort": str(crew.zermatt.uuid)}
+    )
+    assert b"already has a meet-up" in response.content
+    assert MeetUp.objects.count() == 1
+
+
 def test_propose_meetup_refuses_past_day(sam: Client, crew: Crew) -> None:
     url = reverse("planning:meetup_new", kwargs={"group_uuid": crew.group.uuid})
     past = plans.today() - datetime.timedelta(days=1)

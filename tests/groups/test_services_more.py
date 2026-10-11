@@ -48,6 +48,23 @@ def test_join_meetup_adds_to_group_and_sets_day(crew: Crew) -> None:
     assert plan.resort == crew.verbier and plan.note == ""
 
 
+def test_one_meetup_per_group_day(crew: Crew) -> None:
+    meetup = meetups.propose_meetup(crew.group, crew.sam, crew.day, crew.verbier)
+    assert meetups.meetup_on(crew.group, crew.day) == meetup
+    with pytest.raises(MeetUpError, match="already"):
+        meetups.propose_meetup(crew.group, crew.anna, crew.day, crew.zermatt)
+
+
+def test_meetup_keeps_a_private_day_private(crew: Crew) -> None:
+    plans.set_plan(crew.sam, crew.day, S.RESORT, resort=crew.zermatt, is_private=True)
+    plans.set_plan(crew.anna, crew.day, S.NOT_SURE, is_private=True)
+    meetup = meetups.propose_meetup(crew.group, crew.sam, crew.day, crew.verbier)
+    meetups.join_meetup(meetup, crew.anna)
+    for user in (crew.sam, crew.anna):
+        plan = PlanDay.objects.get(user=user, date=crew.day)
+        assert plan.resort == crew.verbier and plan.is_private
+
+
 def test_passed_meetup_is_closed(crew: Crew) -> None:
     meetup = meetups.propose_meetup(crew.group, crew.sam, crew.day, crew.verbier)
     MeetUp.objects.filter(pk=meetup.pk).update(

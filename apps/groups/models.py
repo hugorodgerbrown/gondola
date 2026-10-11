@@ -255,6 +255,9 @@ class MeetUp(BaseModel):
                 ),
                 name="meetup_meeting_pin_pair",
             ),
+            models.UniqueConstraint(
+                fields=["group", "date"], name="meetup_one_per_group_day"
+            ),
         ]
 
     def to_string(self) -> str:

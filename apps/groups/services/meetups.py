@@ -34,12 +34,27 @@ def is_open(meetup: MeetUp) -> bool:
 
 
 def _plan_meetup_day(user: User, meetup: MeetUp) -> PlanDay:
-    """Set ``user``'s day to the meet-up resort, keeping any note."""
+    """Set ``user``'s day to the meet-up resort, keeping its note and privacy.
+
+    A day belongs to the person, not the group, so a private day stays
+    private: the meet-up page still lists them, but their other groups
+    see nothing new.
+    """
     existing = PlanDay.objects.filter(user=user, date=meetup.date).first()
     note = existing.note if existing and existing.resort_id == meetup.resort_id else ""
     return set_plan(
-        user, meetup.date, PlanDay.Status.RESORT, resort=meetup.resort, note=note
+        user,
+        meetup.date,
+        PlanDay.Status.RESORT,
+        resort=meetup.resort,
+        note=note,
+        is_private=existing.is_private if existing else False,
     )
+
+
+def meetup_on(group: Group, day: datetime.date) -> MeetUp | None:
+    """Return the group's meet-up on ``day``, if there is one."""
+    return group.meetups.filter(date=day).first()
 
 
 @transaction.atomic
@@ -53,9 +68,14 @@ def propose_meetup(
     latitude: float | None = None,
     longitude: float | None = None,
 ) -> MeetUp:
-    """Create a meet-up; the organiser is its first participant."""
+    """Create a meet-up; the organiser is its first participant.
+
+    A group has at most one meet-up a day, so everyone agrees on one place.
+    """
     if day < today():
         raise MeetUpError("Pick today or a later day.")
+    if meetup_on(group, day):
+        raise MeetUpError("This group already has a meet-up that day.")
     if (latitude is None) != (longitude is None):
         raise MeetUpError("A meeting pin needs both coordinates.")
     meetup = MeetUp.objects.create(

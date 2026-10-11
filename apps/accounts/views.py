@@ -12,6 +12,7 @@ apps/accounts/views.py — Signing in by emailed link, and the account page.
 from __future__ import annotations
 
 import logging
+from urllib.parse import urlencode
 
 from django.conf import settings
 from django.contrib import messages
@@ -98,7 +99,8 @@ def verify(request: HttpRequest, token: str) -> HttpResponse:
     request.session.pop(DEBUG_LINK_KEY, None)
     next_url = safe_next(result.next_url, request)
     if not result.user.display_name:
-        return redirect(f"{reverse('accounts:welcome')}?next={next_url}")
+        query = urlencode({"next": next_url})
+        return redirect(f"{reverse('accounts:welcome')}?{query}")
     return redirect(next_url)
 
 

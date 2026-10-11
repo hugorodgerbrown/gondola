@@ -32,6 +32,7 @@ from ..services.meetups import (
     is_open,
     join_meetup,
     leave_meetup,
+    meetup_on,
     propose_meetup,
 )
 from ..services.people import is_member
@@ -59,6 +60,10 @@ def meetup_new(request: HttpRequest, group_uuid: str) -> HttpResponse:
     group = member_group(request, group_uuid)
     user = current_user(request)
     day = parse_day(request.POST.get("date") or request.GET.get("date"))
+    existing = meetup_on(group, day)
+    if existing:
+        messages.info(request, "There's already a meet-up that day.")
+        return redirect("planning:meetup", token=existing.share_token)
     suggestions = suggest_resorts(group, day, user)
     initial_resort = _initial_resort(request, suggestions)
     form = MeetUpForm(
@@ -70,19 +75,23 @@ def meetup_new(request: HttpRequest, group_uuid: str) -> HttpResponse:
     )
     if request.method == "POST" and form.is_valid():
         data = form.cleaned_data
-        meetup = propose_meetup(
-            group,
-            user,
-            data["date"],
-            data["resort"],
-            start_time=data["start_time"],
-            latitude=data["meeting_latitude"],
-            longitude=data["meeting_longitude"],
-        )
-        messages.success(
-            request, "Meet-up proposed. Share the link in your group chat."
-        )
-        return redirect("planning:meetup", token=meetup.share_token)
+        try:
+            meetup = propose_meetup(
+                group,
+                user,
+                data["date"],
+                data["resort"],
+                start_time=data["start_time"],
+                latitude=data["meeting_latitude"],
+                longitude=data["meeting_longitude"],
+            )
+        except MeetUpError as exc:
+            form.add_error(None, str(exc))
+        else:
+            messages.success(
+                request, "Meet-up proposed. Share the link in your group chat."
+            )
+            return redirect("planning:meetup", token=meetup.share_token)
     selected = form["resort"].value()
     listed = {s.resort.uuid for s in suggestions}
     extra = (
