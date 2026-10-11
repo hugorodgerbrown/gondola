@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Add a passkey · {{ SITE_NAME }}{% endblock %}
+{% block content %}
+  <section class="stack" data-passkey-register
+           data-options-url="{% url 'accounts:passkey_register_options' %}"
+           data-register-url="{% url 'accounts:passkey_register' %}"
+           data-next="{{ next_url }}">
+    <div class="heading">
+      <span class="eyebrow">You're in</span>
+      <h1 class="title">Add a passkey?</h1>
+      <p class="lede">Next time, sign in with Face ID, a fingerprint or your device PIN instead of waiting for an email. You can add or remove passkeys later from your account.</p>
+    </div>
+    {# Shown by passkeys.js only where the browser supports passkeys. #}
+    <div class="stack" data-passkey-controls hidden>
+      <button type="button" class="button button--block" data-passkey-button>Add a passkey</button>
+      <p class="errors" data-passkey-error role="alert" hidden></p>
+    </div>
+    <p class="small muted" data-passkey-unsupported>This browser can't make passkeys. You'll sign in by email.</p>
+    <a class="button button--secondary button--block" href="{{ next_url }}">Not now</a>
+  </section>
+{% endblock %}
+{% block scripts %}
+  <script src="{% static 'js/webauthn_json.js' %}"></script>
+  <script src="{% static 'js/passkeys.js' %}"></script>
+{% endblock %}

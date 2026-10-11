@@ -108,13 +108,23 @@ LOGIN_REDIRECT_URL = "planning:map"
 # How long an emailed sign-in link works, in seconds.
 SIGN_IN_LINK_MAX_AGE = 60 * 30
 
-# Passkeys (WebAuthn). A passkey belongs to one domain, the relying party,
-# and the browser checks the page's origin against it. Both default to
-# SITE_URL, so a passkey works on the site's own address and nowhere else.
-WEBAUTHN_RP_ID = config("WEBAUTHN_RP_ID", default=urlsplit(SITE_URL).hostname or "")
-WEBAUTHN_ORIGIN = config(
-    "WEBAUTHN_ORIGIN",
+# Passkeys (WebAuthn), as in Tally. The relying party is this site's host
+# name; a passkey only works on the host it was made for. Both default to
+# SITE_URL, so SITE_URL must be the address people use.
+WEBAUTHN_RP_ID: str = config(
+    "WEBAUTHN_RP_ID", default=urlsplit(SITE_URL).hostname or "localhost"
+)
+WEBAUTHN_RP_NAME = SITE_NAME
+WEBAUTHN_ORIGINS: list[str] = config(
+    "WEBAUTHN_ORIGINS",
     default=f"{urlsplit(SITE_URL).scheme}://{urlsplit(SITE_URL).netloc}",
+    cast=Csv(),
+)
+
+# Rate limits count per client address. Behind Render's proxy the client is
+# the last X-Forwarded-For entry; locally there is no proxy.
+RATE_LIMIT_PROXY_COUNT: int = config(
+    "RATE_LIMIT_PROXY_COUNT", default=0 if DEBUG else 1, cast=int
 )
 
 # Django 6.1's MAILERS replaces the EMAIL_* settings. Production sends

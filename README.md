@@ -51,7 +51,9 @@ before each deploy.
 `SITE_URL` must be the address people use, because passkeys are tied to its
 domain: a passkey added on `resort-planner.ultraniche.ai` won't work on the
 `.onrender.com` address. Override with `WEBAUTHN_RP_ID` and
-`WEBAUTHN_ORIGIN` only if the two must differ.
+`WEBAUTHN_ORIGINS` only if the two must differ. If they disagree with the
+address in use, the passkey endpoints answer 409 and log
+`passkeys.wrong_host`.
 
 ## Checks
 

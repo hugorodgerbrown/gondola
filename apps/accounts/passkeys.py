@@ -1,20 +1,22 @@
 """
-apps/accounts/passkeys.py — Sign in with a passkey (WebAuthn).
+apps/accounts/passkeys.py — Passkeys (WebAuthn), wrapping py_webauthn.
 
-A passkey sits alongside the emailed link, never instead of it: someone
-signs in by link once, adds a passkey on the account page, and from then
-on Face ID, Touch ID or their password manager signs them in on that
-device. A passkey stands in for the email, so it must check who is
-holding the device: user verification (Face ID, a PIN) is required, never
-just a touch. Wraps py_webauthn in four steps, two per ceremony:
+Ported from Tally, which shares it with the Titan template, so passkeys
+behave the same in every project. A passkey sits alongside the emailed
+link: someone signs in by link, adds a passkey, and from then on Face ID,
+a fingerprint or a PIN signs them in on that device.
 
-  registration_options / save_registration      add a passkey
-  authentication_options / verify_authentication  sign in with one
+Two ceremonies, each a pair of requests: the server issues options with a
+fresh challenge (kept in the session), the browser signs it, and the
+server verifies the answer against the same challenge, which is then
+dropped so it can't be replayed.
 
-Each "options" step stores its challenge in the session and the matching
-"verify" step pops it, so a challenge is used at most once. The relying
-party is this site: ``WEBAUTHN_RP_ID`` and ``WEBAUTHN_ORIGIN`` default to
-``SITE_URL``'s host and origin.
+The sign-in page can run two ceremonies at once (the email field's
+autofill and the passkey button), so the session keeps the last few
+sign-in challenges and each answer is checked against the one it signed.
+
+User verification is required: a passkey alone signs someone in, so it has to be
+the person (Face ID, fingerprint, PIN) and not just the device.
 """
 
 from __future__ import annotations
@@ -36,145 +38,196 @@ from webauthn.helpers.structs import (
     UserVerificationRequirement,
 )
 
-from .models import Passkey, User
+from apps.accounts.models import Passkey, User
 
 logger = logging.getLogger(__name__)
 
-REGISTRATION_CHALLENGE_KEY = "passkey_registration_challenge"
-AUTHENTICATION_CHALLENGE_KEY = "passkey_authentication_challenge"
+_REGISTER_CHALLENGE = "passkeys.register_challenge"
+_SIGN_IN_CHALLENGES = "passkeys.sign_in_challenges"
+# Outstanding sign-in challenges kept per session; older ones lapse.
+MAX_SIGN_IN_CHALLENGES = 5
 
 
 class PasskeyError(Exception):
-    """A passkey could not be added or used to sign in."""
+    """The browser's answer didn't verify, or had no challenge to check against."""
 
 
-def _descriptors(user: User) -> list[PublicKeyCredentialDescriptor]:
-    """Return ``user``'s passkeys in the form WebAuthn options expect."""
-    return [
-        PublicKeyCredentialDescriptor(id=base64url_to_bytes(key.credential_id))
-        for key in Passkey.objects.for_user(user)
-    ]
+class UnknownPasskeyError(PasskeyError):
+    """The browser offered a passkey this site doesn't know.
+
+    Deleted here, but still kept on the device.
+    """
+
+    def __init__(self, credential_id: str) -> None:
+        """Keep the unknown credential's id, for the page to signal it."""
+        self.credential_id = credential_id
+        super().__init__("Unknown passkey.")
 
 
-def _as_dict(options: Any) -> dict[str, Any]:
-    """Return WebAuthn options as the JSON the browser parses."""
+def _user_handle(user: User) -> bytes:
+    """Return the WebAuthn user id: stable, and not personal data (no email)."""
+    return hashlib.sha256(str(user.pk).encode()).digest()
+
+
+def _options_dict(options: Any) -> dict[str, Any]:
+    """Return py_webauthn options as the JSON-ready dict the browser expects."""
     return cast(dict[str, Any], json.loads(options_to_json(options)))
 
 
 def registration_options(user: User, session: SessionBase) -> dict[str, Any]:
-    """
-    Return the options for adding a passkey to ``user``'s account.
+    """Return options for ``navigator.credentials.create()`` for ``user``.
 
-    The user handle is a hash of the primary key: stable, and not the email.
-    Existing passkeys are excluded, so a device that already has one says
-    so instead of making a second.
+    Lists the user's existing passkeys so a device that already has one
+    says so rather than making a second.
     """
     options = webauthn.generate_registration_options(
         rp_id=settings.WEBAUTHN_RP_ID,
-        rp_name=settings.SITE_NAME,
-        user_id=hashlib.sha256(str(user.pk).encode()).digest(),
+        rp_name=settings.WEBAUTHN_RP_NAME,
+        user_id=_user_handle(user),
         user_name=user.email,
         user_display_name=user.to_string(),
         authenticator_selection=AuthenticatorSelectionCriteria(
             resident_key=ResidentKeyRequirement.REQUIRED,
             user_verification=UserVerificationRequirement.REQUIRED,
         ),
-        exclude_credentials=_descriptors(user),
+        exclude_credentials=[
+            PublicKeyCredentialDescriptor(id=base64url_to_bytes(p.credential_id))
+            for p in Passkey.objects.for_user(user)
+        ],
     )
-    session[REGISTRATION_CHALLENGE_KEY] = bytes_to_base64url(options.challenge)
-    return _as_dict(options)
+    session[_REGISTER_CHALLENGE] = bytes_to_base64url(options.challenge)
+    return _options_dict(options)
 
 
-def _default_name(backed_up: bool) -> str:
-    """Name a new passkey by how it is kept: synced, or bound to one device."""
-    return "Synced passkey" if backed_up else "Device passkey"
-
-
-def save_registration(
-    user: User, credential_json: str, session: SessionBase
+def register(
+    credential_json: str, session: SessionBase, user: User, name: str
 ) -> Passkey:
-    """Verify the browser's new credential and store it for ``user``."""
-    challenge = session.pop(REGISTRATION_CHALLENGE_KEY, None)
+    """Verify the browser's ``create()`` answer and save the new passkey."""
+    challenge = session.pop(_REGISTER_CHALLENGE, None)
     if not challenge:
-        raise PasskeyError("No passkey request is waiting. Try again.")
+        raise PasskeyError("No registration challenge in the session.")
     try:
-        result = webauthn.verify_registration_response(
+        verified = webauthn.verify_registration_response(
             credential=credential_json,
             expected_challenge=base64url_to_bytes(challenge),
             expected_rp_id=settings.WEBAUTHN_RP_ID,
-            expected_origin=settings.WEBAUTHN_ORIGIN,
+            expected_origin=settings.WEBAUTHN_ORIGINS,
             require_user_verification=True,
         )
-    except Exception as exc:  # py_webauthn raises several unrelated types
-        logger.info("Passkey registration did not verify: %s", exc)
-        raise PasskeyError("That passkey could not be checked. Try again.") from exc
-    credential_id = bytes_to_base64url(result.credential_id)
+    except Exception as exc:
+        raise PasskeyError("Registration didn't verify.") from exc
+
+    credential_id = bytes_to_base64url(verified.credential_id)
     if Passkey.objects.filter(credential_id=credential_id).exists():
-        raise PasskeyError("That passkey is already on an account.")
+        raise PasskeyError("That passkey is already registered.")
     passkey = Passkey.objects.create(
         user=user,
         credential_id=credential_id,
-        public_key=result.credential_public_key,
-        sign_count=result.sign_count,
-        backed_up=result.credential_backed_up,
-        name=_default_name(result.credential_backed_up),
+        public_key=verified.credential_public_key,
+        sign_count=verified.sign_count,
+        backed_up=verified.credential_backed_up,
+        name=name[:100],
     )
-    logger.info("Passkey added for user %s", user.pk)
+    logger.info("passkeys.registered user=%s passkey=%s", user.pk, passkey.uuid)
     return passkey
 
 
-def authentication_options(session: SessionBase) -> dict[str, Any]:
-    """
-    Return the options for signing in with any passkey for this site.
+def sign_in_options(session: SessionBase) -> dict[str, Any]:
+    """Return options for ``navigator.credentials.get()``.
 
-    No credentials are listed, so the browser offers every passkey it holds
-    for this site, including in the email field's autofill.
+    No ``allowCredentials``: the browser offers every passkey it holds for
+    this site, so sign-in needs no email address first.
     """
     options = webauthn.generate_authentication_options(
         rp_id=settings.WEBAUTHN_RP_ID,
         user_verification=UserVerificationRequirement.REQUIRED,
     )
-    session[AUTHENTICATION_CHALLENGE_KEY] = bytes_to_base64url(options.challenge)
-    return _as_dict(options)
+    challenges = [
+        *session.get(_SIGN_IN_CHALLENGES, []),
+        bytes_to_base64url(options.challenge),
+    ]
+    session[_SIGN_IN_CHALLENGES] = challenges[-MAX_SIGN_IN_CHALLENGES:]
+    return _options_dict(options)
 
 
-def verify_authentication(credential_json: str, session: SessionBase) -> User:
-    """Verify a passkey sign-in and return the account it belongs to."""
-    challenge = session.pop(AUTHENTICATION_CHALLENGE_KEY, None)
-    if not challenge:
-        raise PasskeyError("No sign-in is waiting. Try again.")
+def _signed_challenge(credential: dict[str, Any]) -> str:
+    """Return the challenge the browser signed, from the answer's clientDataJSON."""
+    client_data = json.loads(
+        base64url_to_bytes(credential["response"]["clientDataJSON"])
+    )
+    return str(client_data["challenge"])
+
+
+def authenticate(credential_json: str, session: SessionBase) -> User:
+    """Verify the browser's ``get()`` answer and return the passkey's user."""
     try:
-        credential_id = str(json.loads(credential_json)["id"])
+        credential = json.loads(credential_json)
+        credential_id = str(credential["id"])
+        challenge = _signed_challenge(credential)
     except (ValueError, KeyError, TypeError) as exc:
-        raise PasskeyError("That sign-in could not be read.") from exc
+        raise PasskeyError("Not a WebAuthn credential.") from exc
+    challenges = session.get(_SIGN_IN_CHALLENGES, [])
+    if challenge not in challenges:
+        raise PasskeyError("No matching sign-in challenge in the session.")
+    # Used once, whether or not it verifies.
+    session[_SIGN_IN_CHALLENGES] = [c for c in challenges if c != challenge]
+
     passkey = (
         Passkey.objects.select_related("user")
         .filter(credential_id=credential_id)
         .first()
     )
     if passkey is None:
-        raise PasskeyError(
-            "That passkey isn't on any account. It may have been removed."
-        )
+        raise UnknownPasskeyError(credential_id)
     try:
-        result = webauthn.verify_authentication_response(
+        verified = webauthn.verify_authentication_response(
             credential=credential_json,
             expected_challenge=base64url_to_bytes(challenge),
             expected_rp_id=settings.WEBAUTHN_RP_ID,
-            expected_origin=settings.WEBAUTHN_ORIGIN,
+            expected_origin=settings.WEBAUTHN_ORIGINS,
             credential_public_key=bytes(passkey.public_key),
             credential_current_sign_count=passkey.sign_count,
             require_user_verification=True,
         )
-    except Exception as exc:  # py_webauthn raises several unrelated types
-        logger.info("Passkey sign-in did not verify: %s", exc)
-        raise PasskeyError("That passkey could not be checked. Try again.") from exc
-    if not passkey.user.is_active:
-        raise PasskeyError("This account is switched off.")
-    passkey.sign_count = result.new_sign_count
-    passkey.backed_up = result.credential_backed_up
+    except Exception as exc:
+        raise PasskeyError("Sign-in didn't verify.") from exc
+
+    passkey.sign_count = verified.new_sign_count
+    passkey.backed_up = verified.credential_backed_up
     passkey.last_used_at = timezone.now()
     passkey.save(
         update_fields=["sign_count", "backed_up", "last_used_at", "updated_at"]
     )
     return passkey.user
+
+
+_DEVICE_NAMES = (
+    ("iPhone", "iPhone"),
+    ("iPad", "iPad"),
+    ("Android", "Android"),
+    ("CrOS", "Chromebook"),
+    ("Windows", "Windows"),
+    ("Macintosh", "Mac"),
+    ("Linux", "Linux"),
+)
+
+
+def serves_host(host: str) -> bool:
+    """Whether a page on ``host`` can use passkeys for ``WEBAUTHN_RP_ID``.
+
+    The browser refuses a ceremony whose relying party isn't the page's
+    host or a parent domain of it, with nothing sent back to the server.
+    So the options views check first and log the mismatch: it means
+    ``SITE_URL`` (or ``WEBAUTHN_RP_ID``) doesn't name the domain in use.
+    """
+    host = host.lower().rstrip(".")
+    rp_id = settings.WEBAUTHN_RP_ID.lower()
+    return host == rp_id or host.endswith("." + rp_id)
+
+
+def default_name(user_agent: str) -> str:
+    """Name a new passkey after the device it was made on ("Passkey on iPhone")."""
+    for marker, device in _DEVICE_NAMES:
+        if marker in user_agent:
+            return f"Passkey on {device}"
+    return "Passkey"
