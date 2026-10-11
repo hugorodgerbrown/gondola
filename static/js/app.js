@@ -64,6 +64,33 @@
   document.addEventListener("input", dropKeep);
   document.addEventListener("change", dropKeep);
 
+  // A resort list where nothing picked means no resort: tapping the picked
+  // resort again clears it. "Leave as it is" stays a plain radio.
+  function clearableRadio(event) {
+    const choice = event.target.closest("[data-clearable] .choice");
+    const radio = choice && choice.querySelector("input[type=radio]");
+    return radio && radio.value !== "keep" ? radio : null;
+  }
+
+  document.addEventListener("pointerdown", function (event) {
+    const radio = clearableRadio(event);
+    if (radio) {
+      radio.dataset.wasChecked = radio.checked ? "1" : "";
+    }
+  });
+
+  document.addEventListener("click", function (event) {
+    const radio = clearableRadio(event);
+    if (!radio || event.target !== radio) {
+      return; // A click on the label arrives again on the radio itself.
+    }
+    if (radio.dataset.wasChecked) {
+      radio.checked = false;
+      radio.dispatchEvent(new Event("change", { bubbles: true }));
+    }
+    radio.dataset.wasChecked = "";
+  });
+
   document.addEventListener("htmx:afterSwap", function (event) {
     const target = event.detail.target;
     if (target && target.id === "resort-results") {
