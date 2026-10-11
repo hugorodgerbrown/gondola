@@ -1,10 +1,10 @@
 """
 apps/groups/views/days.py — My days, and the sheet for one day.
 
-My days lists two weeks at a time, from today by default. Arrows step a
-fortnight, and a calendar jumps to any day you can plan (``?from=``), so
-December and January are as easy to fill in as next week. Plans outside
-the two weeks on show are listed under them. Tapping a day opens a sheet: skiing,
+My days is a month calendar, this month by default; arrows step a month
+(``?from=``, any day in it) as far as plans can be made. Each day shows
+what you said about it and what your groups are up to: friends skiing,
+friends at your resort, and a meet-up. Tapping a day opens a sheet: skiing,
 not sure yet or not skiing; the resorts friends already picked that day
 first, then a search over every resort; an optional note; and a switch to
 keep the day private.
@@ -26,18 +26,13 @@ from apps.resorts.search import search_resorts
 
 from ..forms import DayForm
 from ..models import Group, PlanDay
+from ..services.month import build_month, month_start
 from ..services.plans import (
-    MY_DAYS_SPAN,
     clear_plan,
-    date_range,
     friends_by_resort,
     is_plannable,
-    last_plannable_day,
-    plan_marks,
     set_plan,
     today,
-    upcoming_plans,
-    window_start,
 )
 from .helpers import current_user, parse_day
 
@@ -45,45 +40,35 @@ from .helpers import current_user, parse_day
 @login_required
 @require_GET
 def my_days(request: HttpRequest) -> HttpResponse:
-    """List two weeks of days with what the person has said about each."""
+    """Show a month of days: the person's plans and their groups' activity."""
     user = current_user(request)
-    start = window_start(parse_day(request.GET.get("from")))
-    days = date_range(start, MY_DAYS_SPAN)
-    upcoming = upcoming_plans(user)
-    plans = {plan.date: plan for plan in upcoming}
-    shown = set(days)
-    span = datetime.timedelta(days=MY_DAYS_SPAN)
-    first = today()
-    last = last_plannable_day()
+    month = build_month(user, parse_day(request.GET.get("from")))
     return render(
         request,
         "groups/my_days.html",
         {
-            "rows": [(day, plans.get(day)) for day in days],
-            "today": first,
-            "start": start,
-            "end": days[-1],
-            "previous_start": window_start(start - span) if start > first else None,
-            "next_start": start + span if days[-1] < last else None,
-            "elsewhere": [plan for plan in upcoming if plan.date not in shown],
-            "last_day": last,
-            "marks": plan_marks(upcoming),
-            # Only a later fortnight needs carrying through a plain form post.
-            "window_from": start if start > first else None,
+            "month": month,
+            "today": today(),
+            # Only a later month needs carrying through a plain form post.
+            "window_from": _later_month(month.first),
             "groups": list(Group.objects.for_user(user).order_by("name")),
         },
     )
 
 
+def _later_month(first: datetime.date) -> datetime.date | None:
+    """Return ``first`` if it is a month after this one, else ``None``."""
+    return first if first > today().replace(day=1) else None
+
+
 def _window_from(request: HttpRequest) -> datetime.date | None:
-    """Return the My days fortnight a sheet was opened from, if not the first."""
+    """Return the My days month a sheet was opened from, if not this month."""
     value = request.POST.get("from") or request.GET.get("from")
-    start = window_start(parse_day(value)) if value else None
-    return start if start and start > today() else None
+    return _later_month(month_start(parse_day(value))) if value else None
 
 
 def _my_days_url(window_from: datetime.date | None) -> str:
-    """Return My days, at the fortnight the person was looking at."""
+    """Return My days, at the month the person was looking at."""
     url = reverse("planning:my_days")
     return f"{url}?from={window_from.isoformat()}" if window_from else url
 

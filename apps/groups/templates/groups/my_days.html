@@ -1,9 +1,8 @@
 {% extends "base.html" %}
-{% load static %}
 {% block title %}My days · {{ SITE_NAME }}{% endblock %}
 {% block content %}
   <div class="heading">
-    <span class="eyebrow">{% if start == today %}Next 14 days{% else %}{{ start|date:"j M" }} – {{ end|date:"j M" }}{% endif %}</span>
+    <span class="eyebrow">{{ month.first|date:"F Y" }}</span>
     <h1 class="title">My days</h1>
     {% if groups %}
       <p class="lede">Everyone in {% for group in groups %}{% if not forloop.first %}{% if forloop.last %} and {% else %}, {% endif %}{% endif %}{{ group.name }}{% endfor %} sees these, except days you keep private.</p>
@@ -11,49 +10,71 @@
       <p class="lede">Nobody sees these yet. <a href="{% url 'planning:group_list' %}">Start a group</a> or open an invite link from a friend.</p>
     {% endif %}
   </div>
-  <nav class="float float--page" aria-label="Fortnight">
-    {% if previous_start %}
-      <a class="icon-button" href="?from={{ previous_start|date:'Y-m-d' }}" aria-label="Previous two weeks">{% include "includes/icons/chevron-left.html" %}</a>
+  <nav class="float float--page" aria-label="Month">
+    {% if month.previous %}
+      <a class="icon-button" href="?from={{ month.previous|date:'Y-m-d' }}" aria-label="{{ month.previous|date:'F' }}">{% include "includes/icons/chevron-left.html" %}</a>
     {% else %}
       <span class="icon-button icon-button--off" aria-hidden="true">{% include "includes/icons/chevron-left.html" %}</span>
     {% endif %}
-    <span class="calendar-anchor">
-      <button type="button" class="float__label float__label--button" data-calendar
-              data-navigate="?from=DATE"
-              data-value="{{ start|date:'Y-m-d' }}" data-today="{{ today|date:'Y-m-d' }}"
-              data-min="{{ today|date:'Y-m-d' }}" data-max="{{ last_day|date:'Y-m-d' }}"
-              data-marks="plan-marks">
-        {% include "includes/icons/calendar.html" %}
-        <span>{{ start|date:"j M" }} – {{ end|date:"j M" }}</span>
-        <span class="visually-hidden">, choose a day</span>
-      </button>
-    </span>
-    {% if next_start %}
-      <a class="icon-button" href="?from={{ next_start|date:'Y-m-d' }}" aria-label="Next two weeks">{% include "includes/icons/chevron-right.html" %}</a>
+    <span class="float__label float__label--month">{{ month.first|date:"F Y" }}</span>
+    {% if month.next %}
+      <a class="icon-button" href="?from={{ month.next|date:'Y-m-d' }}" aria-label="{{ month.next|date:'F' }}">{% include "includes/icons/chevron-right.html" %}</a>
     {% else %}
       <span class="icon-button icon-button--off" aria-hidden="true">{% include "includes/icons/chevron-right.html" %}</span>
     {% endif %}
   </nav>
-  <ol class="list card" aria-label="{{ start|date:'j F' }} to {{ end|date:'j F' }}">
-    {% for day, plan in rows %}
-      <li>{% include "groups/partials/day_row.html" with window_from=window_from %}</li>
-    {% endfor %}
-  </ol>
-  {% if elsewhere %}
-    <section class="heading" aria-labelledby="elsewhere-heading">
-      <span class="eyebrow" id="elsewhere-heading">Your other plans</span>
-      <ol class="list card">
-        {% for plan in elsewhere %}
-          <li>{% include "groups/partials/day_row.html" with day=plan.date plan=plan long_date=True window_from=window_from %}</li>
+
+  <div class="month card" role="group" aria-label="{{ month.first|date:'F Y' }}">
+    <div class="month__week month__week--head" aria-hidden="true">
+      {% for name in "MTWTFSS" %}<span class="month__weekday">{{ name }}</span>{% endfor %}
+    </div>
+    {% for week in month.weeks %}
+      <div class="month__week">
+        {% for day in week %}
+          {% if not day.in_month %}
+            <span class="mday mday--out"></span>
+          {% else %}
+            {% with plan=day.plan %}
+              {% if day.plannable %}
+                <a class="mday{% if plan %} mday--{{ plan.status }}{% endif %}{% if day.is_today %} mday--today{% endif %}"
+                   href="{% url 'planning:day' day.date %}{% if window_from %}?from={{ window_from|date:'Y-m-d' }}{% endif %}"
+                   hx-get="{% url 'planning:day' day.date %}{% if window_from %}?from={{ window_from|date:'Y-m-d' }}{% endif %}"
+                   hx-target="#sheet-body" hx-push-url="false"
+                   aria-label="{{ day.summary }}">
+              {% else %}
+                <span class="mday mday--past{% if plan %} mday--{{ plan.status }}{% endif %}" aria-label="{{ day.summary }}">
+              {% endif %}
+                <span class="mday__top" aria-hidden="true">
+                  <span class="mday__date">{{ day.date.day }}</span>
+                  <span class="mday__marks">
+                    {% if plan.is_private %}{% include "includes/icons/lock.html" %}{% endif %}
+                    {% if day.meetup %}<span class="mday__meetup"></span>{% endif %}
+                  </span>
+                </span>
+                <span class="mday__plan" aria-hidden="true">
+                  {% if plan.resort %}{{ plan.resort.display_code }}{% elif plan.status == "not_sure" %}?{% elif plan.status == "not_skiing" %}–{% endif %}
+                </span>
+                {% if day.friends_skiing %}
+                  <span class="mday__friends{% if day.with_me %} mday__friends--with-me{% endif %}" aria-hidden="true">{% include "includes/icons/people.html" %}{{ day.friends_skiing }}</span>
+                {% endif %}
+              {% if day.plannable %}</a>{% else %}</span>{% endif %}
+            {% endwith %}
+          {% endif %}
         {% endfor %}
-      </ol>
-    </section>
-  {% endif %}
+      </div>
+    {% endfor %}
+  </div>
+
+  <ul class="month-key" aria-label="Key">
+    <li><span class="month-key__swatch mday--resort"></span>Skiing</li>
+    <li><span class="month-key__swatch mday--not_sure"></span>Not sure</li>
+    <li><span class="month-key__swatch mday--not_skiing"></span>Not skiing</li>
+    <li><span class="mday__friends">{% include "includes/icons/people.html" %}2</span>Friends skiing</li>
+    <li><span class="mday__friends mday__friends--with-me">{% include "includes/icons/people.html" %}2</span>With you</li>
+    <li><span class="mday__meetup"></span>Meet-up</li>
+  </ul>
+
   {% if groups %}
     <a href="{% url 'planning:board' groups.0.uuid %}" class="small">See who's where →</a>
   {% endif %}
-  {{ marks|json_script:"plan-marks" }}
-{% endblock %}
-{% block scripts %}
-  <script src="{% static 'js/calendar.js' %}"></script>
 {% endblock %}

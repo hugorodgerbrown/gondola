@@ -161,19 +161,6 @@ def test_suggestions_rank_by_people_then_moves(crew: Crew) -> None:
     assert result[1].here == [crew.sam]
 
 
-def test_window_start_is_clamped_to_plannable_days() -> None:
-    today = plans.today()
-    last = plans.last_plannable_day()
-    assert plans.window_start(today - datetime.timedelta(days=3)) == today
-    assert plans.window_start(today + datetime.timedelta(days=30)) == (
-        today + datetime.timedelta(days=30)
-    )
-    assert (
-        plans.window_start(last) + datetime.timedelta(days=plans.MY_DAYS_SPAN - 1)
-        == last
-    )
-
-
 def test_upcoming_plans_and_marks(crew: Crew) -> None:
     today = plans.today()
     plans.set_plan(crew.sam, today - datetime.timedelta(days=1), S.NOT_SURE)

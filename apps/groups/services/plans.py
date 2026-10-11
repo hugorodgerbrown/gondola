@@ -22,8 +22,7 @@ from apps.resorts.models import Resort
 from ..models import PlanDay
 from .people import visible_friend_plans
 
-# How many days My days lists at once, and how far ahead a plan may be made.
-MY_DAYS_SPAN = 14
+# How far ahead a plan may be made.
 PLAN_HORIZON_DAYS = 365
 
 
@@ -41,16 +40,6 @@ def is_plannable(day: datetime.date) -> bool:
 def last_plannable_day() -> datetime.date:
     """Return the furthest day ahead a plan can be made for."""
     return today() + datetime.timedelta(days=PLAN_HORIZON_DAYS)
-
-
-def window_start(day: datetime.date) -> datetime.date:
-    """Return where a My days window starting at ``day`` may actually start.
-
-    Never before today, and never so late that the window runs past the
-    last plannable day.
-    """
-    latest = last_plannable_day() - datetime.timedelta(days=MY_DAYS_SPAN - 1)
-    return min(max(day, today()), latest)
 
 
 def date_range(start: datetime.date, days: int) -> list[datetime.date]:
