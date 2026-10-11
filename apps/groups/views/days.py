@@ -42,6 +42,9 @@ from ..services.plans import (
 )
 from .helpers import current_user, parse_day
 
+# The most days one selection can plan.
+MAX_SELECTED_DAYS = 62
+
 
 @login_required
 @require_GET
@@ -58,6 +61,7 @@ def my_days(request: HttpRequest) -> HttpResponse:
             # Only a later month needs carrying through a plain form post.
             "window_from": _later_month(month.first),
             "groups": list(Group.objects.for_user(user).order_by("name")),
+            "max_selected": MAX_SELECTED_DAYS,
         },
     )
 
@@ -150,10 +154,6 @@ def day_clear(request: HttpRequest, day: datetime.date) -> HttpResponse:
     """Forget what the person said about a day."""
     clear_plan(current_user(request), day)
     return refresh(request, _my_days_url(_window_from(request)))
-
-
-# The most days one selection can plan.
-MAX_SELECTED_DAYS = 62
 
 
 def _selected_days(request: HttpRequest) -> list[datetime.date]:

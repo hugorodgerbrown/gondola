@@ -8,6 +8,8 @@
  * (starting on a ticked day sweeps them off instead). "Plan" opens one
  * sheet for every ticked day. The selection survives stepping to another
  * month, so a trip can cross the end of one, and is forgotten once saved.
+ * It belongs to the person signed in, and stops at the most days one
+ * sheet can plan.
  */
 (function () {
   "use strict";
@@ -21,6 +23,7 @@
   const KEY = "my-days-selection";
   const HOLD_MS = 400;
   const MOVE_PX = 10;
+  const MAX = Number(grid.dataset.selectMax) || 62;
   const count = bar.querySelector("[data-select-count]");
   const plan = bar.querySelector("[data-select-plan]");
   let selected = new Set();
@@ -42,7 +45,10 @@
   function save() {
     try {
       if (selecting) {
-        sessionStorage.setItem(KEY, JSON.stringify(Array.from(selected)));
+        sessionStorage.setItem(
+          KEY,
+          JSON.stringify({ owner: grid.dataset.selectOwner, days: Array.from(selected) })
+        );
       } else {
         sessionStorage.removeItem(KEY);
       }
@@ -65,7 +71,11 @@
     bar.hidden = !selecting;
     document.body.classList.toggle("has-select-bar", selecting);
     const n = selected.size;
-    count.textContent = n === 0 ? "Tap days to select" : n === 1 ? "1 day" : n + " days";
+    count.textContent =
+      n === 0 ? "Tap days to select" :
+      n === 1 ? "1 day" :
+      n >= MAX ? n + " days, the most" :
+      n + " days";
     plan.disabled = n === 0;
   }
 
@@ -97,10 +107,10 @@
   function sweep() {
     selected = new Set(press.base);
     run().forEach(function (date) {
-      if (press.adding) {
-        selected.add(date);
-      } else {
+      if (!press.adding) {
         selected.delete(date);
+      } else if (selected.size < MAX) {
+        selected.add(date);
       }
     });
     render();
@@ -211,7 +221,7 @@
     const date = cell.dataset.date;
     if (selected.has(date)) {
       selected.delete(date);
-    } else {
+    } else if (selected.size < MAX) {
       selected.add(date);
     }
     save();
@@ -257,10 +267,15 @@
   };
 
   try {
+    // Only the person who made it, and only days that can still be planned:
+    // someone else may sign in on this tab, or the selection may be from
+    // yesterday.
     const stored = JSON.parse(sessionStorage.getItem(KEY) || "null");
-    if (Array.isArray(stored)) {
+    if (stored && stored.owner === grid.dataset.selectOwner && Array.isArray(stored.days)) {
       selecting = true;
-      selected = new Set(stored);
+      selected = new Set(
+        stored.days.filter(function (date) { return date >= grid.dataset.today; }).slice(0, MAX)
+      );
     }
   } catch (error) {
     // Nothing stored, or nothing readable: start without a selection.

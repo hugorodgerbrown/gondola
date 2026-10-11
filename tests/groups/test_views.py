@@ -260,6 +260,8 @@ def test_my_days_can_select(sam: Client, crew: Crew) -> None:
     assert b"data-select-bar" in page.content
     assert b'data-select-days="/days/several/"' in page.content
     assert b"js/day_select.js" in page.content
+    assert b'data-select-max="62"' in page.content
+    assert f'data-select-owner="{crew.sam.uuid}"'.encode() in page.content
 
 
 def test_resort_search(sam: Client, crew: Crew) -> None:
