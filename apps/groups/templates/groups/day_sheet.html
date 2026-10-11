@@ -3,7 +3,7 @@
   {% include "groups/partials/meetup_card.html" %}
 {% endfor %}
 <form method="post" action="{{ form_url }}" hx-post="{{ form_url }}" hx-target="#sheet-body" class="stack" data-day-form>
-  {% if window_from %}<input type="hidden" name="from" value="{{ window_from|date:'Y-m-d' }}">{% endif %}
+  {% for name, value in back.items %}<input type="hidden" name="{{ name }}" value="{{ value }}">{% endfor %}
   {% csrf_token %}
   {% if mixed %}
     <p class="help">These days don't all say the same. Anything you leave alone stays as each day has it.</p>
@@ -81,7 +81,7 @@
 </form>
 {% if has_plans %}
   <form method="post" action="{{ clear_url }}" hx-post="{{ clear_url }}">
-    {% if window_from %}<input type="hidden" name="from" value="{{ window_from|date:'Y-m-d' }}">{% endif %}
+    {% for name, value in back.items %}<input type="hidden" name="{{ name }}" value="{{ value }}">{% endfor %}
     {% csrf_token %}
     <button type="submit" class="button button--secondary button--block">Clear {% if span > 1 %}these days{% else %}this day{% endif %}</button>
   </form>
