@@ -149,6 +149,16 @@ def test_day_sheet_where_and_skiing_apart(sam: Client, crew: Crew) -> None:
     assert b"Pick a resort from the list" in bad.content
 
 
+def test_day_sheet_has_no_resort_option_for_none(sam: Client, crew: Crew) -> None:
+    url = reverse("planning:day", kwargs={"day": crew.day})
+    assert b"Not at a resort" not in sam.get(url, headers=HTMX).content
+    # The form sends an empty resort first, then the picked one if any.
+    sam.post(url, {"resort": ["", str(crew.verbier.uuid)]}, headers=HTMX)
+    assert PlanDay.objects.get(user=crew.sam).resort == crew.verbier
+    sam.post(url, {"resort": [""]}, headers=HTMX)
+    assert PlanDay.objects.get(user=crew.sam).resort is None
+
+
 def test_day_sheet_not_sure_and_clear(sam: Client, crew: Crew) -> None:
     url = reverse("planning:day", kwargs={"day": crew.day})
     response = sam.post(url, {"skiing": "not_sure"})

@@ -64,6 +64,47 @@
   document.addEventListener("input", dropKeep);
   document.addEventListener("change", dropKeep);
 
+  // A resort list where nothing picked means no resort: tapping the picked
+  // resort again clears it. "Leave as it is" stays a plain radio.
+  function clearableRadio(event) {
+    const choice = event.target.closest("[data-clearable] .choice");
+    const radio = choice && choice.querySelector("input[type=radio]");
+    return radio && radio.value !== "keep" ? radio : null;
+  }
+
+  function clear(radio) {
+    radio.checked = false;
+    radio.dispatchEvent(new Event("change", { bubbles: true }));
+  }
+
+  // Note whether the radio was already picked before the tap checks it.
+  document.addEventListener("pointerdown", function (event) {
+    const radio = clearableRadio(event);
+    if (radio) {
+      radio.dataset.wasChecked = radio.checked ? "1" : "";
+    }
+  });
+
+  // Space on the picked radio clears it too (the browser does nothing).
+  document.addEventListener("keydown", function (event) {
+    const radio = event.key === " " ? clearableRadio(event) : null;
+    if (radio && event.target === radio && radio.checked) {
+      event.preventDefault();
+      clear(radio);
+    }
+  });
+
+  document.addEventListener("click", function (event) {
+    const radio = clearableRadio(event);
+    if (!radio || event.target !== radio) {
+      return; // A click on the label arrives again on the radio itself.
+    }
+    if (radio.dataset.wasChecked) {
+      clear(radio);
+    }
+    radio.dataset.wasChecked = "";
+  });
+
   document.addEventListener("htmx:afterSwap", function (event) {
     const target = event.detail.target;
     if (target && target.id === "resort-results") {

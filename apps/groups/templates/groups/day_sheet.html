@@ -11,7 +11,10 @@
 
   <div class="field">
     <span class="eyebrow">Where will you be?</span>
-    <div class="choices" role="radiogroup" aria-label="Resort">
+    {# Nothing picked means no resort: tap a picked resort again to clear it. #}
+    <input type="hidden" name="resort" value="">
+    {% if friends or elsewhere or "resort" in mixed %}
+    <div class="choices" role="radiogroup" aria-label="Resort" data-clearable>
       {% if "resort" in mixed %}
         <label class="choice">
           <input type="radio" name="resort" value="{{ keep_resort }}"{% if selected == keep_resort %} checked{% endif %}>
@@ -31,18 +34,15 @@
           <span class="choice__main"><span class="choice__title">{{ resort.name }}</span><span class="choice__meta">Your pick</span></span>
         </label>
       {% endfor %}
-      <label class="choice">
-        <input type="radio" name="resort" value=""{% if not selected %} checked{% endif %}>
-        <span class="choice__main"><span class="choice__title">Not at a resort</span><span class="choice__meta">At home, or not saying where</span></span>
-      </label>
     </div>
+    {% endif %}
     {% if not friends and groups_count %}
       <p class="help">No friends have picked a resort for {% if span > 1 %}these days{% else %}this day{% endif %} yet.</p>
     {% endif %}
     <label for="resort-search" class="visually-hidden">Search resorts</label>
-    <input id="resort-search" class="input input--search" type="search" name="q" placeholder="Somewhere else? Search resorts" autocomplete="off"
+    <input id="resort-search" class="input input--search" type="search" name="q" placeholder="{% if friends or elsewhere %}Somewhere else? Search resorts{% else %}Search resorts (optional){% endif %}" autocomplete="off"
            hx-get="{% url 'planning:resort_search' %}" hx-trigger="input changed delay:200ms, search" hx-target="#resort-results" hx-include="this" hx-sync="this:replace">
-    <div id="resort-results" class="choices" role="radiogroup" aria-label="Search results" hidden></div>
+    <div id="resort-results" class="choices" role="radiogroup" aria-label="Search results" data-clearable hidden></div>
   </div>
 
   <fieldset class="field">
