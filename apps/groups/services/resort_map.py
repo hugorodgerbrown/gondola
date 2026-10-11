@@ -17,6 +17,7 @@ from apps.accounts.models import User
 from apps.resorts.models import Resort
 
 from ..models import Group, MeetUp, PlanDay
+from .meetups import MeetUpCard, meetups_for
 from .people import visible_friend_plans
 from .plans import friend_counts
 
@@ -98,7 +99,7 @@ class ResortDay:
     day: datetime.date
     groups: list[GroupAtResort]
     my_plan: PlanDay | None
-    meetups: list[MeetUp]
+    meetups: list[MeetUpCard]
 
     @property
     def friend_count(self) -> int:
@@ -118,11 +119,7 @@ def resort_day(viewer: User, resort: Resort, day: datetime.date) -> ResortDay:
     my_plan = (
         PlanDay.objects.filter(user=viewer, date=day).select_related("resort").first()
     )
-    meetups = list(
-        MeetUp.objects.filter(
-            group__memberships__user=viewer, date=day, resort=resort
-        ).select_related("group")
-    )
+    meetups = meetups_for(viewer, day, resort)
     return ResortDay(
         resort=resort, day=day, groups=groups, my_plan=my_plan, meetups=meetups
     )

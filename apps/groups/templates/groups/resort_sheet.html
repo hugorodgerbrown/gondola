@@ -2,12 +2,8 @@
   {% include "includes/sheet_header.html" with eyebrow=info.day|date:"D j M" title=resort.name %}
   <p class="small muted">{% if info.friend_count %}{{ info.friend_count }} friend{{ info.friend_count|pluralize }} here{% else %}No friends here yet{% endif %}{% if resort.canton %} · {{ resort.canton }}{% endif %}{% for pass in resort.passes.all %} · {{ pass.name }}{% endfor %}</p>
 
-  {% for meetup in info.meetups %}
-    <a class="card card--padded row--link" href="{% url 'planning:meetup' meetup.share_token %}">
-      <span class="eyebrow">{{ meetup.group.name }} · meet-up</span>
-      <strong>{% if meetup.start_time %}{{ meetup.start_time|time:"H:i" }} at {% endif %}{{ resort.name }}</strong>
-      <span class="small">Open the meet-up →</span>
-    </a>
+  {% for card in info.meetups %}
+    {% include "groups/partials/meetup_card.html" %}
   {% endfor %}
 
   {% for entry in info.groups %}
