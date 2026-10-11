@@ -2,7 +2,8 @@
 apps/groups/services/plans.py — Saying where you're skiing on a day.
 
 A plan day belongs to a person, not a group. ``set_plan`` is the one place
-a plan is written, whether from My days, the map or by joining a meet-up.
+a plan is written, whether from My days, the map or by joining a meet-up;
+``set_plans`` gives several selected days the same plan in one go.
 Saying nothing is different from "Not sure yet" or "Not skiing": clearing
 a day deletes its row.
 """
@@ -11,6 +12,7 @@ from __future__ import annotations
 
 import datetime
 from collections import defaultdict
+from collections.abc import Iterable
 from dataclasses import dataclass, field
 
 from django.db import transaction
@@ -80,6 +82,28 @@ def clear_plan(user: User, day: datetime.date) -> None:
     PlanDay.objects.filter(user=user, date=day).delete()
 
 
+@transaction.atomic
+def set_plans(
+    user: User,
+    days: Iterable[datetime.date],
+    status: str,
+    *,
+    resort: Resort | None = None,
+    note: str = "",
+    is_private: bool = False,
+) -> list[PlanDay]:
+    """Give ``user`` the same plan on every one of ``days``, replacing theirs."""
+    return [
+        set_plan(user, day, status, resort=resort, note=note, is_private=is_private)
+        for day in days
+    ]
+
+
+def clear_plans(user: User, days: Iterable[datetime.date]) -> None:
+    """Forget ``user``'s plans on ``days``."""
+    PlanDay.objects.filter(user=user, date__in=list(days)).delete()
+
+
 def upcoming_plans(user: User) -> list[PlanDay]:
     """Return ``user``'s own plans from today on, soonest first."""
     return list(
@@ -107,16 +131,26 @@ class ResortFriends:
         return join_names([f.to_string() for f in self.friends])
 
 
-def friends_by_resort(viewer: User, day: datetime.date) -> list[ResortFriends]:
-    """Return resorts where ``viewer``'s friends plan to be, busiest first."""
+def friends_by_resort(
+    viewer: User, days: datetime.date | Iterable[datetime.date]
+) -> list[ResortFriends]:
+    """Return resorts where ``viewer``'s friends plan to be, busiest first.
+
+    ``days`` is one date or several; over several, a friend at the same
+    resort on more than one of them counts once.
+    """
+    dates = [days] if isinstance(days, datetime.date) else list(days)
     groups: dict[int, ResortFriends] = {}
-    for plan in visible_friend_plans(viewer, [day]).filter(
-        status=PlanDay.Status.RESORT
+    for plan in (
+        visible_friend_plans(viewer, dates)
+        .filter(status=PlanDay.Status.RESORT)
+        .order_by("date")
     ):
         if plan.resort is None:  # pragma: no cover — the status constraint forbids it
             continue
         entry = groups.setdefault(plan.resort.pk, ResortFriends(resort=plan.resort))
-        entry.friends.append(plan.user)
+        if plan.user not in entry.friends:
+            entry.friends.append(plan.user)
     return sorted(
         groups.values(), key=lambda g: (-len(g.friends), g.resort.name.lower())
     )

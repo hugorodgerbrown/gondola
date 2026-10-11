@@ -75,6 +75,31 @@ def test_friends_by_resort_and_counts(crew: Crew) -> None:
     }
 
 
+def test_friends_by_resort_over_several_days(crew: Crew) -> None:
+    later = crew.day + datetime.timedelta(days=1)
+    plans.set_plan(crew.anna, crew.day, S.RESORT, resort=crew.verbier)
+    plans.set_plan(crew.anna, later, S.RESORT, resort=crew.verbier)
+    plans.set_plan(crew.ben, later, S.RESORT, resort=crew.zermatt)
+    entries = plans.friends_by_resort(crew.sam, [crew.day, later])
+    # Anna on both days at Verbier counts once.
+    assert [(e.resort, e.names) for e in entries] == [
+        (crew.verbier, "Anna"),
+        (crew.zermatt, "Ben"),
+    ]
+
+
+def test_set_and_clear_several_plans(crew: Crew) -> None:
+    days = [crew.day, crew.day + datetime.timedelta(days=3)]
+    plans.set_plan(crew.sam, days[0], S.NOT_SKIING)
+    made = plans.set_plans(crew.sam, days, S.RESORT, resort=crew.verbier, note=" a ")
+    assert [(p.date, p.resort, p.note) for p in made] == [
+        (days[0], crew.verbier, "a"),
+        (days[1], crew.verbier, "a"),
+    ]
+    plans.clear_plans(crew.sam, days)
+    assert not PlanDay.objects.filter(user=crew.sam).exists()
+
+
 def test_join_names() -> None:
     assert plans.join_names([]) == ""
     assert plans.join_names(["A"]) == "A"

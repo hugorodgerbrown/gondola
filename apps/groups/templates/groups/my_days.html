@@ -1,5 +1,9 @@
 {% extends "base.html" %}
+{% load static %}
 {% block title %}My days · {{ SITE_NAME }}{% endblock %}
+{% block scripts %}
+  <script src="{% static 'js/day_select.js' %}"></script>
+{% endblock %}
 {% block content %}
   <div class="heading">
     <span class="eyebrow">{{ month.first|date:"F Y" }}</span>
@@ -24,7 +28,8 @@
     {% endif %}
   </nav>
 
-  <div class="month card" role="group" aria-label="{{ month.first|date:'F Y' }}"{% if month.previous %} data-swipe-previous="?from={{ month.previous|date:'Y-m-d' }}"{% endif %}{% if month.next %} data-swipe-next="?from={{ month.next|date:'Y-m-d' }}"{% endif %}>
+  <div class="month card" role="group" aria-label="{{ month.first|date:'F Y' }}"{% if month.previous %} data-swipe-previous="?from={{ month.previous|date:'Y-m-d' }}"{% endif %}{% if month.next %} data-swipe-next="?from={{ month.next|date:'Y-m-d' }}"{% endif %}
+       data-select-days="{% url 'planning:several_days' %}"{% if window_from %} data-select-from="{{ window_from|date:'Y-m-d' }}"{% endif %}>
     <div class="month__week month__week--head" aria-hidden="true">
       {% for name in "MTWTFSS" %}<span class="month__weekday">{{ name }}</span>{% endfor %}
     </div>
@@ -36,7 +41,8 @@
           {% else %}
             {% with plan=day.plan %}
               {% if day.plannable %}
-                <a class="mday{% if plan %} mday--{{ plan.status }}{% endif %}{% if day.is_today %} mday--today{% endif %}"
+                <a data-date="{{ day.date|date:'Y-m-d' }}"
+                   class="mday{% if plan %} mday--{{ plan.status }}{% endif %}{% if day.is_today %} mday--today{% endif %}"
                    href="{% url 'planning:day' day.date %}{% if window_from %}?from={{ window_from|date:'Y-m-d' }}{% endif %}"
                    hx-get="{% url 'planning:day' day.date %}{% if window_from %}?from={{ window_from|date:'Y-m-d' }}{% endif %}"
                    hx-target="#sheet-body" hx-push-url="false"
@@ -63,6 +69,14 @@
         {% endfor %}
       </div>
     {% endfor %}
+  </div>
+
+  <p class="small muted month-hint">Press and hold a day to select several.</p>
+
+  <div class="select-bar" data-select-bar role="region" aria-label="Selected days" hidden>
+    <button type="button" class="button button--secondary button--small" data-select-cancel>Cancel</button>
+    <span class="select-bar__count" data-select-count aria-live="polite"></span>
+    <button type="button" class="button button--small" data-select-plan>Plan</button>
   </div>
 
   <ul class="month-key" aria-label="Key">
