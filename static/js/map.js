@@ -117,6 +117,8 @@
     let selected = null;
 
     map.on("moveend", function () { saveView(map); });
+    // Leaving mid-pan or mid-flight fires no moveend, so save on the way out too.
+    window.addEventListener("pagehide", function () { saveView(map); });
 
     function markZoom() {
       container.classList.toggle("map-zoomed", map.getZoom() >= 9.5);
