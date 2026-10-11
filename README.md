@@ -40,9 +40,13 @@ email; add `--commit` to send.
 
 ## Deploying
 
-`render.yaml` is a Render blueprint: a web service, Postgres and the nightly
-email job. Set `SITE_URL`, the `EMAIL_*` settings and `DEFAULT_FROM_EMAIL`
-when applying it. Migrations and the resort import run before each deploy.
+`render.yaml` is a Render blueprint for one web service. It uses the
+existing `shared-db` Postgres instance, in a database of its own (create it
+once with `CREATE DATABASE resort_planner;`), and has no scheduled jobs:
+send the evening email by hand with `send_evening_emails --commit` from a
+Render shell. Set `DATABASE_URL`, `SITE_URL`, the `EMAIL_*` settings and
+`DEFAULT_FROM_EMAIL` when applying it. Migrations and the resort import run
+before each deploy.
 
 ## Checks
 
