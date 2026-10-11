@@ -25,7 +25,7 @@ envVarGroups:
       - key: CSRF_TRUSTED_ORIGINS
         value: https://*.onrender.com
       - key: SITE_NAME
-        value: Resort planner
+        value: Ski bum
       # SMTP host, user, password and sender are set per service below.
       - key: EMAIL_PORT
         value: "587"

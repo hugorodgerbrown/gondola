@@ -17,6 +17,7 @@ def test_home_signed_out(client: Client) -> None:
     response = client.get("/")
     assert response.status_code == 200
     assert b"Get started" in response.content
+    assert b"<title>Ski bum</title>" in response.content
     # app.js drops the cached pages of whoever was signed in.
     assert b"data-forget-pages" in response.content
 
@@ -30,6 +31,7 @@ def test_manifest(client: Client) -> None:
     data = json.loads(client.get(reverse("core:manifest")).content)
     assert data["display"] == "standalone"
     assert data["start_url"] == "/map/"
+    assert data["name"] == data["short_name"] == "Ski bum"
 
 
 def test_service_worker(client: Client) -> None:

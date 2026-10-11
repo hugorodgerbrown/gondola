@@ -97,7 +97,7 @@ STORAGES = {
 }
 
 # The product name shown in the header, page titles and emails.
-SITE_NAME = config("SITE_NAME", default="Resort planner")
+SITE_NAME = config("SITE_NAME", default="Ski bum")
 # Absolute origin for links in emails sent outside a request (the evening
 # email runs from a scheduled command), e.g. https://planner.example.com
 SITE_URL = config("SITE_URL", default="http://localhost:8000")

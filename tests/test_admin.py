@@ -43,3 +43,11 @@ def test_admin_pages_render(
     for view in ("changelist", "add"):
         url = reverse(f"admin:{app_label}_{model_name}_{view}")
         assert staff_client.get(url).status_code == 200, url
+
+
+@pytest.mark.django_db
+def test_admin_carries_the_product_name(staff_client: Client) -> None:
+    """The admin header names the product, not Django."""
+    response = staff_client.get(reverse("admin:index"))
+    assert "Ski bum" in response.content.decode()
+    assert "Django administration" not in response.content.decode()
