@@ -11,7 +11,10 @@ from django.core.management import CommandError, call_command
 from apps.groups.management.commands.seed_ui_test import UNSAID
 from apps.groups.models import Group, MeetUp, PlanDay
 from apps.groups.services import plans
+from apps.groups.services.people import is_member
+from apps.groups.services.testers import get_testers_group
 from apps.resorts.services import import_sheets
+from tests.factories import UserFactory
 from tests.groups.conftest import Crew
 
 pytestmark = pytest.mark.django_db
@@ -119,14 +122,19 @@ def test_seed_ui_test_dry_run_prints_the_cases() -> None:
 
 def test_seed_ui_test_covers_every_case_and_reruns() -> None:
     import_sheets(commit=True)
+    me = UserFactory.create()
+    me.groups.add(get_testers_group())
+    out = StringIO()
     for _ in range(2):
-        call_command(
-            "seed_ui_test", "--commit", "--email", "Tess@Example.com", stdout=StringIO()
-        )
+        call_command("seed_ui_test", "--commit", stdout=out)
+    assert "Real accounts in Testers: 1" in out.getvalue()
     group = Group.objects.get(name="UI test")
     tester = group.owner
-    assert tester.email == "tess@example.com"
-    assert group.memberships.count() == 5
+    assert tester.email == "tess@ui-test.invalid"
+    # The five made up, plus the real account already in Testers.
+    assert group.memberships.count() == 6
+    assert is_member(group, me)
+    assert get_testers_group().user_set.count() == 6
     assert MeetUp.objects.filter(group=group).count() == 3
     mine = PlanDay.objects.filter(user=tester)
     pairs = {(plan.resort_id is not None, plan.skiing) for plan in mine}

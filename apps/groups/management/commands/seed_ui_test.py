@@ -15,10 +15,12 @@ and the board have to draw:
   one you haven't.
 
 A bare run prints the plan, day by day, without writing; ``--commit``
-writes it. Re-running rewrites everything from today, so the cases move
-with the calendar. Needs the resorts imported first. ``--email`` makes that
-address the tester, so you can sign in as them; the friends are
-``*@ui-test.invalid`` accounts that can't receive email.
+writes it. Re-running rewrites the made-up people's days from today, so the
+cases move with the calendar. Needs the resorts imported first.
+
+Everyone made up here is a ``*@ui-test.invalid`` account in the "Testers"
+auth group. A real account joins "UI test" by being added to Testers in
+the admin (see ``services/testers.py``), and keeps its own days.
 """
 
 from __future__ import annotations
@@ -31,14 +33,20 @@ from typing import Any
 from django.core.management.base import BaseCommand, CommandError, CommandParser
 from django.db import transaction
 
-from apps.accounts.models import User, normalise_email
-from apps.groups.models import Group, MeetUp, PlanDay
+from apps.accounts.models import User
+from apps.groups.models import MeetUp, PlanDay
 from apps.groups.services.meetups import join_meetup, propose_meetup
-from apps.groups.services.memberships import create_group, join_group
+from apps.groups.services.memberships import create_group
 from apps.groups.services.plans import set_plan, today
+from apps.groups.services.testers import (
+    MADE_UP_DOMAIN,
+    UI_TEST_GROUP,
+    get_testers_group,
+    sync_tester,
+    ui_test_group,
+)
 from apps.resorts.models import Resort
 
-GROUP_NAME = "UI test"
 TESTER = "Tess"
 FRIENDS = ["Anna", "Ben", "Chloé", "Dan"]
 RESORTS = {
@@ -173,13 +181,8 @@ class Command(BaseCommand):
     )
 
     def add_arguments(self, parser: CommandParser) -> None:
-        """Add --commit and --email."""
+        """Add --commit."""
         parser.add_argument("--commit", action="store_true", help="Write the data.")
-        parser.add_argument(
-            "--email",
-            default="tester@ui-test.invalid",
-            help="The tester's email: use one you can sign in with.",
-        )
 
     def handle(self, *args: Any, **options: Any) -> None:
         """Seed the group, or print what would be seeded."""
@@ -190,22 +193,24 @@ class Command(BaseCommand):
                 f"Missing resorts {sorted(missing)}: run import_resorts --commit first."
             )
         self.verbosity = options["verbosity"]
-        email = normalise_email(options["email"])
         first = today()
         runs = tester_runs(first)
         self._legend(runs, first)
         if not options["commit"]:
             if self.verbosity >= 1:
                 self.stdout.write(
-                    f"Would create {GROUP_NAME} with {email} as the tester and "
+                    f"Would create {UI_TEST_GROUP} with {TESTER} and "
                     f"{len(FRIENDS)} friends. Dry run. Re-run with --commit to save."
                 )
             return
         by_code = {code: resorts[name] for code, name in RESORTS.items()}
         with transaction.atomic():
-            self._seed(email, first, runs, by_code)
+            joined = self._seed(first, runs, by_code)
         if self.verbosity >= 1:
-            self.stdout.write(f"Seeded {GROUP_NAME}. Sign in as {email} to see it.")
+            self.stdout.write(
+                f"Seeded {UI_TEST_GROUP}. Real accounts in Testers: {joined}. "
+                "Add yourself to Testers in the admin to join it."
+            )
 
     def _legend(self, runs: list[Run], first: datetime.date) -> None:
         """Print each of the tester's days and the case it covers."""
@@ -234,22 +239,25 @@ class Command(BaseCommand):
 
     def _seed(
         self,
-        email: str,
         first: datetime.date,
         runs: list[Run],
         resorts: dict[str, Resort],
-    ) -> None:
-        """Write the people, the group, the meet-ups and every plan."""
-        tester = self._person(email, TESTER)
-        people = {"you": tester}
-        for name in FRIENDS:
+    ) -> int:
+        """Write the people, the group, the meet-ups and every plan.
+
+        Returns how many real accounts in Testers are members.
+        """
+        people = {}
+        for key, name in [("you", TESTER), *((f, f) for f in FRIENDS)]:
             slug = name.lower().replace("é", "e")
-            people[name] = self._person(f"{slug}@ui-test.invalid", name)
-        group = Group.objects.filter(owner=tester, name=GROUP_NAME).first()
-        if group is None:
-            group = create_group(tester, GROUP_NAME)
-        for person in people.values():
-            join_group(group, person)
+            people[key] = self._person(f"{slug}@{MADE_UP_DOMAIN}", name)
+        get_testers_group().user_set.add(*people.values())
+        group = ui_test_group() or create_group(people["you"], UI_TEST_GROUP)
+        made_up = {person.pk for person in people.values()}
+        real = 0
+        for user in get_testers_group().user_set.all():
+            sync_tester(user, group)
+            real += user.pk not in made_up
         # Start clean from today, so a re-run leaves no stray days behind.
         PlanDay.objects.filter(user__in=people.values(), date__gte=first).delete()
         MeetUp.objects.filter(group=group, date__gte=first).delete()
@@ -269,6 +277,7 @@ class Command(BaseCommand):
         for key, person_runs in everyone.items():
             for run in person_runs:
                 self._write(people[key], run, first, resorts)
+        return real
 
     def _write(
         self,
