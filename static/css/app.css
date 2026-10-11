@@ -17,6 +17,8 @@
   --rule-strong: rgba(0, 0, 0, 0.16);
   --accent: #2563eb;
   --accent-soft: rgba(37, 99, 235, 0.12);
+  /* Magic Pass resorts on the map: a violet square instead of a round pin. */
+  --pass-magic: #7c3aed;
   --danger: #b42318;
   --ok: #067647;
   --map-ground: #e9e7e1;
@@ -906,6 +908,107 @@ fieldset.field {
   color: #ffffff;
 }
 
+/* The chip's key to its pins: only passes with their own pin style have one. */
+.chip__swatch {
+  display: none;
+}
+
+.chip__swatch--pass-magic-pass {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  margin-right: 6px;
+  border-radius: 2px;
+  background: var(--pass-magic);
+  box-shadow: 0 0 0 1px #ffffff;
+}
+
+/* Resort search: a field over the map with suggestions under it. */
+.map-search {
+  position: relative;
+}
+
+.map-search__icon {
+  position: absolute;
+  z-index: 1;
+  left: 14px;
+  top: 12px;
+  width: 20px;
+  height: 20px;
+  color: var(--text-3);
+  pointer-events: none;
+}
+
+.map-search__icon svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.map-search__input {
+  width: 100%;
+  height: 44px;
+  padding: 0 14px 0 42px;
+  border-radius: 22px;
+  border: 0.5px solid var(--rule);
+  background: rgba(255, 255, 255, 0.94);
+  backdrop-filter: blur(12px);
+  box-shadow: var(--shadow-float);
+  font: 400 16px var(--font-sans);
+  color: var(--text-1);
+}
+
+.map-search__input:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.map-search__list {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  z-index: 6;
+  max-height: min(50vh, 360px);
+  overflow-y: auto;
+  margin: 0;
+  padding: 4px 0;
+  list-style: none;
+  background: var(--card);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-card);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.14);
+}
+
+.map-search__option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 44px;
+  padding: 0 14px;
+  cursor: pointer;
+}
+
+.map-search__option[aria-selected="true"] {
+  background: var(--sunk);
+}
+
+.map-search__name {
+  font-size: 15px;
+}
+
+.map-search__canton {
+  font: 500 11px var(--font-mono);
+  color: var(--text-3);
+}
+
+.map-search__empty {
+  padding: 12px 14px;
+  font-size: 14px;
+  color: var(--text-3);
+}
+
 .map-hint {
   align-self: flex-start;
   max-width: 300px;
@@ -974,6 +1077,33 @@ fieldset.field {
   color: #ffffff;
   font: 500 11px/20px var(--font-mono);
   text-align: center;
+}
+
+/* Magic Pass resorts: square and violet, so they read apart from the rest
+   at a glance. Square rather than only a colour, for colour-blind eyes. */
+.pin--pass-magic-pass .pin__dot {
+  border-radius: 3px;
+  border-color: #ffffff;
+  background: var(--pass-magic);
+  box-shadow: 0 0 0 1px var(--pass-magic);
+}
+
+.pin--pass-magic-pass.pin--friends .pin__dot {
+  border-color: var(--pass-magic);
+  background: #ffffff;
+  box-shadow: none;
+}
+
+.pin--pass-magic-pass.pin--mine .pin__dot {
+  background: var(--text-1);
+}
+
+.pin--pass-magic-pass .pin__name {
+  color: var(--pass-magic);
+}
+
+.pin--pass-magic-pass.pin--friends .pin__name {
+  color: var(--text-1);
 }
 
 .pin--meetup .pin__dot {

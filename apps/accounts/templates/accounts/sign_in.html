@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load static %}
 {% block title %}Sign in · {{ SITE_NAME }}{% endblock %}
 {% block content %}
   <div class="heading">
@@ -18,4 +19,17 @@
     </div>
     <button type="submit" class="button button--block">Email me a link</button>
   </form>
+  {# Shown by passkeys.js only where the browser supports passkeys. #}
+  <section class="card card--padded" data-passkey-sign-in
+           data-options-url="{% url 'accounts:passkey_sign_in_options' %}"
+           data-verify-url="{% url 'accounts:passkey_sign_in' %}"
+           data-next="{{ next_url }}" hidden>
+    <span class="eyebrow">Have a passkey?</span>
+    <button type="button" class="button button--secondary button--block" data-passkey-button>Sign in with a passkey</button>
+    <p class="errors" data-passkey-error role="alert" hidden></p>
+  </section>
+{% endblock %}
+{% block scripts %}
+  <script src="{% static 'js/webauthn_json.js' %}"></script>
+  <script src="{% static 'js/passkeys.js' %}"></script>
 {% endblock %}

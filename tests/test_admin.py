@@ -8,6 +8,7 @@ from django.urls import reverse
 from tests.factories import (
     MeetUpParticipantFactory,
     MembershipFactory,
+    PasskeyFactory,
     PlanDayFactory,
     UserFactory,
 )
@@ -26,11 +27,12 @@ def staff_client(client: Client) -> Client:
     MembershipFactory.create()
     PlanDayFactory.create()
     MeetUpParticipantFactory.create()
+    PasskeyFactory.create()
     return client
 
 
 def test_every_app_model_is_registered() -> None:
-    assert len(MODELS) == 8
+    assert len(MODELS) == 9
 
 
 @pytest.mark.django_db

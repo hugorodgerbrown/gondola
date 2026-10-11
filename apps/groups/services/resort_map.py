@@ -40,7 +40,7 @@ def map_pins(
     ).values_list("resort_id", flat=True)
     mine_ids = set(mine)
     keep = set(counts) | meetups | mine_ids
-    resorts = Resort.objects.placed()
+    resorts = Resort.objects.placed().prefetch_related("passes")
     on_pass: set[int] | None = None
     if pass_slug:
         on_pass = set(resorts.on_pass(pass_slug).values_list("id", flat=True))
@@ -58,9 +58,25 @@ def map_pins(
                 "friends": counts.get(resort.pk, 0),
                 "meetup": resort.pk in meetups,
                 "mine": resort.pk in mine_ids,
+                "passes": sorted(p.slug for p in resort.passes.all()),
             }
         )
     return pins
+
+
+def resort_index() -> list[dict[str, object]]:
+    """Return every placed resort, for the map's search box to match against."""
+    return [
+        {
+            "id": str(resort.uuid),
+            "name": resort.name,
+            "code": resort.code,
+            "canton": resort.canton,
+            "lng": resort.longitude,
+            "lat": resort.latitude,
+        }
+        for resort in Resort.objects.placed()
+    ]
 
 
 @dataclass

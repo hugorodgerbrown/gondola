@@ -23,7 +23,7 @@ from apps.resorts.models import Pass, Resort
 
 from ..models import Group, PlanDay
 from ..services.plans import is_plannable, set_plan, today
-from ..services.resort_map import map_pins, resort_day
+from ..services.resort_map import map_pins, resort_day, resort_index
 from .helpers import current_user, parse_day
 
 
@@ -47,6 +47,7 @@ def map_page(request: HttpRequest) -> HttpResponse:
             "has_groups": Group.objects.for_user(current_user(request)).exists(),
             "map_style_url": settings.MAP_STYLE_URL,
             "sheet_url_template": _sheet_url_template(),
+            "resort_index": resort_index(),
         },
     )
 
