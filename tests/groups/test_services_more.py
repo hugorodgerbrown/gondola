@@ -13,14 +13,14 @@ from tests.factories import PassFactory, ResortFactory
 from tests.groups.conftest import Crew
 
 pytestmark = pytest.mark.django_db
-S = PlanDay.Status
+S = PlanDay.Skiing
 
 
 # --- meetups --------------------------------------------------------------------
 
 
 def test_propose_sets_organiser_day(crew: Crew) -> None:
-    plans.set_plan(crew.sam, crew.day, S.RESORT, resort=crew.verbier, note="kids")
+    plans.set_plan(crew.sam, crew.day, S.YES, resort=crew.verbier, note="kids")
     meetup = meetups.propose_meetup(
         crew.group, crew.sam, crew.day, crew.verbier, start_time=datetime.time(9)
     )
@@ -40,7 +40,7 @@ def test_propose_refuses_bad_input(crew: Crew) -> None:
 
 
 def test_join_meetup_adds_to_group_and_sets_day(crew: Crew) -> None:
-    plans.set_plan(crew.outsider, crew.day, S.RESORT, resort=crew.zermatt, note="x")
+    plans.set_plan(crew.outsider, crew.day, S.YES, resort=crew.zermatt, note="x")
     meetup = meetups.propose_meetup(crew.group, crew.sam, crew.day, crew.verbier)
     assert meetups.join_meetup(meetup, crew.outsider) is True
     assert meetups.join_meetup(meetup, crew.outsider) is False
@@ -56,7 +56,7 @@ def test_one_meetup_per_group_day(crew: Crew) -> None:
 
 
 def test_meetup_keeps_a_private_day_private(crew: Crew) -> None:
-    plans.set_plan(crew.sam, crew.day, S.RESORT, resort=crew.zermatt, is_private=True)
+    plans.set_plan(crew.sam, crew.day, S.YES, resort=crew.zermatt, is_private=True)
     plans.set_plan(crew.anna, crew.day, S.NOT_SURE, is_private=True)
     meetup = meetups.propose_meetup(crew.group, crew.sam, crew.day, crew.verbier)
     meetups.join_meetup(meetup, crew.anna)
@@ -97,8 +97,8 @@ def test_map_pins_and_pass_filter(crew: Crew) -> None:
     magic = PassFactory.create(slug="magic-pass")
     crew.verbier.passes.add(magic)
     hidden = ResortFactory.create(name="Unplaced", latitude=None, longitude=None)
-    plans.set_plan(crew.anna, crew.day, S.RESORT, resort=crew.zermatt)
-    plans.set_plan(crew.sam, crew.day, S.RESORT, resort=crew.verbier)
+    plans.set_plan(crew.anna, crew.day, S.YES, resort=crew.zermatt)
+    plans.set_plan(crew.sam, crew.day, S.YES, resort=crew.verbier)
     meetups.propose_meetup(crew.group, crew.ben, crew.day, crew.zermatt)
     pins = {p["name"]: p for p in resort_map.map_pins(crew.sam, crew.day)}
     assert hidden.name not in pins
@@ -115,16 +115,14 @@ def test_map_pins_and_pass_filter(crew: Crew) -> None:
 def test_resort_day(crew: Crew) -> None:
     second = create_group(crew.anna, "Uni friends")
     join_group(second, crew.sam)
-    plans.set_plan(
-        crew.anna, crew.day, S.RESORT, resort=crew.verbier, note="first lift"
-    )
-    plans.set_plan(crew.ben, crew.day, S.RESORT, resort=crew.verbier)
+    plans.set_plan(crew.anna, crew.day, S.YES, resort=crew.verbier, note="first lift")
+    plans.set_plan(crew.ben, crew.day, S.YES, resort=crew.verbier)
     plans.set_plan(crew.sam, crew.day, S.NOT_SURE)
     meetups.propose_meetup(crew.group, crew.ben, crew.day, crew.verbier)
     info = resort_map.resort_day(crew.sam, crew.verbier, crew.day)
     assert [g.group.name for g in info.groups] == ["Thursday crew", "Uni friends"]
     assert info.friend_count == 2
-    assert info.my_plan is not None and info.my_plan.status == S.NOT_SURE
+    assert info.my_plan is not None and info.my_plan.skiing == S.NOT_SURE
     assert len(info.meetups) == 1
 
 
@@ -132,16 +130,16 @@ def test_resort_day(crew: Crew) -> None:
 
 
 def test_digest_and_send(crew: Crew) -> None:
-    plans.set_plan(crew.sam, crew.day, S.RESORT, resort=crew.verbier, is_private=True)
-    plans.set_plan(crew.anna, crew.day, S.RESORT, resort=crew.verbier)
-    plans.set_plan(crew.ben, crew.day, S.RESORT, resort=crew.zermatt)
+    plans.set_plan(crew.sam, crew.day, S.YES, resort=crew.verbier, is_private=True)
+    plans.set_plan(crew.anna, crew.day, S.YES, resort=crew.verbier)
+    plans.set_plan(crew.ben, crew.day, S.NO, resort=crew.zermatt)
     meetup = meetups.propose_meetup(crew.group, crew.anna, crew.day, crew.verbier)
     assert crew.sam in evening.recipients(crew.day)
     digest = evening.build_digest(crew.sam, crew.day)
     assert not digest.is_empty
     assert digest.subject == "Tomorrow: meet-up at Verbier, 1 going"
     lines = {line.resort_name: line.people for line in digest.groups[0].lines}
-    assert lines == {"Verbier": "Anna and you", "Zermatt": "Ben"}
+    assert lines == {"Verbier": "Anna and you", "Zermatt": "Ben (around)"}
     assert not digest.meetups[0].is_going
     evening.send_digest(digest)
     sent = mail.outbox[0]
@@ -151,7 +149,7 @@ def test_digest_and_send(crew: Crew) -> None:
 
 
 def test_digest_without_news(crew: Crew) -> None:
-    plans.set_plan(crew.sam, crew.day, S.NOT_SKIING)
+    plans.set_plan(crew.sam, crew.day, S.NO)
     digest = evening.build_digest(crew.sam, crew.day)
     assert digest.is_empty
     assert digest.subject == "Tomorrow: who's where"

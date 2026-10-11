@@ -4,7 +4,7 @@
  * A button marked ``data-calendar`` opens it. The button carries the day it
  * shows (``data-value``), the first and last days that can be picked
  * (``data-min``, ``data-max``) and the id of a json_script holding your own
- * plans (``data-marks``: {"2026-12-13": "resort", …}), which draw as dots so
+ * plans (``data-marks``: {"2026-12-13": "skiing", …}), which draw as dots so
  * Dec and Jan can be read at a glance.
  *
  * With ``data-navigate="?from=DATE"`` picking a day goes to that address.
@@ -20,7 +20,7 @@
   "use strict";
 
   const MARK_LABELS = {
-    resort: "skiing",
+    skiing: "skiing",
     not_sure: "not sure yet",
     not_skiing: "not skiing",
   };

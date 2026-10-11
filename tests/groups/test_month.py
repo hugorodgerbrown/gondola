@@ -12,7 +12,7 @@ from tests.factories import UserFactory
 from tests.groups.conftest import Crew
 
 pytestmark = pytest.mark.django_db
-S = PlanDay.Status
+S = PlanDay.Skiing
 
 
 def days_of(cal: month.Month) -> dict[datetime.date, month.MonthDay]:
@@ -47,24 +47,24 @@ def test_month_has_monday_weeks_and_stays_plannable(crew: Crew) -> None:
 @freeze_time("2026-10-11 09:00:00+02:00")
 def test_month_day_shows_plan_and_group_activity(crew: Crew) -> None:
     day = datetime.date(2026, 12, 20)
-    plans.set_plan(crew.sam, day, S.RESORT, resort=crew.verbier)
-    plans.set_plan(crew.anna, day, S.RESORT, resort=crew.verbier)
-    plans.set_plan(crew.ben, day, S.RESORT, resort=crew.zermatt)
+    plans.set_plan(crew.sam, day, S.YES, resort=crew.verbier)
+    plans.set_plan(crew.anna, day, S.YES, resort=crew.verbier)
+    plans.set_plan(crew.ben, day, S.YES, resort=crew.zermatt)
     # Private days and people outside the group don't count.
     dana = UserFactory.create(display_name="Dana")
     join_group(crew.group, dana)
-    plans.set_plan(dana, day, S.RESORT, resort=crew.verbier, is_private=True)
-    plans.set_plan(crew.outsider, day, S.RESORT, resort=crew.verbier)
+    plans.set_plan(dana, day, S.YES, resort=crew.verbier, is_private=True)
+    plans.set_plan(crew.outsider, day, S.YES, resort=crew.verbier)
     meetups.propose_meetup(crew.group, crew.anna, day, crew.verbier)
 
     entry = days_of(month.build_month(crew.sam, day))[day]
     assert entry.plan is not None and entry.plan.resort == crew.verbier
     assert entry.friends == ["Anna", "Ben"]
-    assert entry.friends_skiing == 2
+    assert entry.friends_out == 2
     assert entry.with_me == 1
     assert entry.meetup is not None and entry.meetup.resort == crew.verbier
     assert entry.summary == (
-        "Sunday 20 December, Verbier, skiing: Anna and Ben, 1 with you, "
+        "Sunday 20 December, Verbier, friends at resorts: Anna and Ben, 1 with you, "
         "meet-up at Verbier"
     )
 

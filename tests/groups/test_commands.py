@@ -14,14 +14,14 @@ from apps.resorts.services import import_sheets
 from tests.groups.conftest import Crew
 
 pytestmark = pytest.mark.django_db
-S = PlanDay.Status
+S = PlanDay.Skiing
 
 
 def _tomorrow_plans(crew: Crew) -> datetime.date:
     tomorrow = plans.today() + datetime.timedelta(days=1)
-    plans.set_plan(crew.sam, tomorrow, S.RESORT, resort=crew.verbier)
-    plans.set_plan(crew.anna, tomorrow, S.RESORT, resort=crew.verbier)
-    plans.set_plan(crew.ben, tomorrow, S.NOT_SKIING)
+    plans.set_plan(crew.sam, tomorrow, S.YES, resort=crew.verbier)
+    plans.set_plan(crew.anna, tomorrow, S.YES, resort=crew.verbier)
+    plans.set_plan(crew.ben, tomorrow, S.NO)
     return tomorrow
 
 
@@ -94,5 +94,5 @@ def test_seed_demo_dry_run_then_commit_twice() -> None:
     assert group.owner.email == "me@example.com"
     assert group.memberships.count() == 6
     assert MeetUp.objects.get().participants.count() == 3
-    assert PlanDay.objects.filter(status=S.NOT_SURE).exists()
+    assert PlanDay.objects.filter(skiing=S.NOT_SURE).exists()
     assert PlanDay.objects.filter(is_private=True).count() == 1

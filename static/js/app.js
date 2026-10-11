@@ -5,7 +5,9 @@
  * a close button or a tap on the backdrop, and wires share buttons to the
  * phone's share sheet (falling back to copying the link). Before a sign-out
  * (or account deletion) form posts, drops the pages the service worker
- * cached, so the next person on this device can't open them offline. The
+ * cached, so the next person on this device can't open them offline. In
+ * a day sheet over several days, changing an answer that differed across
+ * them drops its "keep as is" flag. The
  * signed-out front page drops them again, which covers a sign-out posted
  * from a page loaded before this script had the handler. ``onSwipe`` turns
  * a sideways swipe into "previous" or "next", for the month calendars.
@@ -46,31 +48,28 @@
     }
   });
 
-  // Day sheet: the resort picker only matters when the day is "Skiing".
-  function syncResortPicker(form) {
-    const picker = form.querySelector("[data-resort-picker]");
-    const checked = form.querySelector("[data-status]:checked");
-    if (picker && checked) {
-      picker.hidden = checked.value !== "resort";
+  // Day sheet over several days: a note or privacy that differs across
+  // them is kept unless changed. Changing it drops the "keep" flag.
+  function dropKeep(event) {
+    const form = event.target.closest("[data-day-form]");
+    if (!form || !event.target.name) {
+      return;
+    }
+    const keep = form.querySelector('[data-keep-for="' + event.target.name + '"]');
+    if (keep) {
+      keep.remove();
     }
   }
 
-  document.addEventListener("change", function (event) {
-    const form = event.target.closest("[data-day-form]");
-    if (form && event.target.matches("[data-status]")) {
-      syncResortPicker(form);
-    }
-  });
+  document.addEventListener("input", dropKeep);
+  document.addEventListener("change", dropKeep);
 
   document.addEventListener("htmx:afterSwap", function (event) {
     const target = event.detail.target;
     if (target && target.id === "resort-results") {
       target.hidden = target.innerHTML.trim() === "";
     }
-    document.querySelectorAll("[data-day-form]").forEach(syncResortPicker);
   });
-
-  document.querySelectorAll("[data-day-form]").forEach(syncResortPicker);
 
   if (sheet) {
     // A click on the dialog itself (not its contents) is the backdrop.

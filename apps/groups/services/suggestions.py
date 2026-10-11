@@ -1,10 +1,11 @@
 """
 apps/groups/services/suggestions.py — Rank resorts for a meet-up.
 
-Resorts are ranked by how many of the group are already planned there,
-ties broken by how few people would have to change plan (members with a
-different resort that day). "Not sure yet", "not skiing" and unsaid days
-never count as a move. Private days count as unsaid.
+Resorts are ranked by how many of the group are already skiing there,
+ties broken by how few people would have to change plan (members skiing
+somewhere else that day). Friends who are around a resort but not (or
+not surely) skiing don't pick the meeting place; nor do unsaid days.
+Private days count as unsaid.
 """
 
 from __future__ import annotations
@@ -39,15 +40,17 @@ def suggest_resorts(group: Group, day: datetime.date, viewer: User) -> list[Sugg
         PlanDay.objects.filter(
             user__group_memberships__group=group,
             date=day,
-            status=PlanDay.Status.RESORT,
         )
+        .skiing()
         .filter(is_private=False)
         .select_related("user", "resort")
     )
     # The viewer's own private day still counts for the viewer.
-    own = PlanDay.objects.filter(
-        user=viewer, date=day, status=PlanDay.Status.RESORT, is_private=True
-    ).select_related("user", "resort")
+    own = (
+        PlanDay.objects.filter(user=viewer, date=day, is_private=True)
+        .skiing()
+        .select_related("user", "resort")
+    )
     plans.extend(own)
     by_resort: dict[int, tuple[Resort, list[User]]] = {}
     for plan in plans:

@@ -3,8 +3,9 @@ apps/groups/services/resort_map.py — What the map shows for a day.
 
 Every placed resort is a pin; a pass filter narrows them to that pass's
 resorts, but a resort with a friend, a meet-up or your own plan that day
-always stays on the map. ``resort_day`` is what the resort sheet shows:
-who from each of your groups is there, and any meet-up.
+always stays on the map. A pin counts every friend there, skiing or just
+around. ``resort_day`` is what the resort sheet shows: who from each of
+your groups is there (and who isn't skiing), and any meet-up.
 """
 
 from __future__ import annotations
@@ -35,9 +36,11 @@ def map_pins(
     """Return one pin per placed resort, as plain data for the map script."""
     counts = friend_counts(viewer, day)
     meetups = _meetup_resort_ids(viewer, day)
-    mine = PlanDay.objects.filter(
-        user=viewer, date=day, status=PlanDay.Status.RESORT
-    ).values_list("resort_id", flat=True)
+    mine = (
+        PlanDay.objects.filter(user=viewer, date=day)
+        .at_resorts()
+        .values_list("resort_id", flat=True)
+    )
     mine_ids = set(mine)
     keep = set(counts) | meetups | mine_ids
     resorts = Resort.objects.placed().prefetch_related("passes")
@@ -105,11 +108,7 @@ class ResortDay:
 
 def resort_day(viewer: User, resort: Resort, day: datetime.date) -> ResortDay:
     """Return who from the viewer's groups is at ``resort`` on ``day``."""
-    plans = list(
-        visible_friend_plans(viewer, [day]).filter(
-            resort=resort, status=PlanDay.Status.RESORT
-        )
-    )
+    plans = list(visible_friend_plans(viewer, [day]).filter(resort=resort))
     groups = []
     for group in Group.objects.for_user(viewer).order_by("name"):
         member_ids = set(group.memberships.values_list("user_id", flat=True))
