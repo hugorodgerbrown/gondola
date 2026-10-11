@@ -24,7 +24,7 @@
     {% endif %}
   </nav>
 
-  <div class="month card" role="group" aria-label="{{ month.first|date:'F Y' }}">
+  <div class="month card" role="group" aria-label="{{ month.first|date:'F Y' }}"{% if month.previous %} data-swipe-previous="?from={{ month.previous|date:'Y-m-d' }}"{% endif %}{% if month.next %} data-swipe-next="?from={{ month.next|date:'Y-m-d' }}"{% endif %}>
     <div class="month__week month__week--head" aria-hidden="true">
       {% for name in "MTWTFSS" %}<span class="month__weekday">{{ name }}</span>{% endfor %}
     </div>

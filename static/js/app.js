@@ -7,7 +7,8 @@
  * (or account deletion) form posts, drops the pages the service worker
  * cached, so the next person on this device can't open them offline. The
  * signed-out front page drops them again, which covers a sign-out posted
- * from a page loaded before this script had the handler.
+ * from a page loaded before this script had the handler. ``onSwipe`` turns
+ * a sideways swipe into "previous" or "next", for the month calendars.
  */
 (function () {
   "use strict";
@@ -147,6 +148,55 @@
   if (document.querySelector("[data-forget-pages]") && navigator.onLine) {
     forgetPages().catch(function () {});
   }
+
+  // A sideways swipe on ``element``: onNext for right-to-left, onPrevious
+  // for left-to-right. Mostly-vertical moves are left to scrolling, and the
+  // click a mouse drag would end in is swallowed.
+  const SWIPE_MIN_PX = 48;
+  const SWIPE_MAX_MS = 800;
+
+  function onSwipe(element, onPrevious, onNext) {
+    let start = null;
+    let swiped = false;
+    element.style.touchAction = "pan-y";
+    element.addEventListener("pointerdown", function (event) {
+      if (event.isPrimary) start = { x: event.clientX, y: event.clientY, t: event.timeStamp };
+    });
+    element.addEventListener("pointercancel", function () { start = null; });
+    // A mouse drag on a day's link would start dragging the link instead.
+    element.addEventListener("dragstart", function (event) { event.preventDefault(); });
+    element.addEventListener("pointerup", function (event) {
+      if (!start || !event.isPrimary) return;
+      const dx = event.clientX - start.x;
+      const dy = event.clientY - start.y;
+      const quick = event.timeStamp - start.t < SWIPE_MAX_MS;
+      start = null;
+      if (!quick || Math.abs(dx) < SWIPE_MIN_PX || Math.abs(dx) < Math.abs(dy) * 1.5) return;
+      // A click, if any, follows straight after; it isn't a tap on a day.
+      swiped = true;
+      setTimeout(function () { swiped = false; }, 0);
+      (dx < 0 ? onNext : onPrevious)();
+    });
+    element.addEventListener("click", function (event) {
+      if (swiped) {
+        event.preventDefault();
+        event.stopPropagation();
+      }
+    }, true);
+  }
+  window.onSwipe = onSwipe;
+
+  // My days: swipe between months, as the arrows do.
+  document.querySelectorAll("[data-swipe-previous], [data-swipe-next]").forEach(function (element) {
+    function go(url) {
+      if (url) location.href = url;
+    }
+    onSwipe(
+      element,
+      function () { go(element.dataset.swipePrevious); },
+      function () { go(element.dataset.swipeNext); }
+    );
+  });
 
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", function () {
