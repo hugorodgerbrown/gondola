@@ -5,8 +5,8 @@ My days is a month calendar, this month by default; arrows step a month
 (``?from=``, any day in it) as far as plans can be made. Each day shows
 what you said about it and what your groups are up to: friends at a
 resort, friends at yours, and a meet-up. Chips above it highlight one
-resort (``?highlight=``): the days anyone is there stand out, and a list
-below says who is there and when. Tapping a day opens a sheet with
+resort (``?highlight=``): the days anyone is there stand out, and the
+friends badge counts only the people there. Tapping a day opens a sheet with
 two separate answers: where you'll be (the resorts friends picked first,
 then a search over every resort, or no resort) and whether you're skiing
 (yes, not sure yet, no); then an optional note, and a switch to keep the
@@ -36,7 +36,7 @@ from apps.resorts.search import search_resorts
 
 from ..forms import KEEP_RESORT, DayForm
 from ..models import Group, PlanDay
-from ..services.highlight import resorts_in_play, visitors
+from ..services.highlight import resorts_in_play
 from ..services.meetups import meetups_for
 from ..services.month import build_month, month_dates, month_start
 from ..services.plans import (
@@ -61,8 +61,7 @@ def my_days(request: HttpRequest) -> HttpResponse:
     user = current_user(request)
     highlight = _highlight(request)
     month = build_month(user, parse_day(request.GET.get("from")), highlight)
-    dates = month_dates(month.first)
-    resorts = resorts_in_play(user, dates)
+    resorts = resorts_in_play(user, month_dates(month.first))
     if highlight is not None and highlight not in resorts:
         resorts.insert(0, highlight)
     window_from = _later_month(month.first)
@@ -80,7 +79,6 @@ def my_days(request: HttpRequest) -> HttpResponse:
             "max_selected": MAX_SELECTED_DAYS,
             "resorts": resorts,
             "highlight": highlight,
-            "visitors": visitors(user, highlight, dates) if highlight else [],
         },
     )
 

@@ -92,7 +92,7 @@ def test_plain_forms_keep_the_month(sam: Client, crew: Crew) -> None:
 
 
 def test_my_days_highlights_a_resort(sam: Client, crew: Crew) -> None:
-    """Chips list the month's resorts; one picked lights its days and says who."""
+    """Chips list the month's resorts; one picked lights the days someone is there."""
     far = plans.today() + datetime.timedelta(days=60)
     first = far.replace(day=1).isoformat()
     plans.set_plan(crew.anna, far, S.YES, resort=crew.verbier)
@@ -108,8 +108,7 @@ def test_my_days_highlights_a_resort(sam: Client, crew: Crew) -> None:
     lit = sam.get(url, {"from": first, "highlight": str(crew.verbier.uuid)})
     assert lit.context["highlight"] == crew.verbier
     assert b"month--highlight" in lit.content and b"mday--lit" in lit.content
-    assert b"Verbier in " in lit.content
-    assert [v.person for v in lit.context["visitors"]] == [crew.anna]
+    assert b"Verbier in " not in lit.content  # no who's-there card
     # The picked chip clears it; the arrows, day links and selection keep it.
     assert f'aria-current="true" href="?from={first}"'.encode() in lit.content
     back = f"from={first}&amp;highlight={crew.verbier.uuid}"
@@ -122,8 +121,8 @@ def test_my_days_highlights_a_resort(sam: Client, crew: Crew) -> None:
 def test_a_highlight_nobody_is_at_still_shows(sam: Client, crew: Crew) -> None:
     page = sam.get(reverse("planning:my_days"), {"highlight": str(crew.zermatt.uuid)})
     assert page.context["resorts"] == [crew.zermatt]
-    assert page.context["visitors"] == []
-    assert b"Nobody has said they'll be in Zermatt" in page.content
+    assert b"month--highlight" in page.content
+    assert b"mday--lit" not in page.content
 
 
 @pytest.mark.parametrize("value", ["nope", "00000000-0000-0000-0000-000000000000"])

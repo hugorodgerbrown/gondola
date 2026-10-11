@@ -89,24 +89,6 @@
 
   <p class="small muted month-hint">Press and hold a day to select several.</p>
 
-  {% if highlight %}
-    <section class="card card--padded visitors" aria-labelledby="visitors-title">
-      <h2 class="visitors__title" id="visitors-title">{{ highlight.name }} in {{ month.first|date:"F" }}</h2>
-      {% if visitors %}
-        <ul class="visitors__list">
-          {% for visitor in visitors %}
-            <li class="visitors__row">
-              <strong class="visitors__name{% if visitor.is_me %} visitors__name--me{% endif %}">{% if visitor.is_me %}You{% else %}{{ visitor.person }}{% endif %}</strong>
-              <span class="visitors__stays">{% for stay in visitor.stays %}{% if not forloop.first %}, {% endif %}{{ stay }}{% endfor %}</span>
-            </li>
-          {% endfor %}
-        </ul>
-      {% else %}
-        <p class="small muted">Nobody has said they'll be in {{ highlight.name }} in {{ month.first|date:"F" }}.</p>
-      {% endif %}
-    </section>
-  {% endif %}
-
   <div class="select-bar" data-select-bar role="region" aria-label="Selected days" hidden>
     <button type="button" class="button button--secondary button--small" data-select-cancel>Cancel</button>
     <span class="select-bar__count" data-select-count aria-live="polite"></span>

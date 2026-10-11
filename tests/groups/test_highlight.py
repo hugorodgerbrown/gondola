@@ -1,4 +1,4 @@
-"""Tests for apps/groups/services/highlight.py: one resort on My days."""
+"""Tests for one resort highlighted on My days (services/highlight.py, month.py)."""
 
 import datetime
 
@@ -37,33 +37,6 @@ def test_resorts_in_play_are_busiest_first(crew: Crew) -> None:
     plans.set_plan(lone, dec(7), S.YES, resort=hidden)
     plans.set_plan(crew.ben, dec(8), S.YES)
     assert highlight.resorts_in_play(crew.sam, DEC) == [crew.verbier, crew.zermatt]
-
-
-@freeze_time("2026-10-11 09:00:00+02:00")
-def test_visitors_you_first_then_most_days(crew: Crew) -> None:
-    plans.set_plan(crew.sam, dec(20), S.YES, resort=crew.verbier)
-    # Anna: a run that is skiing on one day, then a day around on its own.
-    plans.set_plan(crew.anna, dec(1), S.NO, resort=crew.verbier)
-    plans.set_plan(crew.anna, dec(2), S.YES, resort=crew.verbier)
-    plans.set_plan(crew.anna, dec(3), S.NOT_SURE, resort=crew.verbier)
-    plans.set_plan(crew.anna, dec(9), S.NO, resort=crew.verbier)
-    # Ben: elsewhere, and a private day at Verbier, so not there at all.
-    plans.set_plan(crew.ben, dec(1), S.YES, resort=crew.zermatt)
-    plans.set_plan(crew.ben, dec(2), S.YES, resort=crew.verbier, is_private=True)
-
-    found = highlight.visitors(crew.sam, crew.verbier, DEC)
-    assert [(v.person, v.is_me, v.days) for v in found] == [
-        (crew.sam, True, 1),
-        (crew.anna, False, 4),
-    ]
-    assert [str(stay) for stay in found[1].stays] == ["1–3 Dec", "9 Dec (around)"]
-    assert highlight.visitors(crew.sam, crew.zermatt, DEC)[0].person == crew.ben
-
-
-def test_a_stay_across_a_month_end() -> None:
-    stay = highlight.Stay(datetime.date(2026, 12, 30), datetime.date(2027, 1, 2), False)
-    assert stay.to_string() == "30 Dec – 2 Jan (around)"
-    assert stay.days == 4
 
 
 @freeze_time("2026-10-11 09:00:00+02:00")
