@@ -41,11 +41,10 @@ email; add `--commit` to send.
 
 ## Deploying
 
-`render.yaml` is a Render blueprint in the shape the Titan provisioner
-expects: the `resort-planner` web service and a daily `resort-planner-purge`
-job that clears expired sessions. The app uses the existing `shared-db`
+`render.yaml` is a Render blueprint for the `resort-planner` web service,
+and has no scheduled jobs for now. The app uses the existing `shared-db`
 Postgres instance, in a role and database of its own (`resort_planner`).
-There is no scheduled evening email: send it by hand with
+Send the evening email by hand with
 `send_evening_emails --commit` from a Render shell. Migrations and the
 resort import run before each deploy; `/livez` is Render's health check and
 `/healthz` also reads the database.
@@ -63,9 +62,10 @@ bin/titan golive resort-planner --commit               # waits for DNS, sets SIT
 ```
 
 The repository already exists, so `new` skips generating it. It keeps the
-existing database and its password, and only fills in what is missing. It
-stops once if `resort-planner-purge` does not exist yet: apply the
-blueprint (Render, Blueprints, Manual sync) and run it again. The settings
+existing database and its password, and only fills in what is missing.
+`bin/titan` also expects a `resort-planner-purge` cron job, which this app
+leaves out on purpose; it needs to treat that job as optional before it can
+run here. The settings
 read Titan's `DJANGO_SECRET_KEY`, `DJANGO_ALLOWED_HOSTS` and `DJANGO_DEBUG`
 as well as the bare names the first deployment used, and the host in
 `SITE_URL` is always allowed.

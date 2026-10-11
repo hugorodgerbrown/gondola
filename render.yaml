@@ -1,10 +1,9 @@
-# render.yaml — Render blueprint, in the shape bin/titan (the Titan
-# provisioner in django-titan-template) expects: a web service named after
-# the app and a daily clean-up cron job named <app>-purge.
+# render.yaml — Render blueprint: one web service, named after the app as
+# bin/titan (the Titan provisioner in django-titan-template) expects.
 #
 # It uses the existing shared-db Postgres instance rather than a database of
-# its own. The evening email is not scheduled: run `send_evening_emails
-# --commit` by hand (Render shell) when wanted.
+# its own, and there are no scheduled jobs for now (so no <app>-purge cron
+# job): run `send_evening_emails --commit` by hand (Render shell) when wanted.
 #
 # DATABASE_URL points at a database of the app's own on shared-db (e.g.
 # .../resort_planner), never at another app's database: Django's tables
@@ -70,17 +69,3 @@ services:
       - key: DEFAULT_FROM_EMAIL
         sync: false
 
-  # Deletes expired sessions once a day. bin/titan copies DATABASE_URL to it
-  # from the web service.
-  - type: cron
-    name: resort-planner-purge
-    runtime: python
-    plan: starter
-    region: frankfurt
-    schedule: "17 3 * * *"
-    buildCommand: pip install uv && uv sync --frozen --no-dev
-    startCommand: uv run --no-sync python manage.py clearsessions
-    envVars:
-      - fromGroup: resort-planner
-      - key: DATABASE_URL
-        sync: false
