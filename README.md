@@ -63,9 +63,8 @@ bin/titan golive resort-planner --commit               # waits for DNS, sets SIT
 
 The repository already exists, so `new` skips generating it. It keeps the
 existing database and its password, and only fills in what is missing.
-`bin/titan` also expects a `resort-planner-purge` cron job, which this app
-leaves out on purpose; it needs to treat that job as optional before it can
-run here. The settings
+There is no `resort-planner-purge` cron job, so `bin/titan` provisions the
+web service alone. The settings
 read Titan's `DJANGO_SECRET_KEY`, `DJANGO_ALLOWED_HOSTS` and `DJANGO_DEBUG`
 as well as the bare names the first deployment used, and the host in
 `SITE_URL` is always allowed.
