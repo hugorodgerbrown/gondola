@@ -28,6 +28,7 @@ uv sync
 uv run python manage.py migrate
 uv run python manage.py import_resorts --commit             # resorts and passes
 uv run python manage.py seed_demo --commit --email you@example.com  # a busy demo group
+uv run python manage.py seed_ui_test --commit  # "UI test"; join via Testers in the admin
 uv run python manage.py runserver
 ```
 
@@ -73,7 +74,8 @@ apps/accounts/     User, emailed sign-in links, the account page
 apps/resorts/      Pass, Resort, the resort sheets, import_resorts, search
 apps/groups/       Group, Membership, PlanDay, MeetUp, MeetUpParticipant;
                    services/ (plans, board, suggestions, meet-ups, map,
-                   evening email), views/, send_evening_emails, seed_demo
+                   evening email), views/, send_evening_emails, seed_demo,
+                   seed_ui_test
 templates/         base.html and shared includes
 static/            app.css, app.js, map.js, vendored htmx and MapLibre
 tests/             mirrors apps/
