@@ -1,4 +1,4 @@
-"""Tests for the send_evening_emails and seed_demo commands."""
+"""Tests for the send_evening_emails, seed_demo and seed_ui_test commands."""
 
 import datetime
 from io import StringIO
@@ -8,6 +8,7 @@ import pytest
 from django.core import mail
 from django.core.management import CommandError, call_command
 
+from apps.groups.management.commands.seed_ui_test import UNSAID
 from apps.groups.models import Group, MeetUp, PlanDay
 from apps.groups.services import plans
 from apps.resorts.services import import_sheets
@@ -96,3 +97,51 @@ def test_seed_demo_dry_run_then_commit_twice() -> None:
     assert MeetUp.objects.get().participants.count() == 3
     assert PlanDay.objects.filter(skiing=S.NOT_SURE).exists()
     assert PlanDay.objects.filter(is_private=True).count() == 1
+
+
+def test_seed_ui_test_needs_resorts() -> None:
+    with pytest.raises(CommandError, match="import_resorts"):
+        call_command("seed_ui_test", stdout=StringIO())
+
+
+def test_seed_ui_test_dry_run_prints_the_cases() -> None:
+    import_sheets(commit=True)
+    out = StringIO()
+    call_command("seed_ui_test", stdout=out)
+    assert "Dry run" in out.getvalue()
+    assert "No resort, not sure" in out.getvalue()
+    assert "Unsaid, friends and a meet-up" in out.getvalue()
+    assert not Group.objects.exists()
+    quiet = StringIO()
+    call_command("seed_ui_test", "-v", "0", stdout=quiet)
+    assert "No resort" not in quiet.getvalue()
+
+
+def test_seed_ui_test_covers_every_case_and_reruns() -> None:
+    import_sheets(commit=True)
+    for _ in range(2):
+        call_command(
+            "seed_ui_test", "--commit", "--email", "Tess@Example.com", stdout=StringIO()
+        )
+    group = Group.objects.get(name="UI test")
+    tester = group.owner
+    assert tester.email == "tess@example.com"
+    assert group.memberships.count() == 5
+    assert MeetUp.objects.filter(group=group).count() == 3
+    mine = PlanDay.objects.filter(user=tester)
+    pairs = {(plan.resort_id is not None, plan.skiing) for plan in mine}
+    assert pairs == {(at, s) for at in (True, False) for s in S.values}
+    assert mine.filter(is_private=True, resort__isnull=True).exists()
+    assert mine.filter(is_private=True, resort__isnull=False).exists()
+    assert mine.exclude(note="").count() == 2
+    # Nothing from the tester on the unsaid day, but friends and a meet-up.
+    unsaid = plans.today() + datetime.timedelta(days=UNSAID)
+    assert not mine.filter(date=unsaid).exists()
+    assert PlanDay.objects.filter(date=unsaid).exists()
+    assert MeetUp.objects.filter(group=group, date=unsaid).exists()
+    # Some run crosses a month end.
+    months = {
+        (plan.date.year, plan.date.month)
+        for plan in mine.filter(resort__name="Champéry")
+    }
+    assert len(months) == 2
