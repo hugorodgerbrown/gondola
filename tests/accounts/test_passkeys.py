@@ -239,6 +239,8 @@ def test_sign_in_options_allow_any_passkey(client: Client) -> None:
     assert options["challenge"]
     assert not options.get("allowCredentials")
     assert options["userVerification"] == "required"
+    # passkeys.js signals an unknown credential under this RP ID.
+    assert options["rpId"] == "testserver"
 
 
 def test_passkey_signs_in_its_owner(client: Client, verified_sign_in: None) -> None:
