@@ -13,7 +13,8 @@
  *
  * The grid follows the WAI-ARIA date picker pattern: arrows move by a day or
  * a week, Page Up/Down by a month, Home/End to the week's ends, Enter picks,
- * Escape closes and returns focus to the button. Weeks start on Monday.
+ * Escape closes and returns focus to the button. Weeks start on Monday, and
+ * a sideways swipe steps a month, as the arrows do.
  */
 (function () {
   "use strict";
@@ -230,8 +231,20 @@
     button.addEventListener("click", function () {
       if (panel.hidden) open(); else close(true);
     });
-    previous.addEventListener("click", function () { focused = clamp(addMonths(focused, -1)); render(false); });
-    next.addEventListener("click", function () { focused = clamp(addMonths(focused, 1)); render(false); });
+    function stepMonth(arrow, months) {
+      if (arrow.disabled) return;
+      focused = clamp(addMonths(focused, months));
+      render(false);
+    }
+    previous.addEventListener("click", function () { stepMonth(previous, -1); });
+    next.addEventListener("click", function () { stepMonth(next, 1); });
+    if (window.onSwipe) {
+      window.onSwipe(
+        panel,
+        function () { stepMonth(previous, -1); },
+        function () { stepMonth(next, 1); }
+      );
+    }
     todayButton.addEventListener("click", function () { pick(clamp(today)); });
     body.addEventListener("click", function (event) {
       const target = event.target.closest("[data-date]");

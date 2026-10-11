@@ -38,72 +38,55 @@ def test_screens_need_sign_in(client: Client, name: str) -> None:
 # --- my days ------------------------------------------------------------------------
 
 
-def test_my_days_lists_fourteen_days(sam: Client, crew: Crew) -> None:
-    plans.set_plan(
-        crew.sam, plans.today(), S.RESORT, resort=crew.verbier, is_private=True
-    )
+def test_my_days_is_this_month(sam: Client, crew: Crew) -> None:
+    today = plans.today()
+    plans.set_plan(crew.sam, today, S.RESORT, resort=crew.verbier, is_private=True)
+    plans.set_plan(crew.anna, today, S.RESORT, resort=crew.verbier)
     response = sam.get(reverse("planning:my_days"))
-    assert len(response.context["rows"]) == 14
+    cal = response.context["month"]
+    assert cal.first == today.replace(day=1)
+    assert cal.previous is None
     assert b"Thursday crew sees these" in response.content
-    assert b"Private" in response.content
+    # Today's square: the resort code, the lock, and a friend with you.
+    assert b"VERB" in response.content
+    assert b"mday__friends--with-me" in response.content
+    assert f"{today:%A} {today.day} {today:%B}, today, Verbier, private".encode() in (
+        response.content
+    )
 
 
-def test_my_days_steps_a_fortnight_and_lists_other_plans(
-    sam: Client, crew: Crew
-) -> None:
+def test_my_days_steps_a_month(sam: Client, crew: Crew) -> None:
     today = plans.today()
-    far = today + datetime.timedelta(days=60)
-    plans.set_plan(crew.sam, far, S.RESORT, resort=crew.verbier)
-    response = sam.get(reverse("planning:my_days"))
-    # The first fortnight starts today: no way back, a way on, and the
-    # December day listed under it, and dotted on the calendar.
-    assert response.context["previous_start"] is None
-    assert response.context["next_start"] == today + datetime.timedelta(days=14)
-    assert [plan.date for plan in response.context["elsewhere"]] == [far]
-    assert response.context["marks"] == {far.isoformat(): "resort"}
-    assert b"Your other plans" in response.content
-    assert b'id="plan-marks"' in response.content
-    assert b"js/calendar.js" in response.content
-
-    later = sam.get(reverse("planning:my_days"), {"from": far.isoformat()})
-    first_day, first_plan = later.context["rows"][0]
-    assert first_day == far and first_plan.resort == crew.verbier
-    assert later.context["elsewhere"] == []
-    assert later.context["previous_start"] == far - datetime.timedelta(days=14)
+    later = (today.replace(day=1) + datetime.timedelta(days=62)).replace(day=1)
+    response = sam.get(reverse("planning:my_days"), {"from": later.isoformat()})
+    cal = response.context["month"]
+    assert cal.first == later
+    assert cal.previous is not None and cal.previous < later
+    assert f'href="?from={cal.previous.isoformat()}"'.encode() in response.content
+    assert response.context["window_from"] == later
+    # Far past the horizon, the last plannable month, with no way on.
+    end = sam.get(reverse("planning:my_days"), {"from": "2099-01-01"})
+    assert end.context["month"].first == plans.last_plannable_day().replace(day=1)
+    assert end.context["month"].next is None
 
 
-@pytest.mark.parametrize(
-    ("offset", "expected"),
-    [(-5, 0), (1000, plans.PLAN_HORIZON_DAYS - plans.MY_DAYS_SPAN + 1)],
-)
-def test_my_days_window_stays_plannable(
-    sam: Client, offset: int, expected: int
-) -> None:
-    today = plans.today()
-    start = today + datetime.timedelta(days=offset)
-    response = sam.get(reverse("planning:my_days"), {"from": start.isoformat()})
-    assert response.context["start"] == today + datetime.timedelta(days=expected)
-    if offset > 0:
-        assert response.context["end"] == plans.last_plannable_day()
-        assert response.context["next_start"] is None
-
-
-def test_plain_forms_keep_the_fortnight(sam: Client, crew: Crew) -> None:
-    """Without JavaScript, saving or clearing a day returns to its fortnight."""
+def test_plain_forms_keep_the_month(sam: Client, crew: Crew) -> None:
+    """Without JavaScript, saving or clearing a day returns to its month."""
     far = plans.today() + datetime.timedelta(days=60)
+    first = far.replace(day=1)
     page = sam.get(reverse("planning:my_days"), {"from": far.isoformat()})
     day_url = reverse("planning:day", kwargs={"day": far})
-    assert f'href="{day_url}?from={far.isoformat()}"'.encode() in page.content
-    sheet = sam.get(day_url, {"from": far.isoformat()})
-    assert f'name="from" value="{far.isoformat()}"'.encode() in sheet.content
-    back = f"{reverse('planning:my_days')}?from={far.isoformat()}"
-    saved = sam.post(day_url, {"status": S.NOT_SURE, "from": far.isoformat()})
+    assert f'href="{day_url}?from={first.isoformat()}"'.encode() in page.content
+    sheet = sam.get(day_url, {"from": first.isoformat()})
+    assert f'name="from" value="{first.isoformat()}"'.encode() in sheet.content
+    back = f"{reverse('planning:my_days')}?from={first.isoformat()}"
+    saved = sam.post(day_url, {"status": S.NOT_SURE, "from": first.isoformat()})
     assert saved["Location"] == back
     cleared = sam.post(
-        reverse("planning:day_clear", kwargs={"day": far}), {"from": far.isoformat()}
+        reverse("planning:day_clear", kwargs={"day": far}), {"from": first.isoformat()}
     )
     assert cleared["Location"] == back
-    # The first fortnight needs nothing carried.
+    # This month needs nothing carried.
     assert sam.get(reverse("planning:my_days")).context["window_from"] is None
 
 
