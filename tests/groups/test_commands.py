@@ -114,7 +114,7 @@ def test_seed_ui_test_dry_run_prints_the_cases() -> None:
     assert not Group.objects.exists()
     quiet = StringIO()
     call_command("seed_ui_test", "-v", "0", stdout=quiet)
-    assert "No resort" not in quiet.getvalue()
+    assert quiet.getvalue() == ""
 
 
 def test_seed_ui_test_covers_every_case_and_reruns() -> None:
@@ -131,6 +131,8 @@ def test_seed_ui_test_covers_every_case_and_reruns() -> None:
     mine = PlanDay.objects.filter(user=tester)
     pairs = {(plan.resort_id is not None, plan.skiing) for plan in mine}
     assert pairs == {(at, s) for at in (True, False) for s in S.values}
+    # Skiing with no resort, as a single day and a run.
+    assert mine.filter(resort__isnull=True, skiing=S.YES).count() == 4
     assert mine.filter(is_private=True, resort__isnull=True).exists()
     assert mine.filter(is_private=True, resort__isnull=False).exists()
     assert mine.exclude(note="").count() == 2

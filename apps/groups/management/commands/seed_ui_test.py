@@ -113,6 +113,7 @@ def tester_runs(first: datetime.date) -> list[Run]:
         Run(33, "NNNN", label="No resort, not skiing, four days"),
         Run(38, "???", label="No resort, not sure, three days"),
         Run(42, "YYY", "GRIME", private=True, label="Private run"),
+        Run(45, "YYY", label="No resort, skiing, three days"),
         Run(edge, "YYYY", "CHAM", label="Run across a month end"),
     ]
 
@@ -194,15 +195,17 @@ class Command(BaseCommand):
         runs = tester_runs(first)
         self._legend(runs, first)
         if not options["commit"]:
-            self.stdout.write(
-                f"Would create {GROUP_NAME} with {email} as the tester and "
-                f"{len(FRIENDS)} friends. Dry run. Re-run with --commit to save."
-            )
+            if self.verbosity >= 1:
+                self.stdout.write(
+                    f"Would create {GROUP_NAME} with {email} as the tester and "
+                    f"{len(FRIENDS)} friends. Dry run. Re-run with --commit to save."
+                )
             return
         by_code = {code: resorts[name] for code, name in RESORTS.items()}
         with transaction.atomic():
             self._seed(email, first, runs, by_code)
-        self.stdout.write(f"Seeded {GROUP_NAME}. Sign in as {email} to see it.")
+        if self.verbosity >= 1:
+            self.stdout.write(f"Seeded {GROUP_NAME}. Sign in as {email} to see it.")
 
     def _legend(self, runs: list[Run], first: datetime.date) -> None:
         """Print each of the tester's days and the case it covers."""
