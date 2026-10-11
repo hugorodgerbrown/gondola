@@ -7,8 +7,9 @@
 # DATABASE_URL points at a database of the app's own on shared-db (e.g.
 # .../resort_planner), never at another app's database: Django's tables
 # (auth, sessions, migrations) would clash. Secrets marked `sync: false`
-# are entered in the Render dashboard when the blueprint is applied;
-# nothing secret lives in this file.
+# are entered in the Render dashboard when the blueprint is first applied
+# (Render only prompts for them at service scope, never inside an
+# environment group); nothing secret lives in this file.
 
 envVarGroups:
   - name: resort-planner
@@ -23,28 +24,13 @@ envVarGroups:
         value: .onrender.com
       - key: CSRF_TRUSTED_ORIGINS
         value: https://*.onrender.com
-      # The public address, for links in emails (e.g. https://resort-planner.onrender.com).
-      - key: SITE_URL
-        sync: false
       - key: SITE_NAME
         value: Resort planner
-      # SMTP for sign-in links and the evening email (e.g. Resend's relay:
-      # smtp.resend.com, 587, user "resend", the API key as the password).
-      - key: EMAIL_HOST
-        sync: false
+      # SMTP host, user, password and sender are set per service below.
       - key: EMAIL_PORT
         value: "587"
-      - key: EMAIL_HOST_USER
-        sync: false
-      - key: EMAIL_HOST_PASSWORD
-        sync: false
       - key: EMAIL_USE_TLS
         value: "True"
-      - key: DEFAULT_FROM_EMAIL
-        sync: false
-      # The shared-db internal URL, with this app's own database name.
-      - key: DATABASE_URL
-        sync: false
 
 services:
   - type: web
@@ -63,3 +49,19 @@ services:
     healthCheckPath: /
     envVars:
       - fromGroup: resort-planner
+      # The shared-db internal URL, with this app's own database name.
+      - key: DATABASE_URL
+        sync: false
+      # The public address, for links in emails (e.g. https://resort-planner.onrender.com).
+      - key: SITE_URL
+        sync: false
+      # SMTP for sign-in links and the evening email (e.g. Resend's relay:
+      # smtp.resend.com, 587, user "resend", the API key as the password).
+      - key: EMAIL_HOST
+        sync: false
+      - key: EMAIL_HOST_USER
+        sync: false
+      - key: EMAIL_HOST_PASSWORD
+        sync: false
+      - key: DEFAULT_FROM_EMAIL
+        sync: false

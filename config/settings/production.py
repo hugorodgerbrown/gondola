@@ -9,6 +9,15 @@ from .base import *  # noqa: F403 — settings overlay pattern
 
 DEBUG = False
 
+# No SQLite fallback here: a missing DATABASE_URL stops the deploy rather
+# than quietly writing to a throwaway file on the dyno.
+DATABASES = {
+    "default": dj_database_url.parse(  # noqa: F405 — from base
+        config("DATABASE_URL"),  # noqa: F405
+        conn_max_age=600,
+    )
+}
+
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 SECURE_SSL_REDIRECT = True
 SECURE_HSTS_SECONDS = 60 * 60 * 24 * 365
