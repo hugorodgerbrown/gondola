@@ -16,6 +16,7 @@ import uuid
 from dataclasses import dataclass, field
 from pathlib import Path
 
+from django.core.exceptions import ValidationError
 from django.db import transaction
 
 from .models import Pass, Resort
@@ -80,8 +81,13 @@ def _import_resort(row: dict[str, str], result: ImportResult) -> None:
     try:
         key = uuid.UUID(row["uuid"])
         fields = _resort_fields(row)
+        # Check lengths and formats here: SQLite ignores max_length, so
+        # without this a value too long for Postgres only fails on deploy.
+        Resort(**fields).clean_fields(exclude=["uuid", "passes"])
     except (KeyError, ValueError) as exc:
         raise SheetError(f"{row.get('name', '?')}: {exc}") from exc
+    except ValidationError as exc:
+        raise SheetError(f"{row.get('name', '?')}: {exc.message_dict}") from exc
     slugs = [s.strip() for s in row.get("passes", "").split(",") if s.strip()]
     passes = list(Pass.objects.filter(slug__in=slugs))
     if len(passes) != len(slugs):
