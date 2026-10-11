@@ -1,7 +1,10 @@
-{% include "includes/sheet_header.html" with eyebrow="My days" title=day|date:"l j F" %}
-<form method="post" action="{% url 'planning:day' day %}" hx-post="{% url 'planning:day' day %}" hx-target="#sheet-body" class="stack" data-day-form>
+{% include "includes/sheet_header.html" with eyebrow=eyebrow title=title %}
+<form method="post" action="{{ form_url }}" hx-post="{{ form_url }}" hx-target="#sheet-body" class="stack" data-day-form>
   {% if window_from %}<input type="hidden" name="from" value="{{ window_from|date:'Y-m-d' }}">{% endif %}
   {% csrf_token %}
+  {% if replacing %}
+    <p class="help">You'd already said something about {% if replacing == span %}all {{ span }}{% else %}{{ replacing }}{% endif %} of these days. Saving sets them all to this.</p>
+  {% endif %}
   {% if form.non_field_errors or form.resort.errors %}
     <ul class="errors">{% for error in form.non_field_errors %}<li>{{ error }}</li>{% endfor %}{% for error in form.resort.errors %}<li>{{ error }}</li>{% endfor %}</ul>
   {% endif %}
@@ -17,7 +20,7 @@
 
   <div class="field" data-resort-picker>
     {% if friends or elsewhere %}
-      <span class="eyebrow">{% if friends %}Where friends are{% else %}Your pick{% endif %}</span>
+      <span class="eyebrow">{% if friends %}Where friends are{% if span %} these days{% endif %}{% else %}Your pick{% endif %}</span>
       <div class="choices" role="radiogroup" aria-label="Resort">
         {% for entry in friends %}
           <label class="choice">
@@ -48,18 +51,18 @@
   </div>
 
   <label class="check" for="day-private">
-    <span class="row__main"><span>Keep this day private</span><span class="small muted">Friends see nothing for this day.</span></span>
+    <span class="row__main"><span>Keep {% if span %}these days{% else %}this day{% endif %} private</span><span class="small muted">Friends see nothing for {% if span %}these days{% else %}this day{% endif %}.</span></span>
     <input id="day-private" type="checkbox" name="is_private"{% if form.is_private.value %} checked{% endif %}>
   </label>
 
   <div class="field">
-    <button type="submit" class="button button--block">Save {{ day|date:"D j M" }}</button>
+    <button type="submit" class="button button--block">{{ save_label }}</button>
   </div>
 </form>
 {% if plan %}
-  <form method="post" action="{% url 'planning:day_clear' day %}" hx-post="{% url 'planning:day_clear' day %}">
+  <form method="post" action="{{ clear_url }}" hx-post="{{ clear_url }}">
     {% if window_from %}<input type="hidden" name="from" value="{{ window_from|date:'Y-m-d' }}">{% endif %}
     {% csrf_token %}
-    <button type="submit" class="button button--secondary button--block">Clear this day</button>
+    <button type="submit" class="button button--secondary button--block">Clear {% if span %}these days{% else %}this day{% endif %}</button>
   </form>
 {% endif %}

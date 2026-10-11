@@ -167,6 +167,11 @@
     element.addEventListener("dragstart", function (event) { event.preventDefault(); });
     element.addEventListener("pointerup", function (event) {
       if (!start || !event.isPrimary) return;
+      // My days: a drag that is picking a run of days isn't a swipe.
+      if (element.isPicking && element.isPicking()) {
+        start = null;
+        return;
+      }
       const dx = event.clientX - start.x;
       const dy = event.clientY - start.y;
       const quick = event.timeStamp - start.t < SWIPE_MAX_MS;

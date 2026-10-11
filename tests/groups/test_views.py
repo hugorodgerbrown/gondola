@@ -6,6 +6,7 @@ import json
 import pytest
 from django.test import Client
 from django.urls import reverse
+from freezegun import freeze_time
 
 from apps.groups.models import Group, MeetUp, PlanDay
 from apps.groups.services import meetups, plans
@@ -158,6 +159,109 @@ def test_past_day_is_not_plannable(sam: Client) -> None:
 
 def test_impossible_date_is_404(sam: Client) -> None:
     assert sam.get("/days/2027-02-30/").status_code == 404
+
+
+def several(*days: str) -> str:
+    """Return the several-days sheet's URL for ISO dates."""
+    return reverse("planning:several_days") + "?days=" + ",".join(days)
+
+
+@freeze_time("2026-10-11 09:00:00+02:00")
+def test_several_days_sheet(sam: Client, crew: Crew) -> None:
+    plans.set_plan(
+        crew.anna, datetime.date(2026, 12, 14), S.RESORT, resort=crew.verbier
+    )
+    plans.set_plan(
+        crew.anna, datetime.date(2026, 12, 15), S.RESORT, resort=crew.verbier
+    )
+    plans.set_plan(crew.sam, datetime.date(2026, 12, 15), S.NOT_SURE)
+    days = [f"2026-12-{day}" for day in range(14, 21)]
+    fragment = sam.get(several(*reversed(days)), headers=HTMX)
+    assert fragment.status_code == 200
+    context = fragment.context
+    assert context["title"] == "Mon 14 – Sun 20 December"
+    assert context["eyebrow"] == "My days · 7 days"
+    assert context["save_label"] == "Save 7 days"
+    assert [e.names for e in context["friends"]] == ["Anna"]  # once, not twice
+    assert b"already said something about 1 of these days" in fragment.content
+    assert b"Clear these days" in fragment.content
+    assert context["form_url"].endswith("?days=" + ",".join(days))
+
+
+@freeze_time("2026-10-11 09:00:00+02:00")
+@pytest.mark.parametrize(
+    ("days", "title"),
+    [
+        (["2026-12-14"], "Monday 14 December"),
+        (["2026-12-30", "2027-01-02"], "Wed 30 December and Sat 2 January"),
+        (
+            ["2026-12-05", "2026-12-12", "2026-12-19"],
+            "Sat 5, Sat 12 and Sat 19 December",
+        ),
+        (["2026-12-31", "2027-01-01"], "Thu 31 December – Fri 1 January"),
+        ([f"2026-12-{d:02}" for d in (1, 3, 5, 7, 9)], "5 days, 1 – 9 December"),
+        (
+            ["2026-11-28", "2026-11-30", "2026-12-02", "2026-12-04", "2026-12-06"],
+            "5 days, 28 November – 6 December",
+        ),
+    ],
+)
+def test_several_days_titles(
+    sam: Client, crew: Crew, days: list[str], title: str
+) -> None:
+    assert sam.get(several(*days), headers=HTMX).context["title"] == title
+
+
+@freeze_time("2026-10-11 09:00:00+02:00")
+def test_several_days_save_and_clear(sam: Client, crew: Crew) -> None:
+    days = ["2026-12-05", "2026-12-12", "2026-12-19"]
+    url = several(*days)
+    response = sam.post(
+        url,
+        {"status": "resort", "resort": str(crew.verbier.uuid), "from": "2026-12-01"},
+    )
+    assert response["Location"] == reverse("planning:my_days") + "?from=2026-12-01"
+    saved = PlanDay.objects.filter(user=crew.sam).order_by("date")
+    assert [p.date.isoformat() for p in saved] == days
+    assert {p.resort for p in saved} == {crew.verbier}
+    # Picking up the first day's plan as the starting point.
+    assert sam.get(url, headers=HTMX).context["form"]["status"].value() == "resort"
+    clear = reverse("planning:several_days_clear") + "?days=" + ",".join(days[:2])
+    response = sam.post(clear, headers=HTMX)
+    assert response["HX-Refresh"] == "true"
+    assert [p.date.isoformat() for p in PlanDay.objects.filter(user=crew.sam)] == [
+        days[2]
+    ]
+
+
+@freeze_time("2026-10-11 09:00:00+02:00")
+@pytest.mark.parametrize(
+    "query",
+    [
+        "",
+        "?days=",
+        "?days=2026-12-01,nope",
+        "?days=2026-10-10,2026-12-01",  # yesterday
+        "?days="
+        + ",".join(
+            (datetime.date(2026, 11, 1) + datetime.timedelta(days=n)).isoformat()
+            for n in range(63)
+        ),
+    ],
+)
+def test_several_days_refuses_bad_selections(
+    sam: Client, crew: Crew, query: str
+) -> None:
+    assert sam.get(reverse("planning:several_days") + query).status_code == 404
+
+
+def test_my_days_can_select(sam: Client, crew: Crew) -> None:
+    page = sam.get(reverse("planning:my_days"))
+    assert b"data-select-bar" in page.content
+    assert b'data-select-days="/days/several/"' in page.content
+    assert b"js/day_select.js" in page.content
+    assert b'data-select-max="62"' in page.content
+    assert f'data-select-owner="{crew.sam.uuid}"'.encode() in page.content
 
 
 def test_resort_search(sam: Client, crew: Crew) -> None:

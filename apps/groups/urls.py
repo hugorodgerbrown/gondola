@@ -21,6 +21,8 @@ urlpatterns = [
     path("days/", days.my_days, name="my_days"),
     path("days/<date:day>/", days.day, name="day"),
     path("days/<date:day>/clear/", days.day_clear, name="day_clear"),
+    path("days/several/", days.several_days, name="several_days"),
+    path("days/several/clear/", days.several_days_clear, name="several_days_clear"),
     path("resorts/search/", days.resort_search, name="resort_search"),
     # Groups and the board
     path("groups/", groups.group_list, name="group_list"),
