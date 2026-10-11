@@ -1,0 +1,46 @@
+{% with resort=info.resort %}
+  {% include "includes/sheet_header.html" with eyebrow=info.day|date:"D j M" title=resort.name %}
+  <p class="small muted">{% if info.friend_count %}{{ info.friend_count }} friend{{ info.friend_count|pluralize }} here{% else %}No friends here yet{% endif %}{% if resort.canton %} · {{ resort.canton }}{% endif %}{% for pass in resort.passes.all %} · {{ pass.name }}{% endfor %}</p>
+
+  {% for meetup in info.meetups %}
+    <a class="card card--padded row--link" href="{% url 'planning:meetup' meetup.share_token %}">
+      <span class="eyebrow">{{ meetup.group.name }} · meet-up</span>
+      <strong>{% if meetup.start_time %}{{ meetup.start_time|time:"H:i" }} at {% endif %}{{ resort.name }}</strong>
+      <span class="small">Open the meet-up →</span>
+    </a>
+  {% endfor %}
+
+  {% for entry in info.groups %}
+    <section>
+      <span class="eyebrow">{{ entry.group.name }}</span>
+      <div>
+        {% for plan in entry.plans %}
+          <div class="friend-line"><span>{{ plan.user }}</span><span class="small muted">{{ plan.note }}</span></div>
+        {% endfor %}
+      </div>
+    </section>
+  {% endfor %}
+
+  {% if info.my_plan %}
+    <div class="friend-line"><span>You</span>
+      {% if info.my_plan.resort_id == resort.pk %}<span class="tag tag--accent">Planned</span>
+      {% else %}<span class="small muted">{% if info.my_plan.resort %}{{ info.my_plan.resort.name }}{% else %}{{ info.my_plan.get_status_display }}{% endif %}</span>{% endif %}
+    </div>
+  {% endif %}
+
+  {% if plannable %}
+    <div class="stack" style="gap:8px">
+      {% if not info.my_plan or info.my_plan.resort_id != resort.pk %}
+        <form method="post" action="{% url 'planning:plan_here' resort.uuid %}" hx-post="{% url 'planning:plan_here' resort.uuid %}">
+          {% csrf_token %}
+          <input type="hidden" name="date" value="{{ info.day|date:'Y-m-d' }}">
+          <button type="submit" class="button button--block">Plan my day here</button>
+        </form>
+      {% endif %}
+      {% if groups %}
+        <a class="button button--secondary button--block" href="{% url 'planning:meetup_choose_group' %}?date={{ info.day|date:'Y-m-d' }}&resort={{ resort.uuid }}">Propose a meet-up here</a>
+      {% endif %}
+    </div>
+  {% endif %}
+  {% if resort.website %}<a class="small" href="{{ resort.website }}" rel="noopener" target="_blank">Resort website →</a>{% endif %}
+{% endwith %}

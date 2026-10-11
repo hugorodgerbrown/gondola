@@ -16,3 +16,9 @@ SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 SECURE_HSTS_PRELOAD = True
 SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
+
+CSRF_TRUSTED_ORIGINS: list[str] = config(  # noqa: F405 — from base
+    "CSRF_TRUSTED_ORIGINS",
+    default="",
+    cast=Csv(),  # noqa: F405
+)

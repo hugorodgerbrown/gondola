@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block content %}
+  <section class="hero">
+    <span class="eyebrow">For skiing with friends</span>
+    <h1 class="title title--large">Who's skiing where, and where to meet</h1>
+    <p class="lede" style="font-size:16px">On a season pass your friends could be at any of a hundred resorts. Say which days you're skiing and where, see where your group will be, and agree one resort to meet at, without losing it in the group chat.</p>
+  </section>
+  <section class="card card--padded">
+    <span class="eyebrow">How it works</span>
+    <ol class="steps">
+      <li>Start a group and send the invite link to your group chat.</li>
+      <li>Everyone fills in their days: a resort, "not sure yet" or "not skiing".</li>
+      <li>Who's where shows the week at a glance. Propose a meet-up in two taps.</li>
+    </ol>
+    <a class="button button--block" href="{% url 'accounts:sign_in' %}">Get started with your email</a>
+  </section>
+{% endblock %}

@@ -54,6 +54,7 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
+                "apps.core.context_processors.site",
             ],
         },
     },
@@ -85,6 +86,7 @@ USE_I18N = True
 USE_TZ = True
 
 STATIC_URL = "static/"
+STATICFILES_DIRS = [BASE_DIR / "static"]
 STATIC_ROOT = BASE_DIR / "staticfiles"
 STORAGES = {
     "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
@@ -92,6 +94,42 @@ STORAGES = {
         "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage"
     },
 }
+
+# The product name shown in the header, page titles and emails.
+SITE_NAME = config("SITE_NAME", default="Resort planner")
+# Absolute origin for links in emails sent outside a request (the evening
+# email runs from a scheduled command), e.g. https://planner.example.com
+SITE_URL = config("SITE_URL", default="http://localhost:8000")
+
+# Signing in is an emailed link; there are no passwords for people.
+LOGIN_URL = "accounts:sign_in"
+LOGIN_REDIRECT_URL = "planning:map"
+# How long an emailed sign-in link works, in seconds.
+SIGN_IN_LINK_MAX_AGE = 60 * 30
+
+# Django 6.1's MAILERS replaces the EMAIL_* settings. Production sends
+# through SMTP (a relay such as Resend); development prints to the console.
+MAILERS = {
+    "default": {
+        "BACKEND": config(
+            "EMAIL_BACKEND", default="django.core.mail.backends.smtp.EmailBackend"
+        ),
+        "OPTIONS": {
+            "host": config("EMAIL_HOST", default="localhost"),
+            "port": config("EMAIL_PORT", default=1025, cast=int),
+            "username": config("EMAIL_HOST_USER", default=""),
+            "password": config("EMAIL_HOST_PASSWORD", default=""),
+            "use_tls": config("EMAIL_USE_TLS", default=False, cast=bool),
+        },
+    }
+}
+DEFAULT_FROM_EMAIL = config("DEFAULT_FROM_EMAIL", default="planner@localhost")
+
+# The basemap. Any MapLibre style URL; empty draws the built-in plain map
+# (Switzerland's outline only), which is also the fallback when it fails.
+MAP_STYLE_URL = config(
+    "MAP_STYLE_URL", default="https://tiles.openfreemap.org/styles/positron"
+)
 
 LOGGING = {
     "version": 1,

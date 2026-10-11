@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}Your account · {{ SITE_NAME }}{% endblock %}
+{% block content %}
+  <div class="heading">
+    <span class="eyebrow">{{ user.email }}</span>
+    <h1 class="title">Your account</h1>
+  </div>
+  <form method="post" class="card card--padded">
+    {% csrf_token %}
+    {% if form.errors %}<ul class="errors">{% for error in form.display_name.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
+    <div class="field">
+      <label for="{{ form.display_name.id_for_label }}">Your name</label>
+      {{ form.display_name }}
+    </div>
+    <label class="check" for="{{ form.evening_email_enabled.id_for_label }}">
+      <span class="row__main"><span>Email me the evening before</span><span class="small muted">Who's where tomorrow, and any meet-up, when you have plans.</span></span>
+      {{ form.evening_email_enabled }}
+    </label>
+    <button type="submit" class="button button--block">Save</button>
+  </form>
+  <form method="post" action="{% url 'accounts:sign_out' %}">
+    {% csrf_token %}
+    <button type="submit" class="button button--secondary button--block">Sign out</button>
+  </form>
+  <a class="small muted" href="{% url 'accounts:delete' %}">Delete my account</a>
+{% endblock %}

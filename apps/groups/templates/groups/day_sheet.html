@@ -1,0 +1,63 @@
+{% include "includes/sheet_header.html" with eyebrow="My days" title=day|date:"l j F" %}
+<form method="post" action="{% url 'planning:day' day %}" hx-post="{% url 'planning:day' day %}" hx-target="#sheet-body" class="stack" data-day-form>
+  {% csrf_token %}
+  {% if form.non_field_errors or form.resort.errors %}
+    <ul class="errors">{% for error in form.non_field_errors %}<li>{{ error }}</li>{% endfor %}{% for error in form.resort.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+  {% endif %}
+  <fieldset class="field">
+    <legend class="visually-hidden">This day</legend>
+    <div class="segmented">
+      {% for value, label in form.fields.status.choices %}
+        <input type="radio" name="status" id="status-{{ value }}" value="{{ value }}"{% if form.status.value == value %} checked{% endif %} data-status>
+        <label for="status-{{ value }}">{% if value == "resort" %}Skiing{% else %}{{ label }}{% endif %}</label>
+      {% endfor %}
+    </div>
+  </fieldset>
+
+  <div class="field" data-resort-picker>
+    {% if friends or elsewhere %}
+      <span class="eyebrow">{% if friends %}Where friends are{% else %}Your pick{% endif %}</span>
+      <div class="choices" role="radiogroup" aria-label="Resort">
+        {% for entry in friends %}
+          <label class="choice">
+            <input type="radio" name="resort" value="{{ entry.resort.uuid }}"{% if selected == entry.resort.uuid|stringformat:"s" %} checked{% endif %}>
+            <span class="choice__main"><span class="choice__title">{{ entry.resort.name }}</span><span class="choice__meta">{{ entry.names }}</span></span>
+            <span class="choice__count">{{ entry.friends|length }}</span>
+          </label>
+        {% endfor %}
+        {% if elsewhere %}
+          <label class="choice">
+            <input type="radio" name="resort" value="{{ elsewhere.uuid }}" checked>
+            <span class="choice__main"><span class="choice__title">{{ elsewhere.name }}</span><span class="choice__meta">Your pick</span></span>
+          </label>
+        {% endif %}
+      </div>
+    {% elif groups_count %}
+      <p class="help">No friends have picked a resort for this day yet.</p>
+    {% endif %}
+    <label for="resort-search" class="eyebrow">{% if friends or elsewhere %}Somewhere else{% else %}Which resort?{% endif %}</label>
+    <input id="resort-search" class="input input--search" type="search" name="q" placeholder="Search resorts" autocomplete="off"
+           hx-get="{% url 'planning:resort_search' %}" hx-trigger="input changed delay:200ms, search" hx-target="#resort-results" hx-include="this" hx-sync="this:replace">
+    <div id="resort-results" class="choices" role="radiogroup" aria-label="Search results" hidden></div>
+  </div>
+
+  <div class="field">
+    <label for="{{ form.note.id_for_label }}">Note for your groups</label>
+    {{ form.note }}
+  </div>
+
+  <label class="check" for="day-private">
+    <span class="row__main"><span>Keep this day private</span><span class="small muted">Friends see nothing for this day.</span></span>
+    <input id="day-private" type="checkbox" name="is_private"{% if form.is_private.value %} checked{% endif %}>
+  </label>
+
+  <div class="field">
+    <button type="submit" class="button button--block">Save {{ day|date:"D j M" }}</button>
+  </div>
+</form>
+{% if plan %}
+  <form method="post" action="{% url 'planning:day_clear' day %}" hx-post="{% url 'planning:day_clear' day %}">
+    {% csrf_token %}
+    <button type="submit" class="button button--secondary button--block">Clear this day</button>
+  </form>
+{% endif %}

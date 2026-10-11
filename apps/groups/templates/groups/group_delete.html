@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}Delete {{ group.name }} · {{ SITE_NAME }}{% endblock %}
+{% block content %}
+  <div class="heading">
+    <span class="eyebrow">Group</span>
+    <h1 class="title">Delete {{ group.name }}?</h1>
+    <p class="lede">Everyone loses the board and the group's meet-ups. Their own days stay. This can't be undone.</p>
+  </div>
+  <form method="post" class="actions">
+    {% csrf_token %}
+    <a class="button button--secondary" href="{% url 'planning:group_detail' group.uuid %}">Keep it</a>
+    <button type="submit" class="button button--danger">Delete</button>
+  </form>
+{% endblock %}

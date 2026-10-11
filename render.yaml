@@ -1,0 +1,82 @@
+# render.yaml — Render blueprint for a user-test deployment.
+#
+# One web service, one Postgres database and one cron job for the
+# evening-before email, sharing one environment group. Secrets marked
+# `sync: false` are entered in the Render dashboard when the blueprint is
+# applied; nothing secret lives in this file.
+
+envVarGroups:
+  - name: resort-planner
+    envVars:
+      - key: DJANGO_SETTINGS_MODULE
+        value: config.settings.production
+      - key: PYTHON_VERSION
+        value: "3.14"
+      - key: SECRET_KEY
+        generateValue: true
+      - key: ALLOWED_HOSTS
+        value: .onrender.com
+      - key: CSRF_TRUSTED_ORIGINS
+        value: https://*.onrender.com
+      # The public address, for links in emails (e.g. https://resort-planner.onrender.com).
+      - key: SITE_URL
+        sync: false
+      - key: SITE_NAME
+        value: Resort planner
+      # SMTP for sign-in links and the evening email (e.g. Resend's relay:
+      # smtp.resend.com, 587, user "resend", the API key as the password).
+      - key: EMAIL_HOST
+        sync: false
+      - key: EMAIL_PORT
+        value: "587"
+      - key: EMAIL_HOST_USER
+        sync: false
+      - key: EMAIL_HOST_PASSWORD
+        sync: false
+      - key: EMAIL_USE_TLS
+        value: "True"
+      - key: DEFAULT_FROM_EMAIL
+        sync: false
+
+databases:
+  - name: resort-planner-db
+    plan: basic-256mb
+    region: frankfurt
+
+services:
+  - type: web
+    name: resort-planner
+    runtime: python
+    plan: starter
+    region: frankfurt
+    buildCommand: >-
+      pip install uv &&
+      uv sync --frozen --no-dev &&
+      uv run --no-sync python manage.py collectstatic --noinput
+    preDeployCommand: >-
+      uv run --no-sync python manage.py migrate --noinput &&
+      uv run --no-sync python manage.py import_resorts --commit
+    startCommand: uv run --no-sync gunicorn config.wsgi:application --bind 0.0.0.0:$PORT
+    healthCheckPath: /
+    envVars:
+      - fromGroup: resort-planner
+      - key: DATABASE_URL
+        fromDatabase:
+          name: resort-planner-db
+          property: connectionString
+
+  # 17:00 UTC is 18:00 in Zurich in winter (19:00 in summer).
+  - type: cron
+    name: resort-planner-evening-email
+    runtime: python
+    plan: starter
+    region: frankfurt
+    schedule: "0 17 * * *"
+    buildCommand: pip install uv && uv sync --frozen --no-dev
+    startCommand: uv run --no-sync python manage.py send_evening_emails --commit
+    envVars:
+      - fromGroup: resort-planner
+      - key: DATABASE_URL
+        fromDatabase:
+          name: resort-planner-db
+          property: connectionString

@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Map · {{ day|date:"D j M" }} · {{ SITE_NAME }}{% endblock %}
+{% block head %}<link rel="stylesheet" href="{% static 'vendor/maplibre-gl-4.7.1.css' %}">{% endblock %}
+{% block topbar %}{% endblock %}
+{% block main %}
+  <main class="map-page">
+    <div class="map-canvas" id="map" data-resort-map
+         data-style-url="{{ map_style_url }}"
+         data-outline-url="{% static 'vendor/switzerland.geojson' %}"
+         data-pins-url="{% url 'planning:map_pins' %}"
+         data-sheet-url="{{ sheet_url_template }}"
+         data-date="{{ day|date:'Y-m-d' }}"
+         data-pass="{{ pass_slug }}"></div>
+    <div class="map-overlay">
+      <div class="map-bar">
+        <nav class="float" aria-label="Day">
+          <a class="icon-button" href="?date={{ previous_day|date:'Y-m-d' }}{% if pass_slug %}&pass={{ pass_slug }}{% endif %}" aria-label="Previous day">{% include "includes/icons/chevron-left.html" %}</a>
+          <span class="float__label">{% if day == today %}Today · {% endif %}{{ day|date:"D j M" }}</span>
+          <a class="icon-button" href="?date={{ next_day|date:'Y-m-d' }}{% if pass_slug %}&pass={{ pass_slug }}{% endif %}" aria-label="Next day">{% include "includes/icons/chevron-right.html" %}</a>
+        </nav>
+        <a class="icon-button icon-button--boxed" style="border-radius:50%" href="{% url 'accounts:settings' %}" aria-label="Your account">{% include "includes/icons/user.html" %}</a>
+      </div>
+      <nav class="chips" aria-label="Pass">
+        <a class="chip" href="?date={{ day|date:'Y-m-d' }}"{% if not pass_slug %} aria-current="true"{% endif %}>All resorts</a>
+        {% for pass in passes %}
+          <a class="chip" href="?date={{ day|date:'Y-m-d' }}&pass={{ pass.slug }}"{% if pass_slug == pass.slug %} aria-current="true"{% endif %}>{{ pass.name }}</a>
+        {% endfor %}
+      </nav>
+      {% if not has_groups %}
+        <p class="map-hint">Friends show up here once you're in a group. <a href="{% url 'planning:group_list' %}">Start one</a> or open an invite link.</p>
+      {% endif %}
+      {% include "includes/messages.html" %}
+    </div>
+  </main>
+{% endblock %}
+{% block scripts %}
+  <script src="{% static 'vendor/maplibre-gl-4.7.1.js' %}"></script>
+  <script src="{% static 'js/map.js' %}"></script>
+{% endblock %}

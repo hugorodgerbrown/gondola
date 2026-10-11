@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Propose a meet-up · {{ group.name }} · {{ SITE_NAME }}{% endblock %}
+{% block head %}<link rel="stylesheet" href="{% static 'vendor/maplibre-gl-4.7.1.css' %}">{% endblock %}
+{% block content %}
+  <div class="heading">
+    <span class="eyebrow">{{ group.name }} · {{ day|date:"D j M" }}</span>
+    <h1 class="title">Propose a meet-up</h1>
+  </div>
+  <form method="post" class="stack">
+    {% csrf_token %}
+    {% if form.errors %}
+      <ul class="errors">{% for field in form %}{% for error in field.errors %}<li>{{ error }}</li>{% endfor %}{% endfor %}{% for error in form.non_field_errors %}<li>{{ error }}</li>{% endfor %}</ul>
+    {% endif %}
+    <div class="field">
+      <label for="{{ form.date.id_for_label }}">Day</label>
+      <input type="date" name="date" id="{{ form.date.id_for_label }}" class="input" value="{{ form.date.value|date:'Y-m-d'|default:form.date.value }}"
+             onchange="location.search = '?date=' + this.value">
+    </div>
+
+    <div class="field">
+      <span class="eyebrow">{% if suggestions %}Suggested{% else %}Where{% endif %}</span>
+      {% if suggestions or extra %}
+        <div class="choices" role="radiogroup" aria-label="Resort">
+          {% for suggestion in suggestions %}
+            <label class="choice" data-lat="{{ suggestion.resort.latitude|default_if_none:'' }}" data-lng="{{ suggestion.resort.longitude|default_if_none:'' }}">
+              <input type="radio" name="resort" value="{{ suggestion.resort.uuid }}"{% if selected == suggestion.resort.uuid|stringformat:"s" %} checked{% endif %}>
+              <span class="choice__main">
+                <span class="choice__title">{{ suggestion.resort.name }}</span>
+                <span class="choice__meta">{{ suggestion.names }} {{ suggestion.here|length|pluralize:"is,are" }} planned here</span>
+              </span>
+              <span class="choice__count">{{ suggestion.here|length }} here<br>{{ suggestion.moves }} move{{ suggestion.moves|pluralize }}</span>
+            </label>
+          {% endfor %}
+          {% if extra %}
+            <label class="choice" data-lat="{{ extra.latitude|default_if_none:'' }}" data-lng="{{ extra.longitude|default_if_none:'' }}">
+              <input type="radio" name="resort" value="{{ extra.uuid }}"{% if selected == extra.uuid|stringformat:"s" %} checked{% endif %}>
+              <span class="choice__main"><span class="choice__title">{{ extra.name }}</span><span class="choice__meta">Nobody's planned here yet</span></span>
+            </label>
+          {% endif %}
+        </div>
+      {% else %}
+        <p class="help">Nobody in {{ group.name }} has picked a resort for this day yet. Choose one below.</p>
+      {% endif %}
+      <label for="resort-search" class="eyebrow">Choose another resort</label>
+      <input id="resort-search" class="input input--search" type="search" name="q" placeholder="Search resorts" autocomplete="off"
+             hx-get="{% url 'planning:resort_search' %}" hx-trigger="input changed delay:200ms, search" hx-target="#resort-results" hx-include="this" hx-sync="this:replace">
+      <div id="resort-results" class="choices" role="radiogroup" aria-label="Search results" hidden></div>
+    </div>
+
+    <div class="field">
+      <label for="{{ form.start_time.id_for_label }}">Time</label>
+      {{ form.start_time }}
+    </div>
+
+    <div class="field">
+      <span class="eyebrow">Meeting point</span>
+      {% with centre=map_centre %}
+        <div class="pin-picker" data-pin-picker data-style-url="{{ map_style_url }}" data-outline-url="{% static 'vendor/switzerland.geojson' %}"
+             data-lat="{{ centre.latitude|default_if_none:'' }}" data-lng="{{ centre.longitude|default_if_none:'' }}"
+             data-pin-svg="{% filter force_escape %}{% include 'includes/meeting_pin.html' %}{% endfilter %}"></div>
+      {% endwith %}
+      {{ form.meeting_latitude }}{{ form.meeting_longitude }}
+      <div class="pager"><span class="help">Tap the map to drop a pin. Time and pin are both optional.</span><button type="button" class="link-button" data-clear-pin hidden>Remove pin</button></div>
+    </div>
+
+    <button type="submit" class="button button--block">Propose meet-up</button>
+    <p class="help" style="text-align:center">You get a link to send to the group chat.</p>
+  </form>
+{% endblock %}
+{% block scripts %}
+  <script src="{% static 'vendor/maplibre-gl-4.7.1.js' %}"></script>
+  <script src="{% static 'js/map.js' %}"></script>
+{% endblock %}
