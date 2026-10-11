@@ -5,7 +5,9 @@
  * a close button or a tap on the backdrop, and wires share buttons to the
  * phone's share sheet (falling back to copying the link). Before a sign-out
  * (or account deletion) form posts, drops the pages the service worker
- * cached, so the next person on this device can't open them offline.
+ * cached, so the next person on this device can't open them offline. The
+ * signed-out front page drops them again, which covers a sign-out posted
+ * from a page loaded before this script had the handler.
  */
 (function () {
   "use strict";
@@ -140,6 +142,11 @@
     // Sign out whether or not the cleanup worked.
     forgetPages().then(submit, submit);
   });
+
+  // Only with signal: offline, this page may be an old copy from the cache.
+  if (document.querySelector("[data-forget-pages]") && navigator.onLine) {
+    forgetPages().catch(function () {});
+  }
 
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", function () {

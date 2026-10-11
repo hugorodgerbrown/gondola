@@ -1,5 +1,7 @@
 {% extends "base.html" %}
 {% block content %}
+  {# Signed out: app.js drops the pages the service worker cached for whoever was signed in. #}
+  <div hidden data-forget-pages></div>
   <section class="hero">
     <span class="eyebrow">For skiing with friends</span>
     <h1 class="title title--large">Who's skiing where, and where to meet</h1>
