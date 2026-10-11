@@ -725,7 +725,8 @@ fieldset.field {
   border-top: 0;
   border-bottom: 1px solid var(--rule);
   padding: 0;
-  min-width: 44px;
+  /* Seven days and a name fit a 390px phone without scrolling. */
+  min-width: 36px;
 }
 
 .board thead a {
@@ -755,11 +756,11 @@ fieldset.field {
   z-index: 1;
   background: var(--card);
   text-align: left;
-  padding: 0 8px 0 12px;
+  padding: 0 6px 0 12px;
   height: 44px;
   font: 400 14px var(--font-sans);
   white-space: nowrap;
-  max-width: 96px;
+  max-width: 80px;
   overflow: hidden;
   text-overflow: ellipsis;
 }
@@ -802,9 +803,9 @@ fieldset.field {
 .board__meetup {
   display: inline-grid;
   place-items: center;
-  width: 40px;
-  height: 38px;
-  margin: 7px 0;
+  width: 32px;
+  height: 32px;
+  margin: 6px 0;
   border-radius: var(--radius-control);
   text-decoration: none;
 }
