@@ -22,7 +22,7 @@ from apps.resorts.models import Resort
 from ..models import PlanDay
 from .people import visible_friend_plans
 
-# How far ahead My days lists, and how far ahead a plan may be made.
+# How many days My days lists at once, and how far ahead a plan may be made.
 MY_DAYS_SPAN = 14
 PLAN_HORIZON_DAYS = 365
 
@@ -36,6 +36,21 @@ def is_plannable(day: datetime.date) -> bool:
     """Return whether a plan can be made for ``day`` (today onwards)."""
     start = today()
     return start <= day <= start + datetime.timedelta(days=PLAN_HORIZON_DAYS)
+
+
+def last_plannable_day() -> datetime.date:
+    """Return the furthest day ahead a plan can be made for."""
+    return today() + datetime.timedelta(days=PLAN_HORIZON_DAYS)
+
+
+def window_start(day: datetime.date) -> datetime.date:
+    """Return where a My days window starting at ``day`` may actually start.
+
+    Never before today, and never so late that the window runs past the
+    last plannable day.
+    """
+    latest = last_plannable_day() - datetime.timedelta(days=MY_DAYS_SPAN - 1)
+    return min(max(day, today()), latest)
 
 
 def date_range(start: datetime.date, days: int) -> list[datetime.date]:
@@ -76,12 +91,18 @@ def clear_plan(user: User, day: datetime.date) -> None:
     PlanDay.objects.filter(user=user, date=day).delete()
 
 
-def plans_by_date(
-    user: User, days: list[datetime.date]
-) -> dict[datetime.date, PlanDay]:
-    """Return ``user``'s own plans on ``days``, keyed by date."""
-    plans = PlanDay.objects.filter(user=user, date__in=days).select_related("resort")
-    return {plan.date: plan for plan in plans}
+def upcoming_plans(user: User) -> list[PlanDay]:
+    """Return ``user``'s own plans from today on, soonest first."""
+    return list(
+        PlanDay.objects.filter(user=user, date__gte=today())
+        .select_related("resort")
+        .order_by("date")
+    )
+
+
+def plan_marks(plans: list[PlanDay]) -> dict[str, str]:
+    """Return the calendar's dots: each planned day's ISO date and status."""
+    return {plan.date.isoformat(): plan.status for plan in plans}
 
 
 @dataclass

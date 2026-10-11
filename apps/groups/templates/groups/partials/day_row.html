@@ -1,0 +1,16 @@
+{# One day on My days: what the person said about it, and a tap to change it. #}
+<a class="row row--link" href="{% url 'planning:day' day %}{% if window_from %}?from={{ window_from|date:'Y-m-d' }}{% endif %}" hx-get="{% url 'planning:day' day %}" hx-target="#sheet-body" hx-push-url="false">
+  <span class="row__date{% if long_date %} row__date--long{% endif %}{% if day == today %} row__date--today{% endif %}">{% if day == today %}Today{% elif long_date %}{{ day|date:"D j M" }}{% else %}{{ day|date:"D j" }}{% endif %}</span>
+  <span class="row__main">
+    {% if not plan %}
+      <span class="row__label row__label--quiet">Add a plan</span>
+    {% elif plan.resort %}
+      <span class="row__label">{{ plan.resort.name }}</span>
+    {% else %}
+      <span class="row__label row__label--quiet">{{ plan.get_status_display }}</span>
+    {% endif %}
+    {% if plan.note %}<span class="row__note">{{ plan.note }}</span>{% endif %}
+  </span>
+  {% if plan.is_private %}<span class="tag">{% include "includes/icons/lock.html" %}Private</span>{% endif %}
+  <span class="icon-button" aria-hidden="true">{% include "includes/icons/chevron-right.html" %}</span>
+</a>

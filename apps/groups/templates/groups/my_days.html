@@ -1,8 +1,9 @@
 {% extends "base.html" %}
+{% load static %}
 {% block title %}My days · {{ SITE_NAME }}{% endblock %}
 {% block content %}
   <div class="heading">
-    <span class="eyebrow">Next 14 days</span>
+    <span class="eyebrow">{% if start == today %}Next 14 days{% else %}{{ start|date:"j M" }} – {{ end|date:"j M" }}{% endif %}</span>
     <h1 class="title">My days</h1>
     {% if groups %}
       <p class="lede">Everyone in {% for group in groups %}{% if not forloop.first %}{% if forloop.last %} and {% else %}, {% endif %}{% endif %}{{ group.name }}{% endfor %} sees these, except days you keep private.</p>
@@ -10,28 +11,49 @@
       <p class="lede">Nobody sees these yet. <a href="{% url 'planning:group_list' %}">Start a group</a> or open an invite link from a friend.</p>
     {% endif %}
   </div>
-  <ol class="list card" aria-label="Your next 14 days">
+  <nav class="float float--page" aria-label="Fortnight">
+    {% if previous_start %}
+      <a class="icon-button" href="?from={{ previous_start|date:'Y-m-d' }}" aria-label="Previous two weeks">{% include "includes/icons/chevron-left.html" %}</a>
+    {% else %}
+      <span class="icon-button icon-button--off" aria-hidden="true">{% include "includes/icons/chevron-left.html" %}</span>
+    {% endif %}
+    <span class="calendar-anchor">
+      <button type="button" class="float__label float__label--button" data-calendar
+              data-navigate="?from=DATE"
+              data-value="{{ start|date:'Y-m-d' }}" data-today="{{ today|date:'Y-m-d' }}"
+              data-min="{{ today|date:'Y-m-d' }}" data-max="{{ last_day|date:'Y-m-d' }}"
+              data-marks="plan-marks">
+        {% include "includes/icons/calendar.html" %}
+        <span>{{ start|date:"j M" }} – {{ end|date:"j M" }}</span>
+        <span class="visually-hidden">, choose a day</span>
+      </button>
+    </span>
+    {% if next_start %}
+      <a class="icon-button" href="?from={{ next_start|date:'Y-m-d' }}" aria-label="Next two weeks">{% include "includes/icons/chevron-right.html" %}</a>
+    {% else %}
+      <span class="icon-button icon-button--off" aria-hidden="true">{% include "includes/icons/chevron-right.html" %}</span>
+    {% endif %}
+  </nav>
+  <ol class="list card" aria-label="{{ start|date:'j F' }} to {{ end|date:'j F' }}">
     {% for day, plan in rows %}
-      <li>
-        <a class="row row--link" href="{% url 'planning:day' day %}" hx-get="{% url 'planning:day' day %}" hx-target="#sheet-body" hx-push-url="false">
-          <span class="row__date{% if day == today %} row__date--today{% endif %}">{% if day == today %}Today{% else %}{{ day|date:"D j" }}{% endif %}</span>
-          <span class="row__main">
-            {% if not plan %}
-              <span class="row__label row__label--quiet">Add a plan</span>
-            {% elif plan.resort %}
-              <span class="row__label">{{ plan.resort.name }}</span>
-            {% else %}
-              <span class="row__label row__label--quiet">{{ plan.get_status_display }}</span>
-            {% endif %}
-            {% if plan.note %}<span class="row__note">{{ plan.note }}</span>{% endif %}
-          </span>
-          {% if plan.is_private %}<span class="tag">{% include "includes/icons/lock.html" %}Private</span>{% endif %}
-          <span class="icon-button" aria-hidden="true">{% include "includes/icons/chevron-right.html" %}</span>
-        </a>
-      </li>
+      <li>{% include "groups/partials/day_row.html" with window_from=window_from %}</li>
     {% endfor %}
   </ol>
+  {% if elsewhere %}
+    <section class="heading" aria-labelledby="elsewhere-heading">
+      <span class="eyebrow" id="elsewhere-heading">Your other plans</span>
+      <ol class="list card">
+        {% for plan in elsewhere %}
+          <li>{% include "groups/partials/day_row.html" with day=plan.date plan=plan long_date=True window_from=window_from %}</li>
+        {% endfor %}
+      </ol>
+    </section>
+  {% endif %}
   {% if groups %}
     <a href="{% url 'planning:board' groups.0.uuid %}" class="small">See who's where →</a>
   {% endif %}
+  {{ marks|json_script:"plan-marks" }}
+{% endblock %}
+{% block scripts %}
+  <script src="{% static 'js/calendar.js' %}"></script>
 {% endblock %}

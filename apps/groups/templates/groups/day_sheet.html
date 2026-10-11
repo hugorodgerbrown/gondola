@@ -1,5 +1,6 @@
 {% include "includes/sheet_header.html" with eyebrow="My days" title=day|date:"l j F" %}
 <form method="post" action="{% url 'planning:day' day %}" hx-post="{% url 'planning:day' day %}" hx-target="#sheet-body" class="stack" data-day-form>
+  {% if window_from %}<input type="hidden" name="from" value="{{ window_from|date:'Y-m-d' }}">{% endif %}
   {% csrf_token %}
   {% if form.non_field_errors or form.resort.errors %}
     <ul class="errors">{% for error in form.non_field_errors %}<li>{{ error }}</li>{% endfor %}{% for error in form.resort.errors %}<li>{{ error }}</li>{% endfor %}</ul>
@@ -57,6 +58,7 @@
 </form>
 {% if plan %}
   <form method="post" action="{% url 'planning:day_clear' day %}" hx-post="{% url 'planning:day_clear' day %}">
+    {% if window_from %}<input type="hidden" name="from" value="{{ window_from|date:'Y-m-d' }}">{% endif %}
     {% csrf_token %}
     <button type="submit" class="button button--secondary button--block">Clear this day</button>
   </form>
