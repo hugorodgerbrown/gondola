@@ -21,7 +21,7 @@ class SignInForm(forms.Form):
         widget=forms.EmailInput(
             attrs={
                 "class": "input",
-                "autocomplete": "email",
+                "autocomplete": "email webauthn",
                 "placeholder": "you@example.com",
                 "autofocus": True,
             }

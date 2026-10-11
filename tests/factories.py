@@ -11,7 +11,7 @@ import datetime
 import factory
 from factory.django import DjangoModelFactory
 
-from apps.accounts.models import User
+from apps.accounts.models import Passkey, User
 from apps.groups.models import Group, MeetUp, MeetUpParticipant, Membership, PlanDay
 from apps.resorts.models import Pass, Resort
 
@@ -28,6 +28,20 @@ class UserFactory(DjangoModelFactory[User]):
     email = factory.Sequence(lambda n: f"skier{n}@example.com")
     display_name = factory.Sequence(lambda n: f"Skier {n}")
     password = factory.django.Password("password")
+
+
+class PasskeyFactory(DjangoModelFactory[Passkey]):
+    """Build a ``Passkey`` with a made-up credential."""
+
+    class Meta:
+        """Factory metadata."""
+
+        model = Passkey
+
+    user = factory.SubFactory(UserFactory)
+    credential_id = factory.Sequence(lambda n: f"credential-{n}")
+    public_key = b"public-key"
+    name = "Synced passkey"
 
 
 class PassFactory(DjangoModelFactory[Pass]):

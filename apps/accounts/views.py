@@ -7,10 +7,13 @@ apps/accounts/views.py — Signing in by emailed link, and the account page.
 * ``account_settings`` edits the name and the evening email; it also holds
   sign-out and account deletion.
 * ``stop_evening_email`` is the one-tap opt-out from the email footer.
+* The ``passkey_*`` views back the browser's WebAuthn calls (see
+  ``passkeys.py``): JSON in, JSON out, except removing one, which is a form.
 """
 
 from __future__ import annotations
 
+import json
 import logging
 from urllib.parse import urlencode
 
@@ -19,13 +22,14 @@ from django.contrib import messages
 from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
-from django.http import HttpRequest, HttpResponse
-from django.shortcuts import redirect, render
+from django.http import HttpRequest, HttpResponse, JsonResponse
+from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
-from django.views.decorators.http import require_POST
+from django.views.decorators.http import require_GET, require_POST
 
+from . import passkeys
 from .forms import NameForm, ProfileForm, SignInForm
-from .models import User
+from .models import Passkey, User
 from .services import (
     InvalidLink,
     read_sign_in_token,
@@ -46,6 +50,8 @@ def current_user(request: HttpRequest) -> User:
         raise PermissionDenied
     return user
 
+
+MODEL_BACKEND = "django.contrib.auth.backends.ModelBackend"
 
 # Session key holding the last link, shown on the page in DEBUG only.
 DEBUG_LINK_KEY = "debug_sign_in_link"
@@ -95,7 +101,7 @@ def verify(request: HttpRequest, token: str) -> HttpResponse:
         return render(
             request, "accounts/link_invalid.html", {"reason": str(exc)}, status=400
         )
-    login(request, result.user, backend="django.contrib.auth.backends.ModelBackend")
+    login(request, result.user, backend=MODEL_BACKEND)
     request.session.pop(DEBUG_LINK_KEY, None)
     next_url = safe_next(result.next_url, request)
     if not result.user.display_name:
@@ -125,7 +131,14 @@ def account_settings(request: HttpRequest) -> HttpResponse:
         form.save()
         messages.success(request, "Saved.")
         return redirect("accounts:settings")
-    return render(request, "accounts/settings.html", {"form": form})
+    return render(
+        request,
+        "accounts/settings.html",
+        {
+            "form": form,
+            "passkeys": Passkey.objects.for_user(current_user(request)),
+        },
+    )
 
 
 @require_POST
@@ -164,3 +177,75 @@ def stop_evening_email(request: HttpRequest, token: str) -> HttpResponse:
     return render(
         request, "accounts/stop_evening_email.html", {"done": done, "person": user}
     )
+
+
+def _json_body(request: HttpRequest) -> dict[str, object]:
+    """Return the request's JSON object body, or an empty dict if it isn't one."""
+    try:
+        body = json.loads(request.body or b"{}")
+    except ValueError:
+        return {}
+    return body if isinstance(body, dict) else {}
+
+
+@require_GET
+def passkey_sign_in_options(request: HttpRequest) -> JsonResponse:
+    """Start a passkey sign-in: return the browser's request options."""
+    return JsonResponse(passkeys.authentication_options(request.session))
+
+
+@require_POST
+def passkey_sign_in(request: HttpRequest) -> JsonResponse:
+    """Finish a passkey sign-in and say where to go next."""
+    body = _json_body(request)
+    raw_next = body.get("next")
+    next_url = safe_next(raw_next if isinstance(raw_next, str) else None, request)
+    try:
+        user = passkeys.verify_authentication(
+            json.dumps(body.get("credential")), request.session
+        )
+    except passkeys.PasskeyError as exc:
+        return JsonResponse({"error": str(exc)}, status=400)
+    login(request, user, backend=MODEL_BACKEND)
+    if not user.display_name:
+        next_url = f"{reverse('accounts:welcome')}?{urlencode({'next': next_url})}"
+    return JsonResponse({"next": next_url})
+
+
+@login_required
+@require_GET
+def passkey_add_options(request: HttpRequest) -> JsonResponse:
+    """Start adding a passkey: return the browser's creation options."""
+    return JsonResponse(
+        passkeys.registration_options(current_user(request), request.session)
+    )
+
+
+@login_required
+@require_POST
+def passkey_add(request: HttpRequest) -> JsonResponse:
+    """Finish adding a passkey to the signed-in account."""
+    body = _json_body(request)
+    try:
+        passkey = passkeys.save_registration(
+            current_user(request), json.dumps(body.get("credential")), request.session
+        )
+    except passkeys.PasskeyError as exc:
+        return JsonResponse({"error": str(exc)}, status=400)
+    messages.success(request, "Passkey added. Next time, sign in with it.")
+    return JsonResponse({"name": passkey.name})
+
+
+@login_required
+@require_POST
+def passkey_remove(request: HttpRequest, passkey_uuid: str) -> HttpResponse:
+    """Remove one of the signed-in person's passkeys."""
+    passkey = get_object_or_404(
+        Passkey.objects.for_user(current_user(request)), uuid=passkey_uuid
+    )
+    passkey.delete()
+    messages.success(
+        request,
+        "Passkey removed. Also delete it from your password manager or device.",
+    )
+    return redirect("accounts:settings")

@@ -48,6 +48,11 @@ Render shell. Set `DATABASE_URL`, `SITE_URL`, the `EMAIL_*` settings and
 `DEFAULT_FROM_EMAIL` when applying it. Migrations and the resort import run
 before each deploy.
 
+`SITE_URL` must be the address people use, because passkeys are tied to its
+domain: a passkey added on `resort-planner.ultraniche.ai` won't work on the
+`.onrender.com` address. Override with `WEBAUTHN_RP_ID` and
+`WEBAUTHN_ORIGIN` only if the two must differ.
+
 ## Checks
 
 `tox` runs everything CI runs:

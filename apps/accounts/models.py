@@ -119,3 +119,46 @@ class User(BaseModel, AbstractBaseUser, PermissionsMixin):
     def get_full_name(self) -> str:
         """Return the name shown in full."""
         return self.to_string()
+
+
+class PasskeyQuerySet(models.QuerySet["Passkey"]):
+    """Custom queryset for Passkey."""
+
+    def for_user(self, user: User) -> PasskeyQuerySet:
+        """Return the passkeys ``user`` has added."""
+        return self.filter(user=user)
+
+
+class Passkey(BaseModel):
+    """
+    A passkey (WebAuthn credential) someone can sign in with.
+
+    The public key is stored; the private key never leaves the person's
+    device or password manager. A person can add one per device, and the
+    emailed link keeps working alongside them.
+    """
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="passkeys")
+    credential_id = models.CharField(
+        max_length=1400,
+        unique=True,
+        help_text="The credential's id, base64url-encoded, as the browser sends it.",
+    )
+    public_key = models.BinaryField(help_text="COSE-encoded public key.")
+    sign_count = models.PositiveBigIntegerField(default=0)
+    name = models.CharField(max_length=100, help_text="Shown on the account page.")
+    backed_up = models.BooleanField(
+        default=False, help_text="Synced by a password manager, not tied to one device."
+    )
+    last_used_at = models.DateTimeField(null=True, blank=True)
+
+    objects = PasskeyQuerySet.as_manager()
+
+    class Meta(BaseModel.Meta):
+        """Model metadata."""
+
+        ordering = ["-created_at"]
+
+    def to_string(self) -> str:
+        """Return the passkey's name and whose it is."""
+        return f"{self.name} ({self.user.email})"

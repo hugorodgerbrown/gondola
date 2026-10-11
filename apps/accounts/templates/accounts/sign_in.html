@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load static %}
 {% block title %}Sign in · {{ SITE_NAME }}{% endblock %}
 {% block content %}
   <div class="heading">
@@ -6,6 +7,10 @@
     <h1 class="title">Sign in with your email</h1>
     <p class="lede">We'll email you a link. No password. New here? The link creates your account.</p>
   </div>
+  <div class="stack" data-passkey-sign-in
+       data-options-url="{% url 'accounts:passkey_sign_in_options' %}"
+       data-verify-url="{% url 'accounts:passkey_sign_in' %}"
+       data-next="{{ next_url }}">
   <form method="post" class="card card--padded" novalidate>
     {% csrf_token %}
     <input type="hidden" name="next" value="{{ next_url }}">
@@ -18,4 +23,10 @@
     </div>
     <button type="submit" class="button button--block">Email me a link</button>
   </form>
+  <p class="errors" data-passkey-error role="alert" hidden></p>
+  <button type="button" class="button button--secondary button--block" data-passkey-button hidden>Sign in with a passkey</button>
+  </div>
+{% endblock %}
+{% block scripts %}
+  <script src="{% static 'js/passkey.js' %}"></script>
 {% endblock %}

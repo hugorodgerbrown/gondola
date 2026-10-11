@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load static %}
 {% block title %}Your account · {{ SITE_NAME }}{% endblock %}
 {% block content %}
   <div class="heading">
@@ -18,9 +19,39 @@
     </label>
     <button type="submit" class="button button--block">Save</button>
   </form>
+  <section class="heading" aria-labelledby="passkeys-heading">
+    <span class="eyebrow" id="passkeys-heading">Passkeys</span>
+    {% if passkeys %}
+      <ul class="list card">
+        {% for passkey in passkeys %}
+          <li class="row">
+            <span class="row__main">
+              <span>{{ passkey.name }}</span>
+              <span class="row__note">Added {{ passkey.created_at|date:"j M Y" }} · {% if passkey.last_used_at %}last used {{ passkey.last_used_at|date:"j M Y" }}{% else %}not used yet{% endif %}</span>
+            </span>
+            <form method="post" action="{% url 'accounts:passkey_remove' passkey.uuid %}">
+              {% csrf_token %}
+              <button type="submit" class="icon-button" aria-label="Remove {{ passkey.name }}">{% include "includes/icons/close.html" %}</button>
+            </form>
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p class="small muted">Sign in with Face ID, Touch ID or your password manager instead of waiting for an email.</p>
+    {% endif %}
+    <div data-passkey-add hidden
+         data-options-url="{% url 'accounts:passkey_add_options' %}"
+         data-verify-url="{% url 'accounts:passkey_add' %}">
+      <p class="errors" data-passkey-error role="alert" hidden></p>
+      <button type="button" class="button button--secondary button--block" data-passkey-button>Add a passkey for this device</button>
+    </div>
+  </section>
   <form method="post" action="{% url 'accounts:sign_out' %}">
     {% csrf_token %}
     <button type="submit" class="button button--secondary button--block">Sign out</button>
   </form>
   <a class="small muted" href="{% url 'accounts:delete' %}">Delete my account</a>
+{% endblock %}
+{% block scripts %}
+  <script src="{% static 'js/passkey.js' %}"></script>
 {% endblock %}
