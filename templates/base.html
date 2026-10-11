@@ -9,7 +9,7 @@
     <meta name="theme-color" content="#f2f0ec">
     <link rel="manifest" href="{% url 'core:manifest' %}">
     <link rel="icon" href="{% static 'img/icon.svg' %}" type="image/svg+xml">
-    <link rel="apple-touch-icon" href="{% static 'img/icon-192.png' %}">
+    <link rel="apple-touch-icon" href="{% static 'img/apple-touch-icon.png' %}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap">
@@ -20,7 +20,7 @@
   <body hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
     {% block topbar %}
       <header class="topbar">
-        <a class="topbar__brand" href="{% url 'core:home' %}">{{ SITE_NAME }}</a>
+        <a class="topbar__brand" href="{% url 'core:home' %}"><img class="topbar__logo" src="{% static 'img/icon.svg' %}" alt="" width="28" height="28">{{ SITE_NAME }}</a>
         {% if user.is_authenticated %}
           <a class="icon-button" href="{% url 'accounts:settings' %}" aria-label="Your account">{% include "includes/icons/user.html" %}</a>
         {% else %}
