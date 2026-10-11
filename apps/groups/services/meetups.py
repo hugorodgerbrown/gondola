@@ -13,6 +13,7 @@ chat as the invite link. Once the day has passed the link is read-only.
 from __future__ import annotations
 
 import datetime
+from dataclasses import dataclass
 
 from django.db import transaction
 
@@ -21,7 +22,7 @@ from apps.resorts.models import Resort
 
 from ..models import Group, MeetUp, MeetUpParticipant, PlanDay
 from .memberships import join_group
-from .plans import set_plan, today
+from .plans import join_names, set_plan, today
 
 
 class MeetUpError(Exception):
@@ -50,6 +51,39 @@ def _plan_meetup_day(user: User, meetup: MeetUp) -> PlanDay:
         note=note,
         is_private=existing.is_private if existing else False,
     )
+
+
+@dataclass
+class MeetUpCard:
+    """One meet-up as a sheet shows it: who's going, the viewer first."""
+
+    meetup: MeetUp
+    viewer_going: bool
+    going: str
+
+
+def meetups_for(
+    viewer: User, day: datetime.date, resort: Resort | None = None
+) -> list[MeetUpCard]:
+    """Return the meet-ups on ``day`` in ``viewer``'s groups, earliest first.
+
+    ``resort`` narrows them to one resort.
+    """
+    meetups = MeetUp.objects.filter(group__in=Group.objects.for_user(viewer), date=day)
+    if resort is not None:
+        meetups = meetups.filter(resort=resort)
+    cards = []
+    for meetup in (
+        meetups.select_related("group", "resort")
+        .prefetch_related("participants__user")
+        .order_by("start_time", "created_at")
+    ):
+        people = [p.user for p in meetup.participants.all()]
+        viewer_going = any(u.pk == viewer.pk for u in people)
+        names = [u.to_string() for u in people if u.pk != viewer.pk]
+        going = join_names((["You"] if viewer_going else []) + names)
+        cards.append(MeetUpCard(meetup, viewer_going, going))
+    return cards
 
 
 def meetup_on(group: Group, day: datetime.date) -> MeetUp | None:

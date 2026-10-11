@@ -1,0 +1,9 @@
+{# One meet-up as a card linking to its page: a MeetUpCard from meetups_for(). #}
+{% with meetup=card.meetup %}
+  <a class="card card--padded row--link" href="{% url 'planning:meetup' meetup.share_token %}">
+    <span class="eyebrow">{{ meetup.group.name }} · meet-up</span>
+    <strong>{% if meetup.start_time %}{{ meetup.start_time|time:"H:i" }} at {% endif %}{{ meetup.resort.name }}</strong>
+    <span class="small muted">Going: {{ card.going }}</span>
+    <span class="small">{% if card.viewer_going %}Open the meet-up →{% else %}Join, or see the details →{% endif %}</span>
+  </a>
+{% endwith %}

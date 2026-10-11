@@ -31,6 +31,7 @@ from apps.resorts.search import search_resorts
 
 from ..forms import KEEP_RESORT, DayForm
 from ..models import Group, PlanDay
+from ..services.meetups import meetups_for
 from ..services.month import build_month, month_start
 from ..services.plans import (
     clear_plan,
@@ -172,6 +173,8 @@ def _sheet(
             "selected": selected,
             "keep_resort": KEEP_RESORT,
             "groups_count": Group.objects.for_user(user).count(),
+            # One day's sheet lists that day's meet-ups in your groups.
+            "meetups": meetups_for(user, days[0]) if len(days) == 1 else [],
             "window_from": _window_from(request),
         },
     )
