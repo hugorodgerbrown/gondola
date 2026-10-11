@@ -1,16 +1,21 @@
 """
-apps/groups/services/plans.py — Saying where you're skiing on a day.
+apps/groups/services/plans.py — Saying where you'll be, and if you're skiing.
 
-A plan day belongs to a person, not a group. ``set_plan`` is the one place
-a plan is written, whether from My days, the map or by joining a meet-up;
-``set_plans`` gives several selected days the same plan in one go.
-Saying nothing is different from "Not sure yet" or "Not skiing": clearing
-a day deletes its row.
+A plan day belongs to a person, not a group, and answers two separate
+questions: where they'll be (a resort, or none) and whether they're
+skiing (yes, not sure, no). Someone at a resort who isn't skiing is still
+"around" for friends. ``update_plans`` is the one place plans are written,
+whether from My days, the map or by joining a meet-up: over several days it
+changes only the answers given and keeps the rest, so ten days in Verbier
+stay in Verbier when three of them are then marked as skiing. Saying
+nothing is different from "Not sure yet" or "Not skiing": clearing a day
+deletes its row.
 """
 
 from __future__ import annotations
 
 import datetime
+import enum
 from collections import defaultdict
 from collections.abc import Iterable
 from dataclasses import dataclass, field
@@ -49,30 +54,61 @@ def date_range(start: datetime.date, days: int) -> list[datetime.date]:
     return [start + datetime.timedelta(days=n) for n in range(days)]
 
 
+class Keep(enum.Enum):
+    """Leave this answer as each day already has it."""
+
+    KEEP = "keep"
+
+
+KEEP = Keep.KEEP
+
+
 @transaction.atomic
+def update_plans(
+    user: User,
+    days: Iterable[datetime.date],
+    *,
+    skiing: str | Keep = KEEP,
+    resort: Resort | None | Keep = KEEP,
+    note: str | Keep = KEEP,
+    is_private: bool | Keep = KEEP,
+) -> list[PlanDay]:
+    """Set the answers given on each of ``days``, keeping the ones left out.
+
+    A day with no plan yet starts from skiing, at no resort, shared.
+    """
+    dates = sorted(set(days))
+    existing = {
+        plan.date: plan for plan in PlanDay.objects.filter(user=user, date__in=dates)
+    }
+    saved = []
+    for day in dates:
+        plan = existing.get(day) or PlanDay(user=user, date=day)
+        if not isinstance(skiing, Keep):
+            plan.skiing = skiing
+        if not isinstance(resort, Keep):
+            plan.resort = resort
+        if not isinstance(note, Keep):
+            plan.note = note.strip()
+        if not isinstance(is_private, Keep):
+            plan.is_private = is_private
+        plan.save()
+        saved.append(plan)
+    return saved
+
+
 def set_plan(
     user: User,
     day: datetime.date,
-    status: str,
+    skiing: str,
     *,
     resort: Resort | None = None,
     note: str = "",
     is_private: bool = False,
 ) -> PlanDay:
-    """Create or replace ``user``'s plan for ``day``."""
-    if status != PlanDay.Status.RESORT:
-        resort = None
-    elif resort is None:
-        raise ValueError("A day at a resort needs a resort.")
-    plan, _ = PlanDay.objects.update_or_create(
-        user=user,
-        date=day,
-        defaults={
-            "status": status,
-            "resort": resort,
-            "note": note.strip(),
-            "is_private": is_private,
-        },
+    """Create or replace ``user``'s whole plan for ``day``."""
+    (plan,) = update_plans(
+        user, [day], skiing=skiing, resort=resort, note=note, is_private=is_private
     )
     return plan
 
@@ -80,23 +116,6 @@ def set_plan(
 def clear_plan(user: User, day: datetime.date) -> None:
     """Forget ``user``'s plan for ``day``, so it reads as unsaid."""
     PlanDay.objects.filter(user=user, date=day).delete()
-
-
-@transaction.atomic
-def set_plans(
-    user: User,
-    days: Iterable[datetime.date],
-    status: str,
-    *,
-    resort: Resort | None = None,
-    note: str = "",
-    is_private: bool = False,
-) -> list[PlanDay]:
-    """Give ``user`` the same plan on every one of ``days``, replacing theirs."""
-    return [
-        set_plan(user, day, status, resort=resort, note=note, is_private=is_private)
-        for day in days
-    ]
 
 
 def clear_plans(user: User, days: Iterable[datetime.date]) -> None:
@@ -114,21 +133,27 @@ def upcoming_plans(user: User) -> list[PlanDay]:
 
 
 def plan_marks(plans: list[PlanDay]) -> dict[str, str]:
-    """Return the calendar's dots: each planned day's ISO date and status."""
-    return {plan.date.isoformat(): plan.status for plan in plans}
+    """Return the calendar's dots: each planned day's ISO date and skiing."""
+    return {plan.date.isoformat(): plan.skiing for plan in plans}
 
 
 @dataclass
 class ResortFriends:
-    """Friends planned at one resort on one day."""
+    """Friends planned at one resort, and which of them aren't skiing."""
 
     resort: Resort
     friends: list[User] = field(default_factory=list)
+    skiers: set[int] = field(default_factory=set)
 
     @property
     def names(self) -> str:
-        """Return the friends' names as one phrase."""
-        return join_names([f.to_string() for f in self.friends])
+        """Return the friends' names as one phrase, marking who's just around."""
+        return join_names(
+            [
+                f.to_string() + ("" if f.pk in self.skiers else " (around)")
+                for f in self.friends
+            ]
+        )
 
 
 def friends_by_resort(
@@ -137,20 +162,19 @@ def friends_by_resort(
     """Return resorts where ``viewer``'s friends plan to be, busiest first.
 
     ``days`` is one date or several; over several, a friend at the same
-    resort on more than one of them counts once.
+    resort on more than one of them counts once, and counts as skiing if
+    they ski any of them. Friends there but not skiing count too.
     """
     dates = [days] if isinstance(days, datetime.date) else list(days)
     groups: dict[int, ResortFriends] = {}
-    for plan in (
-        visible_friend_plans(viewer, dates)
-        .filter(status=PlanDay.Status.RESORT)
-        .order_by("date")
-    ):
-        if plan.resort is None:  # pragma: no cover — the status constraint forbids it
+    for plan in visible_friend_plans(viewer, dates).at_resorts().order_by("date"):
+        if plan.resort is None:  # pragma: no cover — at_resorts() rules it out
             continue
         entry = groups.setdefault(plan.resort.pk, ResortFriends(resort=plan.resort))
         if plan.user not in entry.friends:
             entry.friends.append(plan.user)
+        if plan.is_skiing:
+            entry.skiers.add(plan.user.pk)
     return sorted(
         groups.values(), key=lambda g: (-len(g.friends), g.resort.name.lower())
     )
@@ -159,9 +183,7 @@ def friends_by_resort(
 def friend_counts(viewer: User, day: datetime.date) -> dict[int, int]:
     """Return how many friends plan to be at each resort id on ``day``."""
     counts: dict[int, int] = defaultdict(int)
-    for plan in visible_friend_plans(viewer, [day]).filter(
-        status=PlanDay.Status.RESORT
-    ):
+    for plan in visible_friend_plans(viewer, [day]).at_resorts():
         if plan.resort_id is not None:
             counts[plan.resort_id] += 1
     return dict(counts)

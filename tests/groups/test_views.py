@@ -15,7 +15,7 @@ from tests.factories import PassFactory
 from tests.groups.conftest import Crew
 
 pytestmark = pytest.mark.django_db
-S = PlanDay.Status
+S = PlanDay.Skiing
 HTMX = {"HX-Request": "true"}
 
 
@@ -41,8 +41,8 @@ def test_screens_need_sign_in(client: Client, name: str) -> None:
 
 def test_my_days_is_this_month(sam: Client, crew: Crew) -> None:
     today = plans.today()
-    plans.set_plan(crew.sam, today, S.RESORT, resort=crew.verbier, is_private=True)
-    plans.set_plan(crew.anna, today, S.RESORT, resort=crew.verbier)
+    plans.set_plan(crew.sam, today, S.YES, resort=crew.verbier, is_private=True)
+    plans.set_plan(crew.anna, today, S.YES, resort=crew.verbier)
     response = sam.get(reverse("planning:my_days"))
     cal = response.context["month"]
     assert cal.first == today.replace(day=1)
@@ -81,7 +81,7 @@ def test_plain_forms_keep_the_month(sam: Client, crew: Crew) -> None:
     sheet = sam.get(day_url, {"from": first.isoformat()})
     assert f'name="from" value="{first.isoformat()}"'.encode() in sheet.content
     back = f"{reverse('planning:my_days')}?from={first.isoformat()}"
-    saved = sam.post(day_url, {"status": S.NOT_SURE, "from": first.isoformat()})
+    saved = sam.post(day_url, {"skiing": S.NOT_SURE, "from": first.isoformat()})
     assert saved["Location"] == back
     cleared = sam.post(
         reverse("planning:day_clear", kwargs={"day": far}), {"from": first.isoformat()}
@@ -97,13 +97,13 @@ def test_my_days_without_groups(client: Client, crew: Crew) -> None:
 
 
 def test_day_sheet_shows_friends_first(sam: Client, crew: Crew) -> None:
-    plans.set_plan(crew.anna, crew.day, S.RESORT, resort=crew.verbier)
-    plans.set_plan(crew.sam, crew.day, S.RESORT, resort=crew.zermatt)
+    plans.set_plan(crew.anna, crew.day, S.YES, resort=crew.verbier)
+    plans.set_plan(crew.sam, crew.day, S.YES, resort=crew.zermatt)
     url = reverse("planning:day", kwargs={"day": crew.day})
     fragment = sam.get(url, headers=HTMX)
     assert b"<html" not in fragment.content
-    assert b"Where friends are" in fragment.content
-    assert fragment.context["elsewhere"] == crew.zermatt
+    assert b"Where will you be?" in fragment.content
+    assert fragment.context["elsewhere"] == [crew.zermatt]
     page = sam.get(url)
     assert b"<html" in page.content
 
@@ -113,7 +113,7 @@ def test_day_sheet_saves(sam: Client, crew: Crew) -> None:
     response = sam.post(
         url,
         {
-            "status": "resort",
+            "skiing": "skiing",
             "resort": str(crew.verbier.uuid),
             "note": "first lift",
             "is_private": "on",
@@ -129,14 +129,21 @@ def test_day_sheet_saves(sam: Client, crew: Crew) -> None:
     )
 
 
-def test_day_sheet_needs_resort_when_skiing(sam: Client, crew: Crew) -> None:
+def test_day_sheet_where_and_skiing_apart(sam: Client, crew: Crew) -> None:
     url = reverse("planning:day", kwargs={"day": crew.day})
-    response = sam.post(url, {"status": "resort"}, headers=HTMX)
-    assert response.status_code == 200
-    assert b"Pick a resort" in response.content
+    # Around Verbier, not skiing.
+    sam.post(
+        url, {"skiing": "not_skiing", "resort": str(crew.verbier.uuid)}, headers=HTMX
+    )
+    plan = PlanDay.objects.get(user=crew.sam)
+    assert (plan.resort, plan.skiing) == (crew.verbier, S.NO)
+    # Skiing, no resort named yet.
+    sam.post(url, {"skiing": "skiing", "resort": ""}, headers=HTMX)
+    plan.refresh_from_db()
+    assert (plan.resort, plan.skiing) == (None, S.YES)
     bad = sam.post(
         url,
-        {"status": "resort", "resort": "00000000-0000-0000-0000-000000000000"},
+        {"skiing": "skiing", "resort": "00000000-0000-0000-0000-000000000000"},
         headers=HTMX,
     )
     assert b"Pick a resort from the list" in bad.content
@@ -144,9 +151,9 @@ def test_day_sheet_needs_resort_when_skiing(sam: Client, crew: Crew) -> None:
 
 def test_day_sheet_not_sure_and_clear(sam: Client, crew: Crew) -> None:
     url = reverse("planning:day", kwargs={"day": crew.day})
-    response = sam.post(url, {"status": "not_sure"})
+    response = sam.post(url, {"skiing": "not_sure"})
     assert response["Location"] == reverse("planning:my_days")
-    assert PlanDay.objects.get(user=crew.sam).status == S.NOT_SURE
+    assert PlanDay.objects.get(user=crew.sam).skiing == S.NOT_SURE
     assert b"Clear this day" in sam.get(url).content
     sam.post(reverse("planning:day_clear", kwargs={"day": crew.day}), headers=HTMX)
     assert not PlanDay.objects.filter(user=crew.sam).exists()
@@ -168,12 +175,8 @@ def several(*days: str) -> str:
 
 @freeze_time("2026-10-11 09:00:00+02:00")
 def test_several_days_sheet(sam: Client, crew: Crew) -> None:
-    plans.set_plan(
-        crew.anna, datetime.date(2026, 12, 14), S.RESORT, resort=crew.verbier
-    )
-    plans.set_plan(
-        crew.anna, datetime.date(2026, 12, 15), S.RESORT, resort=crew.verbier
-    )
+    plans.set_plan(crew.anna, datetime.date(2026, 12, 14), S.YES, resort=crew.verbier)
+    plans.set_plan(crew.anna, datetime.date(2026, 12, 15), S.YES, resort=crew.verbier)
     plans.set_plan(crew.sam, datetime.date(2026, 12, 15), S.NOT_SURE)
     days = [f"2026-12-{day}" for day in range(14, 21)]
     fragment = sam.get(several(*reversed(days)), headers=HTMX)
@@ -183,7 +186,14 @@ def test_several_days_sheet(sam: Client, crew: Crew) -> None:
     assert context["eyebrow"] == "My days · 7 days"
     assert context["save_label"] == "Save 7 days"
     assert [e.names for e in context["friends"]] == ["Anna"]  # once, not twice
-    assert b"already said something about 1 of these days" in fragment.content
+    # Sam is unsure about one day, and the rest start out skiing.
+    assert context["mixed"] == {"skiing"}
+    assert b"Differs across these days" in fragment.content
+    assert b"Anything you leave alone stays" in fragment.content
+    plans.set_plan(crew.sam, datetime.date(2026, 12, 16), S.YES, resort=crew.verbier)
+    mixed = sam.get(several(*days), headers=HTMX)
+    assert mixed.context["mixed"] == {"skiing", "resort"}
+    assert b"Leave as it is" in mixed.content
     assert b"Clear these days" in fragment.content
     assert context["form_url"].endswith("?days=" + ",".join(days))
 
@@ -213,19 +223,58 @@ def test_several_days_titles(
 
 
 @freeze_time("2026-10-11 09:00:00+02:00")
+def test_several_days_change_only_what_is_touched(sam: Client, crew: Crew) -> None:
+    days = [datetime.date(2026, 12, d) for d in (19, 20, 21)]
+    plans.set_plan(crew.sam, days[0], S.NO, resort=crew.verbier, note="spa")
+    plans.set_plan(crew.sam, days[1], S.YES, resort=crew.zermatt, is_private=True)
+    url = several(*(d.isoformat() for d in days))
+    sheet = sam.get(url, headers=HTMX)
+    assert sheet.context["mixed"] == {"skiing", "resort", "note", "is_private"}
+    assert b'name="note_keep"' in sheet.content
+    assert b'name="private_keep"' in sheet.content
+    # Only skiing is picked; everything else keeps each day's own answer.
+    sam.post(
+        url,
+        {
+            "skiing": "not_sure",
+            "resort": "keep",
+            "note_keep": "on",
+            "private_keep": "on",
+        },
+        headers=HTMX,
+    )
+    saved = {p.date: p for p in PlanDay.objects.filter(user=crew.sam)}
+    assert [(saved[d].skiing, saved[d].resort) for d in days] == [
+        (S.NOT_SURE, crew.verbier),
+        (S.NOT_SURE, crew.zermatt),
+        (S.NOT_SURE, None),
+    ]
+    assert [(saved[d].note, saved[d].is_private) for d in days] == [
+        ("spa", False),
+        ("", True),
+        ("", False),
+    ]
+    # Now put them all in Verbier, leaving skiing alone.
+    sam.post(url, {"resort": str(crew.verbier.uuid)}, headers=HTMX)
+    assert {(p.resort, p.skiing) for p in PlanDay.objects.filter(user=crew.sam)} == {
+        (crew.verbier, S.NOT_SURE)
+    }
+
+
+@freeze_time("2026-10-11 09:00:00+02:00")
 def test_several_days_save_and_clear(sam: Client, crew: Crew) -> None:
     days = ["2026-12-05", "2026-12-12", "2026-12-19"]
     url = several(*days)
     response = sam.post(
         url,
-        {"status": "resort", "resort": str(crew.verbier.uuid), "from": "2026-12-01"},
+        {"skiing": "skiing", "resort": str(crew.verbier.uuid), "from": "2026-12-01"},
     )
     assert response["Location"] == reverse("planning:my_days") + "?from=2026-12-01"
     saved = PlanDay.objects.filter(user=crew.sam).order_by("date")
     assert [p.date.isoformat() for p in saved] == days
     assert {p.resort for p in saved} == {crew.verbier}
     # Picking up the first day's plan as the starting point.
-    assert sam.get(url, headers=HTMX).context["form"]["status"].value() == "resort"
+    assert sam.get(url, headers=HTMX).context["form"]["skiing"].value() == "skiing"
     clear = reverse("planning:several_days_clear") + "?days=" + ",".join(days[:2])
     response = sam.post(clear, headers=HTMX)
     assert response["HX-Refresh"] == "true"
@@ -301,7 +350,7 @@ def test_map_page_bad_date_is_today(sam: Client) -> None:
 
 
 def test_map_pins_json(sam: Client, crew: Crew) -> None:
-    plans.set_plan(crew.anna, crew.day, S.RESORT, resort=crew.verbier)
+    plans.set_plan(crew.anna, crew.day, S.YES, resort=crew.verbier)
     response = sam.get(reverse("planning:map_pins"), {"date": crew.day.isoformat()})
     data = json.loads(response.content)
     verbier = next(p for p in data["pins"] if p["name"] == "Verbier")
@@ -309,20 +358,22 @@ def test_map_pins_json(sam: Client, crew: Crew) -> None:
 
 
 def test_resort_sheet_and_plan_here(sam: Client, crew: Crew) -> None:
-    plans.set_plan(
-        crew.anna, crew.day, S.RESORT, resort=crew.verbier, note="first lift"
-    )
+    plans.set_plan(crew.anna, crew.day, S.YES, resort=crew.verbier, note="first lift")
     url = reverse("planning:resort_sheet", kwargs={"resort_uuid": crew.verbier.uuid})
     sheet = sam.get(url, {"date": crew.day.isoformat()}, headers=HTMX)
     assert b"first lift" in sheet.content
-    assert b"Plan my day here" in sheet.content
+    assert b"I'll be here" in sheet.content
+    plans.set_plan(crew.ben, crew.day, S.NO, resort=crew.verbier)
+    assert (
+        b"Around" in sam.get(url, {"date": crew.day.isoformat()}, headers=HTMX).content
+    )
     assert b"Propose a meet-up here" in sheet.content
     plan_url = reverse("planning:plan_here", kwargs={"resort_uuid": crew.verbier.uuid})
     response = sam.post(plan_url, {"date": crew.day.isoformat()})
     assert response["Location"] == f"/map/?date={crew.day.isoformat()}"
     assert PlanDay.objects.get(user=crew.sam).resort == crew.verbier
     again = sam.get(url, {"date": crew.day.isoformat()}, headers=HTMX)
-    assert b"Planned" in again.content and b"Plan my day here" not in again.content
+    assert b"Planned" in again.content and b"ll be here" not in again.content
 
 
 def test_plan_here_ignores_past_days(sam: Client, crew: Crew) -> None:
@@ -433,7 +484,7 @@ def test_reset_invite_kills_old_link(client: Client, crew: Crew) -> None:
 
 
 def test_board(sam: Client, crew: Crew) -> None:
-    plans.set_plan(crew.anna, plans.today(), S.RESORT, resort=crew.verbier)
+    plans.set_plan(crew.anna, plans.today(), S.YES, resort=crew.verbier)
     meetups.propose_meetup(crew.group, crew.anna, plans.today(), crew.zermatt)
     url = reverse("planning:board", kwargs={"group_uuid": crew.group.uuid})
     page = sam.get(url)
@@ -446,7 +497,7 @@ def test_board(sam: Client, crew: Crew) -> None:
 
 
 def test_propose_meetup_prefills_top_suggestion(sam: Client, crew: Crew) -> None:
-    plans.set_plan(crew.anna, crew.day, S.RESORT, resort=crew.verbier)
+    plans.set_plan(crew.anna, crew.day, S.YES, resort=crew.verbier)
     url = reverse("planning:meetup_new", kwargs={"group_uuid": crew.group.uuid})
     page = sam.get(url, {"date": crew.day.isoformat()})
     assert page.context["selected"] == str(crew.verbier.uuid)

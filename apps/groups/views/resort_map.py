@@ -21,14 +21,14 @@ from django.views.decorators.http import require_GET, require_POST
 from apps.core.http import refresh, render_sheet
 from apps.resorts.models import Pass, Resort
 
-from ..models import Group, PlanDay
+from ..models import Group
 from ..services.plans import (
     is_plannable,
     last_plannable_day,
     plan_marks,
-    set_plan,
     today,
     upcoming_plans,
+    update_plans,
 )
 from ..services.resort_map import map_pins, resort_day, resort_index
 from .helpers import current_user, parse_day
@@ -105,18 +105,12 @@ def resort_sheet(request: HttpRequest, resort_uuid: str) -> HttpResponse:
 @login_required
 @require_POST
 def plan_here(request: HttpRequest, resort_uuid: str) -> HttpResponse:
-    """Set the day to this resort, from the resort sheet."""
+    """Put the person at this resort for the day, from the resort sheet."""
     resort = get_object_or_404(Resort, uuid=resort_uuid)
     day = parse_day(request.POST.get("date"))
     url = f"{reverse('planning:map')}?date={day.isoformat()}"
     if is_plannable(day):
-        user = current_user(request)
-        existing = PlanDay.objects.filter(user=user, date=day).first()
-        set_plan(
-            user,
-            day,
-            PlanDay.Status.RESORT,
-            resort=resort,
-            is_private=existing.is_private if existing else False,
-        )
+        # Only where changes: skiing or not, and privacy, stay as they were
+        # (a new day is skiing).
+        update_plans(current_user(request), [day], resort=resort)
     return refresh(request, url)

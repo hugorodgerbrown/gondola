@@ -35,14 +35,16 @@ RESORTS = {
     "CRA": "Crans-Montana",
     "CHAM": "Champéry",
 }
-# One row per person, one cell per day from today: a resort code, "?" for
-# not sure, "-" for not skiing, "" for unsaid, a trailing "*" for private.
+# One row per person, one cell per day from today: a resort code (skiing
+# there), "?" for not sure, "-" for not skiing, "" for unsaid. A code can
+# take "-" (there, not skiing) or "?" (there, maybe skiing), and any cell a
+# trailing "*" for private.
 WEEK = {
     "you": ["VERB", "VERB", "-", "?", "", "CRA", "SAASF*"],
     "Anna": ["VERB", "GRIME", "?", "", "SAASF", "CRA", ""],
     "Ben": ["SAASF", "VERB", "VERB", "?", "VERB", "", "-"],
-    "Chloé": ["VERB", "VERB", "", "", "VERB", "CRA", "?"],
-    "Ella": ["CHAM", "-", "-", "CHAM", "", "", "?"],
+    "Chloé": ["VERB", "VERB", "VERB-", "", "VERB", "CRA", "?"],
+    "Ella": ["CHAM", "CHAM-", "CHAM-", "CHAM", "CHAM?", "", "?"],
     "Felix": ["?", "", "", "", "", "CRA", "CRA"],
 }
 NOTES = {("Anna", 0): "First lift, then Mont Fort", ("you", 5): "With the kids"}
@@ -139,16 +141,15 @@ class Command(BaseCommand):
         code = cell.rstrip("*")
         if not code:
             return
-        if code == "?":
-            set_plan(user, day, PlanDay.Status.NOT_SURE, is_private=private)
-        elif code == "-":
-            set_plan(user, day, PlanDay.Status.NOT_SKIING, is_private=private)
-        else:
-            set_plan(
-                user,
-                day,
-                PlanDay.Status.RESORT,
-                resort=resorts[code],
-                note=note,
-                is_private=private,
-            )
+        skiing = PlanDay.Skiing.YES
+        if code[-1] in "?-":
+            skiing = PlanDay.Skiing.NOT_SURE if code[-1] == "?" else PlanDay.Skiing.NO
+            code = code[:-1]
+        set_plan(
+            user,
+            day,
+            skiing,
+            resort=resorts[code] if code else None,
+            note=note,
+            is_private=private,
+        )

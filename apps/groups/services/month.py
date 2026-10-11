@@ -3,9 +3,9 @@ apps/groups/services/month.py — My days as a month calendar.
 
 One month at a time, weeks starting Monday. Each day carries what the
 viewer said about it and what their groups are up to: how many friends
-are skiing, how many of them at the viewer's resort, and whether one of
-the viewer's groups has a meet-up. Friends' private days count for
-nothing, as everywhere else.
+are at a resort (skiing or just around), how many of them at the viewer's
+resort, and whether one of the viewer's groups has a meet-up. Friends'
+private days count for nothing, as everywhere else.
 """
 
 from __future__ import annotations
@@ -36,8 +36,8 @@ class MonthDay:
     meetup: MeetUp | None = None
 
     @property
-    def friends_skiing(self) -> int:
-        """Return how many friends are skiing that day."""
+    def friends_out(self) -> int:
+        """Return how many friends are at a resort that day."""
         return len(self.friends)
 
     @property
@@ -48,16 +48,11 @@ class MonthDay:
         if self.is_today:
             parts.append("today")
         plan = self.plan
-        if plan is None:
-            parts.append("no plan")
-        elif plan.resort is not None:
-            parts.append(plan.resort.name)
-        else:
-            parts.append(plan.get_status_display())
+        parts.append("no plan" if plan is None else plan.describe())
         if plan is not None and plan.is_private:
             parts.append("private")
         if self.friends:
-            parts.append(f"skiing: {join_names(self.friends)}")
+            parts.append(f"friends at resorts: {join_names(self.friends)}")
         if self.with_me:
             parts.append(f"{self.with_me} with you")
         if self.meetup is not None:
@@ -103,9 +98,7 @@ def build_month(viewer: User, first: datetime.date) -> Month:
     }
     friends: dict[datetime.date, list[str]] = defaultdict(list)
     with_me: dict[datetime.date, int] = defaultdict(int)
-    for plan in visible_friend_plans(viewer, dates).filter(
-        status=PlanDay.Status.RESORT
-    ):
+    for plan in visible_friend_plans(viewer, dates).at_resorts():
         friends[plan.date].append(plan.user.to_string())
         own = mine.get(plan.date)
         if own is not None and own.resort_id == plan.resort_id:

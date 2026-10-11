@@ -1,7 +1,8 @@
 """
 apps/groups/services/board.py — The who's-where board for one group.
 
-People down the side, seven days across, a short resort code in each cell.
+People down the side, seven days across, a short resort code in each cell,
+quieter when that person is around but not skiing.
 The viewer's own row comes first and shows their private days with a lock;
 everyone else's private days look unplanned. The last row holds the
 group's meet-up for each day, if there is one.
@@ -86,16 +87,15 @@ def cell_for(plan: PlanDay | None, *, mine: bool) -> Cell:
     """Return the cell for one plan, as the viewer may see it."""
     if plan is None or (plan.is_private and not mine):
         return EMPTY
-    if plan.status == PlanDay.Status.NOT_SURE:
-        return Cell(text="?", title="Not sure yet", quiet=True, private=plan.is_private)
-    if plan.status == PlanDay.Status.NOT_SKIING:
-        return Cell(text="–", title="Not skiing", quiet=True, private=plan.is_private)
-    resort = plan.resort
-    if resort is None:  # pragma: no cover — the status constraint forbids it
-        return EMPTY
+    if plan.resort is not None:
+        text = plan.resort.display_code
+    else:
+        text = "–" if plan.skiing == PlanDay.Skiing.NO else "?"
     return Cell(
-        text=resort.display_code,
-        title=resort.name + (f" · {plan.note}" if plan.note else ""),
+        text=text,
+        title=plan.describe() + (f" · {plan.note}" if plan.note else ""),
+        # Only a day out skiing is drawn at full strength.
+        quiet=not plan.is_skiing,
         private=plan.is_private,
     )
 

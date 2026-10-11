@@ -45,7 +45,7 @@ def _plan_meetup_day(user: User, meetup: MeetUp) -> PlanDay:
     return set_plan(
         user,
         meetup.date,
-        PlanDay.Status.RESORT,
+        PlanDay.Skiing.YES,
         resort=meetup.resort,
         note=note,
         is_private=existing.is_private if existing else False,

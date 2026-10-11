@@ -13,8 +13,11 @@ Python 3.14 / Django 6.0, pinned in `pyproject.toml`.
   link. Opening the link never joins by itself: a Join button does.
 - A plan day belongs to a person, not a group. A day can be marked private,
   and then group-mates see nothing for it.
-- "Not sure yet" and "Not skiing" are real states, distinct from saying
-  nothing.
+- A plan day answers two separate questions: where you'll be (a resort,
+  or none) and whether you're skiing (yes, not sure yet, no). Someone at a
+  resort who isn't skiing is "around": counted on the map, but not used to
+  pick a meet-up resort. Every answer is distinct from saying nothing.
+- A sheet for several days changes only the answers you touch.
 - A meet-up needs a resort; the time and meeting pin are optional.
 - Touring spots are not resorts and are never imported.
 - Every resort is Swiss, so dates and times are Swiss wall-clock

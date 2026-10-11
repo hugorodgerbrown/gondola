@@ -4,7 +4,8 @@ apps/groups/services/evening.py — The evening-before email.
 Sent once a day, the evening before. A person gets it when they have said
 something about tomorrow (any status), or one of their groups has a
 meet-up tomorrow, and there is something from friends to tell them: who
-in each group is where tomorrow, and the meet-ups. Private days are left
+in each group is where tomorrow (marking who's around but not skiing), and
+the meet-ups. Private days are left
 out, as everywhere. Anyone can stop it with one tap from the footer.
 """
 
@@ -96,7 +97,7 @@ def build_digest(user: User, day: datetime.date) -> Digest:
         PlanDay.objects.shared()
         .filter(
             date=day,
-            status=PlanDay.Status.RESORT,
+            resort__isnull=False,
             user__group_memberships__group__in=groups,
         )
         .select_related("user", "resort")
@@ -110,6 +111,8 @@ def build_digest(user: User, day: datetime.date) -> Digest:
         for plan in shared:
             if plan.user_id in member_ids and plan.resort is not None:
                 name = "you" if plan.user_id == user.pk else plan.user.to_string()
+                if not plan.is_skiing and name != "you":
+                    name += " (around)"
                 by_resort.setdefault(plan.resort.name, []).append(name)
         if own and own.is_private and own.resort is not None:
             by_resort.setdefault(own.resort.name, []).append("you")

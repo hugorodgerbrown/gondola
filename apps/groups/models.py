@@ -149,16 +149,28 @@ class PlanDayQuerySet(models.QuerySet["PlanDay"]):
         """Return plans on or after ``day``."""
         return self.filter(date__gte=day)
 
+    def at_resorts(self) -> PlanDayQuerySet:
+        """Return plans that name a resort, skiing or not."""
+        return self.filter(resort__isnull=False)
+
+    def skiing(self) -> PlanDayQuerySet:
+        """Return plans at a resort where the person is skiing."""
+        return self.filter(resort__isnull=False, skiing=PlanDay.Skiing.YES)
+
 
 class PlanDay(BaseModel):
-    """Where one person is skiing on one date."""
+    """What one person said about one date: where they'll be, and if skiing.
 
-    class Status(models.TextChoices):
-        """What the person has said about the day."""
+    The two are separate: someone can be in Verbier for ten days and ski
+    three of them, and friends still want to know they're around.
+    """
 
-        RESORT = "resort", "At a resort"
+    class Skiing(models.TextChoices):
+        """Whether the person is skiing that day."""
+
+        YES = "skiing", "Skiing"
         NOT_SURE = "not_sure", "Not sure yet"
-        NOT_SKIING = "not_skiing", "Not skiing"
+        NO = "not_skiing", "Not skiing"
 
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -166,13 +178,14 @@ class PlanDay(BaseModel):
         related_name="plan_days",
     )
     date = models.DateField()
-    status = models.CharField(max_length=10, choices=Status)
+    skiing = models.CharField(max_length=10, choices=Skiing, default=Skiing.YES)
     resort = models.ForeignKey(
         Resort,
         on_delete=models.PROTECT,
         null=True,
         blank=True,
         related_name="plan_days",
+        help_text="Where they'll be, skiing or not. Empty: not at a resort.",
     )
     note = models.CharField(max_length=140, blank=True)
     is_private = models.BooleanField(
@@ -189,20 +202,28 @@ class PlanDay(BaseModel):
             models.UniqueConstraint(
                 fields=["user", "date"], name="planday_one_per_user_date"
             ),
-            # A resort is named exactly when the status says "at a resort".
-            models.CheckConstraint(
-                condition=(
-                    models.Q(status="resort", resort__isnull=False)
-                    | (~models.Q(status="resort") & models.Q(resort__isnull=True))
-                ),
-                name="planday_resort_matches_status",
-            ),
         ]
 
     def to_string(self) -> str:
         """Return who is where on which day."""
-        where = self.resort if self.resort_id else self.get_status_display()
-        return f"{self.user} · {self.date:%Y-%m-%d} · {where}"
+        return f"{self.user} · {self.date:%Y-%m-%d} · {self.describe()}"
+
+    @property
+    def is_skiing(self) -> bool:
+        """Return whether the person said they're skiing."""
+        return self.skiing == self.Skiing.YES
+
+    def describe(self) -> str:
+        """Return the day in words: "Verbier, not skiing", "Not sure yet"."""
+        if self.resort is None:
+            if self.skiing == self.Skiing.YES:
+                return "Skiing, not sure where"
+            return self.get_skiing_display()
+        if self.skiing == self.Skiing.NO:
+            return f"{self.resort.name}, not skiing"
+        if self.skiing == self.Skiing.NOT_SURE:
+            return f"{self.resort.name}, maybe skiing"
+        return self.resort.name
 
 
 # ---------------------------------------------------------------------------

@@ -42,13 +42,13 @@
             {% with plan=day.plan %}
               {% if day.plannable %}
                 <a data-date="{{ day.date|date:'Y-m-d' }}"
-                   class="mday{% if plan %} mday--{{ plan.status }}{% endif %}{% if day.is_today %} mday--today{% endif %}"
+                   class="mday{% if plan %} mday--{{ plan.skiing }}{% if plan.resort %} mday--at{% endif %}{% endif %}{% if day.is_today %} mday--today{% endif %}"
                    href="{% url 'planning:day' day.date %}{% if window_from %}?from={{ window_from|date:'Y-m-d' }}{% endif %}"
                    hx-get="{% url 'planning:day' day.date %}{% if window_from %}?from={{ window_from|date:'Y-m-d' }}{% endif %}"
                    hx-target="#sheet-body" hx-push-url="false"
                    aria-label="{{ day.summary }}">
               {% else %}
-                <span class="mday mday--past{% if plan %} mday--{{ plan.status }}{% endif %}" aria-label="{{ day.summary }}">
+                <span class="mday mday--past{% if plan %} mday--{{ plan.skiing }}{% if plan.resort %} mday--at{% endif %}{% endif %}" aria-label="{{ day.summary }}">
               {% endif %}
                 <span class="mday__top" aria-hidden="true">
                   <span class="mday__date">{{ day.date.day }}</span>
@@ -58,10 +58,10 @@
                   </span>
                 </span>
                 <span class="mday__plan" aria-hidden="true">
-                  {% if plan.resort %}{{ plan.resort.display_code }}{% elif plan.status == "not_sure" %}?{% elif plan.status == "not_skiing" %}–{% endif %}
+                  {% if plan.resort %}{{ plan.resort.display_code }}{% elif plan.skiing == "not_skiing" %}–{% elif plan %}?{% endif %}
                 </span>
-                {% if day.friends_skiing %}
-                  <span class="mday__friends{% if day.with_me %} mday__friends--with-me{% endif %}" aria-hidden="true">{% include "includes/icons/people.html" %}{{ day.friends_skiing }}</span>
+                {% if day.friends_out %}
+                  <span class="mday__friends{% if day.with_me %} mday__friends--with-me{% endif %}" aria-hidden="true">{% include "includes/icons/people.html" %}{{ day.friends_out }}</span>
                 {% endif %}
               {% if day.plannable %}</a>{% else %}</span>{% endif %}
             {% endwith %}
@@ -80,10 +80,11 @@
   </div>
 
   <ul class="month-key" aria-label="Key">
-    <li><span class="month-key__swatch mday--resort"></span>Skiing</li>
+    <li><span class="month-key__swatch mday--skiing"></span>Skiing</li>
     <li><span class="month-key__swatch mday--not_sure"></span>Not sure</li>
+    <li><span class="month-key__swatch mday--not_skiing mday--at"></span>Around, not skiing</li>
     <li><span class="month-key__swatch mday--not_skiing"></span>Not skiing</li>
-    <li><span class="mday__friends">{% include "includes/icons/people.html" %}2</span>Friends skiing</li>
+    <li><span class="mday__friends">{% include "includes/icons/people.html" %}2</span>Friends at a resort</li>
     <li><span class="mday__friends mday__friends--with-me">{% include "includes/icons/people.html" %}2</span>With you</li>
     <li><span class="mday__meetup"></span>Meet-up</li>
   </ul>

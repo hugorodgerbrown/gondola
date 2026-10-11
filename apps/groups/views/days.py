@@ -3,14 +3,17 @@ apps/groups/views/days.py — My days, and the sheet for one day.
 
 My days is a month calendar, this month by default; arrows step a month
 (``?from=``, any day in it) as far as plans can be made. Each day shows
-what you said about it and what your groups are up to: friends skiing,
-friends at your resort, and a meet-up. Tapping a day opens a sheet: skiing,
-not sure yet or not skiing; the resorts friends already picked that day
-first, then a search over every resort; an optional note; and a switch to
-keep the day private.
+what you said about it and what your groups are up to: friends at a
+resort, friends at yours, and a meet-up. Tapping a day opens a sheet with
+two separate answers: where you'll be (the resorts friends picked first,
+then a search over every resort, or no resort) and whether you're skiing
+(yes, not sure yet, no); then an optional note, and a switch to keep the
+day private.
 
 Pressing and holding a day starts selecting: tap more days (or drag
-across a run), then one sheet plans them all the same (``?days=``).
+across a run), then one sheet plans them all (``?days=``). An answer that
+differs across the days is left out of the sheet and kept unless changed,
+so a sheet only ever saves what was touched.
 """
 
 from __future__ import annotations
@@ -24,10 +27,9 @@ from django.urls import reverse
 from django.views.decorators.http import require_GET, require_POST
 
 from apps.core.http import refresh, render_sheet
-from apps.resorts.models import Resort
 from apps.resorts.search import search_resorts
 
-from ..forms import DayForm
+from ..forms import KEEP_RESORT, DayForm
 from ..models import Group, PlanDay
 from ..services.month import build_month, month_start
 from ..services.plans import (
@@ -36,9 +38,8 @@ from ..services.plans import (
     friends_by_resort,
     is_plannable,
     join_names,
-    set_plan,
-    set_plans,
     today,
+    update_plans,
 )
 from .helpers import current_user, parse_day
 
@@ -83,27 +84,97 @@ def _my_days_url(window_from: datetime.date | None) -> str:
     return f"{url}?from={window_from.isoformat()}" if window_from else url
 
 
-def _initial(plan: PlanDay | None) -> dict[str, object]:
-    """Return the form's starting values from an existing plan."""
+# What a day with no plan yet starts from in the sheet.
+FRESH = {"skiing": PlanDay.Skiing.YES, "resort": "", "note": "", "is_private": False}
+
+
+def _answers(plan: PlanDay | None) -> dict[str, object]:
+    """Return one day's answers as the sheet's form values."""
     if plan is None:
-        return {"status": PlanDay.Status.RESORT}
+        return dict(FRESH)
     return {
-        "status": plan.status,
-        "resort": plan.resort.uuid if plan.resort else None,
+        "skiing": plan.skiing,
+        "resort": str(plan.resort.uuid) if plan.resort else "",
         "note": plan.note,
         "is_private": plan.is_private,
     }
 
 
-def _resort_choices(
-    request: HttpRequest, days: list[datetime.date], plan: PlanDay | None
-) -> tuple[list[object], Resort | None]:
-    """Return friends' resorts on the days, and the current pick if elsewhere."""
-    by_resort = friends_by_resort(current_user(request), days)
-    current = plan.resort if plan else None
-    listed = {entry.resort.pk for entry in by_resort}
-    elsewhere = current if current and current.pk not in listed else None
-    return list(by_resort), elsewhere
+def _initial(
+    days: list[datetime.date], plans: dict[datetime.date, PlanDay]
+) -> tuple[dict[str, object], set[str]]:
+    """Return the sheet's starting values, and which answers differ by day.
+
+    An answer the days share is filled in; one that differs is left out
+    and named in the second value, so saving keeps it unless it's changed.
+    """
+    per_day = [_answers(plans.get(day)) for day in days]
+    initial: dict[str, object] = {}
+    mixed = set()
+    for name in FRESH:
+        values = {str(answers[name]) for answers in per_day}
+        if len(values) == 1:
+            initial[name] = per_day[0][name]
+        else:
+            mixed.add(name)
+    if "resort" in mixed:
+        initial["resort"] = KEEP_RESORT
+    return initial, mixed
+
+
+def _sheet(
+    request: HttpRequest,
+    days: list[datetime.date],
+    *,
+    form_url: str,
+    clear_url: str,
+    title: str,
+    eyebrow: str,
+    save_label: str,
+) -> HttpResponse:
+    """Show and save the sheet for one day or several."""
+    user = current_user(request)
+    plans = {
+        plan.date: plan
+        for plan in PlanDay.objects.filter(user=user, date__in=days).select_related(
+            "resort"
+        )
+    }
+    initial, mixed = _initial(days, plans)
+    form = DayForm(request.POST or None, initial=initial)
+    if request.method == "POST" and form.is_valid():
+        update_plans(user, days, **form.changes())
+        return refresh(request, _my_days_url(_window_from(request)))
+    friends = friends_by_resort(user, days)
+    listed = {entry.resort.pk for entry in friends}
+    picks = {plan.resort for plan in plans.values() if plan.resort is not None}
+    selected = str(form["resort"].value() or "")
+    return render_sheet(
+        request,
+        "groups/day_sheet.html",
+        {
+            "day": days[0],
+            "span": len(days),
+            "eyebrow": eyebrow,
+            "title": title,
+            "save_label": save_label,
+            "form_url": form_url,
+            "clear_url": clear_url,
+            "has_plans": bool(plans),
+            "mixed": mixed,
+            "form": form,
+            "friends": friends,
+            # The days' own resorts that no friend has picked, to keep them
+            # one tap away.
+            "elsewhere": sorted(
+                (r for r in picks if r.pk not in listed), key=lambda r: r.name
+            ),
+            "selected": selected,
+            "keep_resort": KEEP_RESORT,
+            "groups_count": Group.objects.for_user(user).count(),
+            "window_from": _window_from(request),
+        },
+    )
 
 
 @login_required
@@ -111,40 +182,14 @@ def day(request: HttpRequest, day: datetime.date) -> HttpResponse:
     """Show and save the sheet for one day."""
     if not is_plannable(day):
         raise Http404("That day can't be planned.")
-    user = current_user(request)
-    plan = PlanDay.objects.filter(user=user, date=day).select_related("resort").first()
-    form = DayForm(request.POST or None, initial=_initial(plan))
-    if request.method == "POST" and form.is_valid():
-        data = form.cleaned_data
-        set_plan(
-            user,
-            day,
-            data["status"],
-            resort=data["resort"],
-            note=data["note"],
-            is_private=data["is_private"],
-        )
-        return refresh(request, _my_days_url(_window_from(request)))
-    friends, elsewhere = _resort_choices(request, [day], plan)
-    selected = form["resort"].value()
-    return render_sheet(
+    return _sheet(
         request,
-        "groups/day_sheet.html",
-        {
-            "day": day,
-            "eyebrow": "My days",
-            "title": f"{day:%A} {day.day} {day:%B}",
-            "save_label": f"Save {day:%a} {day.day} {day:%b}",
-            "form_url": reverse("planning:day", kwargs={"day": day}),
-            "clear_url": reverse("planning:day_clear", kwargs={"day": day}),
-            "plan": plan,
-            "form": form,
-            "friends": friends,
-            "elsewhere": elsewhere,
-            "selected": str(selected) if selected else "",
-            "groups_count": Group.objects.for_user(user).count(),
-            "window_from": _window_from(request),
-        },
+        [day],
+        form_url=reverse("planning:day", kwargs={"day": day}),
+        clear_url=reverse("planning:day_clear", kwargs={"day": day}),
+        title=f"{day:%A} {day.day} {day:%B}",
+        eyebrow="My days",
+        save_label=f"Save {day:%a} {day.day} {day:%b}",
     )
 
 
@@ -200,50 +245,16 @@ def _days_query(days: list[datetime.date]) -> str:
 def several_days(request: HttpRequest) -> HttpResponse:
     """Show and save one sheet for several selected days."""
     days = _selected_days(request)
-    user = current_user(request)
-    planned = list(
-        PlanDay.objects.filter(user=user, date__in=days)
-        .select_related("resort")
-        .order_by("date")
-    )
-    first = planned[0] if planned and planned[0].date == days[0] else None
-    form = DayForm(request.POST or None, initial=_initial(first))
-    if request.method == "POST" and form.is_valid():
-        data = form.cleaned_data
-        set_plans(
-            user,
-            days,
-            data["status"],
-            resort=data["resort"],
-            note=data["note"],
-            is_private=data["is_private"],
-        )
-        return refresh(request, _my_days_url(_window_from(request)))
-    friends, elsewhere = _resort_choices(request, days, first)
-    selected = form["resort"].value()
     query = _days_query(days)
     count = f"{len(days)} day{'s' if len(days) > 1 else ''}"
-    return render_sheet(
+    return _sheet(
         request,
-        "groups/day_sheet.html",
-        {
-            "day": days[0],
-            "days": days,
-            "span": len(days),
-            "replacing": len(planned),
-            "eyebrow": f"My days · {count}",
-            "title": _days_title(days),
-            "save_label": f"Save {count}",
-            "form_url": reverse("planning:several_days") + query,
-            "clear_url": reverse("planning:several_days_clear") + query,
-            "plan": first or (planned[0] if planned else None),
-            "form": form,
-            "friends": friends,
-            "elsewhere": elsewhere,
-            "selected": str(selected) if selected else "",
-            "groups_count": Group.objects.for_user(user).count(),
-            "window_from": _window_from(request),
-        },
+        days,
+        form_url=reverse("planning:several_days") + query,
+        clear_url=reverse("planning:several_days_clear") + query,
+        title=_days_title(days),
+        eyebrow=f"My days · {count}",
+        save_label=f"Save {count}",
     )
 
 

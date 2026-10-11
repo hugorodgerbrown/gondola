@@ -1,8 +1,10 @@
 """Tests for apps/groups/models.py."""
 
 import datetime
+import importlib
 
 import pytest
+from django.apps import apps as django_apps
 from django.db import IntegrityError
 from django.db.models import ProtectedError
 
@@ -96,7 +98,7 @@ def test_planday_to_string() -> None:
     unsure = PlanDayFactory.create(
         user=user,
         date=SATURDAY + datetime.timedelta(1),
-        status=PlanDay.Status.NOT_SURE,
+        skiing=PlanDay.Skiing.NOT_SURE,
         resort=None,
     )
     assert str(at_resort) == "Cleo · 2027-01-09 · Zinal"
@@ -110,17 +112,23 @@ def test_one_plan_per_user_per_day() -> None:
 
 
 @pytest.mark.parametrize(
-    ("status", "with_resort"),
+    ("skiing", "named", "words"),
     [
-        (PlanDay.Status.RESORT, False),
-        (PlanDay.Status.NOT_SURE, True),
-        (PlanDay.Status.NOT_SKIING, True),
+        (PlanDay.Skiing.YES, True, "Zinal"),
+        (PlanDay.Skiing.NOT_SURE, True, "Zinal, maybe skiing"),
+        (PlanDay.Skiing.NO, True, "Zinal, not skiing"),
+        (PlanDay.Skiing.YES, False, "Skiing, not sure where"),
+        (PlanDay.Skiing.NOT_SURE, False, "Not sure yet"),
+        (PlanDay.Skiing.NO, False, "Not skiing"),
     ],
 )
-def test_resort_must_match_status(status: str, with_resort: bool) -> None:
-    resort = ResortFactory.create() if with_resort else None
-    with pytest.raises(IntegrityError):
-        PlanDayFactory.create(status=status, resort=resort)
+def test_where_and_skiing_are_separate(skiing: str, named: bool, words: str) -> None:
+    resort = ResortFactory.create(name="Zinal") if named else None
+    plan = PlanDayFactory.create(skiing=skiing, resort=resort)
+    assert plan.describe() == words
+    assert plan.is_skiing == (skiing == PlanDay.Skiing.YES)
+    assert PlanDay.objects.at_resorts().contains(plan) == named
+    assert PlanDay.objects.skiing().contains(plan) == (named and plan.is_skiing)
 
 
 def test_planday_querysets() -> None:
@@ -188,3 +196,21 @@ def test_one_participation_per_user() -> None:
     going = MeetUpParticipantFactory.create()
     with pytest.raises(IntegrityError):
         MeetUpParticipantFactory.create(meetup=going.meetup, user=going.user)
+
+
+def test_migration_turns_resort_status_into_skiing() -> None:
+    migration = importlib.import_module(
+        "apps.groups.migrations.0003_planday_where_and_skiing"
+    )
+    resort = ResortFactory.create()
+    at = PlanDayFactory.create(date=SATURDAY, resort=resort)
+    home = PlanDayFactory.create(date=SATURDAY, resort=None, skiing=PlanDay.Skiing.NO)
+    PlanDay.objects.filter(pk=at.pk).update(skiing="resort")
+    migration.forwards(django_apps, None)
+    at.refresh_from_db()
+    assert at.skiing == PlanDay.Skiing.YES
+    # And back: a day at a resort folds into the old "resort" status.
+    migration.backwards(django_apps, None)
+    at.refresh_from_db()
+    home.refresh_from_db()
+    assert (at.skiing, home.skiing) == ("resort", PlanDay.Skiing.NO)

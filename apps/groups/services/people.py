@@ -11,11 +11,9 @@ from __future__ import annotations
 import datetime
 from collections.abc import Iterable
 
-from django.db.models import QuerySet
-
 from apps.accounts.models import User
 
-from ..models import Group, Membership, PlanDay
+from ..models import Group, Membership, PlanDay, PlanDayQuerySet
 
 
 def friend_ids(user: User) -> set[int]:
@@ -30,7 +28,7 @@ def friend_ids(user: User) -> set[int]:
 
 def visible_friend_plans(
     viewer: User, dates: Iterable[datetime.date]
-) -> QuerySet[PlanDay]:
+) -> PlanDayQuerySet:
     """Return friends' non-private plans on ``dates``, with user and resort."""
     return (
         PlanDay.objects.shared()
