@@ -154,11 +154,15 @@ def account_settings(request: HttpRequest) -> HttpResponse:
 
 @require_POST
 def sign_out(request: HttpRequest) -> HttpResponse:
-    """Sign out, wipe this device's cached pages, and go to the front page."""
+    """Sign out and go to the front page.
+
+    The page drops the service worker's cached pages before the form posts
+    (``data-sign-out`` in app.js). There is no ``Clear-Site-Data: "cache"``
+    here: Chrome on Android held the redirect while it cleared the cache,
+    so the button looked dead until the page was refreshed.
+    """
     logout(request)
-    response = redirect("core:home")
-    response["Clear-Site-Data"] = '"cache"'
-    return response
+    return redirect("core:home")
 
 
 @login_required

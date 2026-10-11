@@ -17,6 +17,8 @@ def test_home_signed_out(client: Client) -> None:
     response = client.get("/")
     assert response.status_code == 200
     assert b"Get started" in response.content
+    # app.js drops the cached pages of whoever was signed in.
+    assert b"data-forget-pages" in response.content
 
 
 def test_home_signed_in_goes_to_map(client: Client) -> None:
