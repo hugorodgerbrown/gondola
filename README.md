@@ -1,4 +1,4 @@
-# Ski bum
+# Gondola
 
 Friends join a group through an invite link, say which resort they'll be at
 on which day, see a "who's where" board, and agree where to meet. An email

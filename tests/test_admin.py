@@ -49,5 +49,5 @@ def test_admin_pages_render(
 def test_admin_carries_the_product_name(staff_client: Client) -> None:
     """The admin header names the product, not Django."""
     response = staff_client.get(reverse("admin:index"))
-    assert "Ski bum" in response.content.decode()
+    assert "Gondola" in response.content.decode()
     assert "Django administration" not in response.content.decode()

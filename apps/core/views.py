@@ -56,7 +56,7 @@ def manifest(request: HttpRequest) -> JsonResponse:
                     "type": "image/png",
                 },
                 {
-                    "src": static("img/icon-512.png"),
+                    "src": static("img/icon-maskable-512.png"),
                     "sizes": "512x512",
                     "type": "image/png",
                     "purpose": "maskable",
