@@ -159,6 +159,26 @@ def test_day_sheet_has_no_resort_option_for_none(sam: Client, crew: Crew) -> Non
     assert PlanDay.objects.get(user=crew.sam).resort is None
 
 
+def test_day_sheet_shows_the_days_meetups(sam: Client, crew: Crew) -> None:
+    meetup = meetups.propose_meetup(
+        crew.group, crew.anna, crew.day, crew.verbier, start_time=datetime.time(9, 30)
+    )
+    meetups.join_meetup(meetup, crew.sam)
+    url = reverse("planning:day", kwargs={"day": crew.day})
+    content = sam.get(url, headers=HTMX).content.decode()
+    assert reverse("planning:meetup", args=[meetup.share_token]) in content
+    assert "09:30 at Verbier" in content
+    assert "Going: You and Anna" in content
+    # Not on another day, and not on the several-days sheet.
+    other = crew.day + datetime.timedelta(days=1)
+    assert (
+        "meet-up"
+        not in sam.get(
+            reverse("planning:day", kwargs={"day": other}), headers=HTMX
+        ).content.decode()
+    )
+
+
 def test_day_sheet_not_sure_and_clear(sam: Client, crew: Crew) -> None:
     url = reverse("planning:day", kwargs={"day": crew.day})
     response = sam.post(url, {"skiing": "not_sure"})
