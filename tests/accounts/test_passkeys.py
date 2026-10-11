@@ -34,16 +34,23 @@ def _stub_registration(monkeypatch: pytest.MonkeyPatch, **overrides: Any) -> Non
             **overrides,
         }
     )
-    monkeypatch.setattr(
-        passkeys.webauthn, "verify_registration_response", lambda **_: result
-    )
+
+    def verify(**kwargs: Any) -> SimpleNamespace:
+        # A passkey replaces the email, so a touch alone must never do.
+        assert kwargs["require_user_verification"] is True
+        return result
+
+    monkeypatch.setattr(passkeys.webauthn, "verify_registration_response", verify)
 
 
 def _stub_authentication(monkeypatch: pytest.MonkeyPatch) -> None:
     result = SimpleNamespace(new_sign_count=5, credential_backed_up=True)
-    monkeypatch.setattr(
-        passkeys.webauthn, "verify_authentication_response", lambda **_: result
-    )
+
+    def verify(**kwargs: Any) -> SimpleNamespace:
+        assert kwargs["require_user_verification"] is True
+        return result
+
+    monkeypatch.setattr(passkeys.webauthn, "verify_authentication_response", verify)
 
 
 def _fail(**_: Any) -> None:
@@ -68,6 +75,7 @@ def test_registration_options_name_the_site_and_exclude_existing_keys(
     assert options["user"]["name"] == user.email
     assert [c["id"] for c in options["excludeCredentials"]] == ["AAAA"]
     assert options["authenticatorSelection"]["residentKey"] == "required"
+    assert options["authenticatorSelection"]["userVerification"] == "required"
     assert session[passkeys.REGISTRATION_CHALLENGE_KEY] == options["challenge"]
 
 
@@ -125,6 +133,7 @@ def test_verify_authentication_signs_in_and_records_use(
     passkey = PasskeyFactory.create(credential_id="credential-new")
     options = passkeys.authentication_options(session)
     assert options["rpId"] == "localhost"
+    assert options["userVerification"] == "required"
     assert "allowCredentials" not in options or options["allowCredentials"] == []
     user = passkeys.verify_authentication(json.dumps(CREDENTIAL), session)
     assert user == passkey.user

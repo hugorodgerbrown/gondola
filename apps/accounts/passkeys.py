@@ -4,7 +4,9 @@ apps/accounts/passkeys.py — Sign in with a passkey (WebAuthn).
 A passkey sits alongside the emailed link, never instead of it: someone
 signs in by link once, adds a passkey on the account page, and from then
 on Face ID, Touch ID or their password manager signs them in on that
-device. Wraps py_webauthn in four steps, two per ceremony:
+device. A passkey stands in for the email, so it must check who is
+holding the device: user verification (Face ID, a PIN) is required, never
+just a touch. Wraps py_webauthn in four steps, two per ceremony:
 
   registration_options / save_registration      add a passkey
   authentication_options / verify_authentication  sign in with one
@@ -75,7 +77,7 @@ def registration_options(user: User, session: SessionBase) -> dict[str, Any]:
         user_display_name=user.to_string(),
         authenticator_selection=AuthenticatorSelectionCriteria(
             resident_key=ResidentKeyRequirement.REQUIRED,
-            user_verification=UserVerificationRequirement.PREFERRED,
+            user_verification=UserVerificationRequirement.REQUIRED,
         ),
         exclude_credentials=_descriptors(user),
     )
@@ -101,6 +103,7 @@ def save_registration(
             expected_challenge=base64url_to_bytes(challenge),
             expected_rp_id=settings.WEBAUTHN_RP_ID,
             expected_origin=settings.WEBAUTHN_ORIGIN,
+            require_user_verification=True,
         )
     except Exception as exc:  # py_webauthn raises several unrelated types
         logger.info("Passkey registration did not verify: %s", exc)
@@ -129,7 +132,7 @@ def authentication_options(session: SessionBase) -> dict[str, Any]:
     """
     options = webauthn.generate_authentication_options(
         rp_id=settings.WEBAUTHN_RP_ID,
-        user_verification=UserVerificationRequirement.PREFERRED,
+        user_verification=UserVerificationRequirement.REQUIRED,
     )
     session[AUTHENTICATION_CHALLENGE_KEY] = bytes_to_base64url(options.challenge)
     return _as_dict(options)
@@ -161,6 +164,7 @@ def verify_authentication(credential_json: str, session: SessionBase) -> User:
             expected_origin=settings.WEBAUTHN_ORIGIN,
             credential_public_key=bytes(passkey.public_key),
             credential_current_sign_count=passkey.sign_count,
+            require_user_verification=True,
         )
     except Exception as exc:  # py_webauthn raises several unrelated types
         logger.info("Passkey sign-in did not verify: %s", exc)
