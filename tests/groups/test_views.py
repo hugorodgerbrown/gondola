@@ -48,6 +48,46 @@ def test_my_days_lists_fourteen_days(sam: Client, crew: Crew) -> None:
     assert b"Private" in response.content
 
 
+def test_my_days_steps_a_fortnight_and_lists_other_plans(
+    sam: Client, crew: Crew
+) -> None:
+    today = plans.today()
+    far = today + datetime.timedelta(days=60)
+    plans.set_plan(crew.sam, far, S.RESORT, resort=crew.verbier)
+    response = sam.get(reverse("planning:my_days"))
+    # The first fortnight starts today: no way back, a way on, and the
+    # December day listed under it, and dotted on the calendar.
+    assert response.context["previous_start"] is None
+    assert response.context["next_start"] == today + datetime.timedelta(days=14)
+    assert [plan.date for plan in response.context["elsewhere"]] == [far]
+    assert response.context["marks"] == {far.isoformat(): "resort"}
+    assert b"Your other plans" in response.content
+    assert b'id="plan-marks"' in response.content
+    assert b"js/calendar.js" in response.content
+
+    later = sam.get(reverse("planning:my_days"), {"from": far.isoformat()})
+    first_day, first_plan = later.context["rows"][0]
+    assert first_day == far and first_plan.resort == crew.verbier
+    assert later.context["elsewhere"] == []
+    assert later.context["previous_start"] == far - datetime.timedelta(days=14)
+
+
+@pytest.mark.parametrize(
+    ("offset", "expected"),
+    [(-5, 0), (1000, plans.PLAN_HORIZON_DAYS - plans.MY_DAYS_SPAN + 1)],
+)
+def test_my_days_window_stays_plannable(
+    sam: Client, offset: int, expected: int
+) -> None:
+    today = plans.today()
+    start = today + datetime.timedelta(days=offset)
+    response = sam.get(reverse("planning:my_days"), {"from": start.isoformat()})
+    assert response.context["start"] == today + datetime.timedelta(days=expected)
+    if offset > 0:
+        assert response.context["end"] == plans.last_plannable_day()
+        assert response.context["next_start"] is None
+
+
 def test_my_days_without_groups(client: Client, crew: Crew) -> None:
     client.force_login(crew.outsider)
     assert b"Nobody sees these yet" in client.get(reverse("planning:my_days")).content
@@ -143,6 +183,10 @@ def test_map_page(sam: Client, crew: Crew) -> None:
     assert response.content.count(b"data-day-link") == 2
     assert b'id="resort-index"' in response.content
     assert b"Verbier" in response.content
+    # The day label opens a calendar that reaches the end of the horizon.
+    assert b"data-calendar" in response.content
+    assert response.context["last_day"] == plans.last_plannable_day()
+    assert b'id="plan-marks"' in response.content
 
 
 def test_map_page_bad_date_is_today(sam: Client) -> None:

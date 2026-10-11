@@ -176,29 +176,32 @@
       selected = null;
     });
 
-    /* Picking a pass swaps the pins only. The basemap, the view and the
-       page stay as they are, and the URL still says which pass is showing,
-       so a reload or a shared link opens the same map. */
-    function showPass(slug) {
-      container.dataset.pass = slug;
-      document.querySelectorAll("[data-pass-chip]").forEach(function (chip) {
-        if (chip.dataset.passChip === slug) {
-          chip.setAttribute("aria-current", "true");
-        } else {
-          chip.removeAttribute("aria-current");
-        }
-      });
-      // The day arrows carry the pass, so moving day keeps the filter.
-      document.querySelectorAll("[data-day-link]").forEach(function (link) {
-        link.href = withPass(link.href, slug);
-      });
-      if (selected) selected.classList.remove("pin--selected");
-      selected = null;
-      loadPins(false);
+    /* Picking a pass or a day swaps the pins only. The basemap, the view
+       and the page stay as they are, and the URL still says which day and
+       pass are showing, so a reload or a shared link opens the same map. */
+    const shortDay = new Intl.DateTimeFormat("en-GB", { weekday: "short", day: "numeric", month: "short" });
+    const dayText = document.querySelector("[data-day-text]");
+    const dayButton = document.querySelector("[data-day-label]");
+    const todayIso = dayButton ? dayButton.dataset.today : "";
+
+    function localDate(iso) {
+      const parts = iso.split("-").map(Number);
+      return new Date(parts[0], parts[1] - 1, parts[2]);
     }
 
-    function withPass(href, slug) {
-      const url = new URL(href, window.location.href);
+    function isoDate(date) {
+      const pad = function (n) { return String(n).padStart(2, "0"); };
+      return date.getFullYear() + "-" + pad(date.getMonth() + 1) + "-" + pad(date.getDate());
+    }
+
+    function shiftDay(iso, n) {
+      const date = localDate(iso);
+      return isoDate(new Date(date.getFullYear(), date.getMonth(), date.getDate() + n));
+    }
+
+    function viewUrl(date, slug) {
+      const url = new URL(window.location.href);
+      url.searchParams.set("date", date);
       if (slug) {
         url.searchParams.set("pass", slug);
       } else {
@@ -207,19 +210,65 @@
       return url.pathname + url.search;
     }
 
+    function showView(date, slug) {
+      container.dataset.date = date;
+      container.dataset.pass = slug;
+      document.querySelectorAll("[data-pass-chip]").forEach(function (chip) {
+        chip.href = viewUrl(date, chip.dataset.passChip);
+        if (chip.dataset.passChip === slug) {
+          chip.setAttribute("aria-current", "true");
+        } else {
+          chip.removeAttribute("aria-current");
+        }
+      });
+      // The day arrows carry the pass, so moving day keeps the filter.
+      document.querySelectorAll("[data-day-link]").forEach(function (link) {
+        link.href = viewUrl(shiftDay(date, Number(link.dataset.dayLink)), slug);
+      });
+      const label = shortDay.format(localDate(date)).replace(",", "");
+      if (dayText) dayText.textContent = (date === todayIso ? "Today · " : "") + label;
+      if (dayButton) dayButton.dataset.value = date;
+      document.title = document.title.replace(/^Map · [^·]+·/, "Map · " + label + " ·");
+      if (selected) selected.classList.remove("pin--selected");
+      selected = null;
+      loadPins(false);
+    }
+
+    function go(date, slug) {
+      if (date === container.dataset.date && slug === (container.dataset.pass || "")) return;
+      history.pushState({ date: date, pass: slug }, "", viewUrl(date, slug));
+      showView(date, slug);
+    }
+
+    function plainClick(event) {
+      return !(event.metaKey || event.ctrlKey || event.shiftKey || event.button !== 0);
+    }
+
     document.querySelectorAll("[data-pass-chip]").forEach(function (chip) {
       chip.addEventListener("click", function (event) {
-        if (event.metaKey || event.ctrlKey || event.shiftKey || event.button !== 0) return;
+        if (!plainClick(event)) return;
         event.preventDefault();
-        const slug = chip.dataset.passChip;
-        if (slug === (container.dataset.pass || "")) return;
-        history.pushState({ pass: slug }, "", withPass(window.location.href, slug));
-        showPass(slug);
+        go(container.dataset.date, chip.dataset.passChip);
       });
     });
 
+    document.querySelectorAll("[data-day-link]").forEach(function (link) {
+      link.addEventListener("click", function (event) {
+        if (!plainClick(event)) return;
+        event.preventDefault();
+        go(shiftDay(container.dataset.date, Number(link.dataset.dayLink)), container.dataset.pass || "");
+      });
+    });
+
+    if (dayButton && window.dayCalendar) {
+      window.dayCalendar(dayButton, function (date) {
+        go(date, container.dataset.pass || "");
+      });
+    }
+
     window.addEventListener("popstate", function () {
-      showPass(new URL(window.location.href).searchParams.get("pass") || "");
+      const params = new URL(window.location.href).searchParams;
+      showView(params.get("date") || todayIso, params.get("pass") || "");
     });
 
     map.on("load", function () { loadPins(true); });

@@ -22,7 +22,14 @@ from apps.core.http import refresh, render_sheet
 from apps.resorts.models import Pass, Resort
 
 from ..models import Group, PlanDay
-from ..services.plans import is_plannable, set_plan, today
+from ..services.plans import (
+    is_plannable,
+    last_plannable_day,
+    plan_marks,
+    set_plan,
+    today,
+    upcoming_plans,
+)
 from ..services.resort_map import map_pins, resort_day, resort_index
 from .helpers import current_user, parse_day
 
@@ -48,6 +55,8 @@ def map_page(request: HttpRequest) -> HttpResponse:
             "map_style_url": settings.MAP_STYLE_URL,
             "sheet_url_template": _sheet_url_template(),
             "resort_index": resort_index(),
+            "last_day": last_plannable_day(),
+            "marks": plan_marks(upcoming_plans(current_user(request))),
         },
     )
 

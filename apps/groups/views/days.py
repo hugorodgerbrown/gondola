@@ -1,7 +1,10 @@
 """
 apps/groups/views/days.py — My days, and the sheet for one day.
 
-My days lists the next two weeks. Tapping a day opens a sheet: skiing,
+My days lists two weeks at a time, from today by default. Arrows step a
+fortnight, and a calendar jumps to any day you can plan (``?from=``), so
+December and January are as easy to fill in as next week. Plans outside
+the two weeks on show are listed under them. Tapping a day opens a sheet: skiing,
 not sure yet or not skiing; the resorts friends already picked that day
 first, then a search over every resort; an optional note; and a switch to
 keep the day private.
@@ -29,28 +32,43 @@ from ..services.plans import (
     date_range,
     friends_by_resort,
     is_plannable,
-    plans_by_date,
+    last_plannable_day,
+    plan_marks,
     set_plan,
     today,
+    upcoming_plans,
+    window_start,
 )
-from .helpers import current_user
+from .helpers import current_user, parse_day
 
 
 @login_required
 @require_GET
 def my_days(request: HttpRequest) -> HttpResponse:
-    """List the next two weeks with what the person has said about each."""
+    """List two weeks of days with what the person has said about each."""
     user = current_user(request)
-    days = date_range(today(), MY_DAYS_SPAN)
-    plans = plans_by_date(user, days)
-    groups = list(Group.objects.for_user(user).order_by("name"))
+    start = window_start(parse_day(request.GET.get("from")))
+    days = date_range(start, MY_DAYS_SPAN)
+    upcoming = upcoming_plans(user)
+    plans = {plan.date: plan for plan in upcoming}
+    shown = set(days)
+    span = datetime.timedelta(days=MY_DAYS_SPAN)
+    first = today()
+    last = last_plannable_day()
     return render(
         request,
         "groups/my_days.html",
         {
             "rows": [(day, plans.get(day)) for day in days],
-            "today": days[0],
-            "groups": groups,
+            "today": first,
+            "start": start,
+            "end": days[-1],
+            "previous_start": window_start(start - span) if start > first else None,
+            "next_start": start + span if days[-1] < last else None,
+            "elsewhere": [plan for plan in upcoming if plan.date not in shown],
+            "last_day": last,
+            "marks": plan_marks(upcoming),
+            "groups": list(Group.objects.for_user(user).order_by("name")),
         },
     )
 

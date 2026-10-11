@@ -15,9 +15,17 @@
     <div class="map-overlay">
       <div class="map-bar">
         <nav class="float" aria-label="Day">
-          <a class="icon-button" data-day-link href="?date={{ previous_day|date:'Y-m-d' }}{% if pass_slug %}&pass={{ pass_slug }}{% endif %}" aria-label="Previous day">{% include "includes/icons/chevron-left.html" %}</a>
-          <span class="float__label">{% if day == today %}Today · {% endif %}{{ day|date:"D j M" }}</span>
-          <a class="icon-button" data-day-link href="?date={{ next_day|date:'Y-m-d' }}{% if pass_slug %}&pass={{ pass_slug }}{% endif %}" aria-label="Next day">{% include "includes/icons/chevron-right.html" %}</a>
+          <a class="icon-button" data-day-link="-1" href="?date={{ previous_day|date:'Y-m-d' }}{% if pass_slug %}&pass={{ pass_slug }}{% endif %}" aria-label="Previous day">{% include "includes/icons/chevron-left.html" %}</a>
+          <span class="calendar-anchor">
+            <button type="button" class="float__label float__label--button" data-calendar data-day-label
+                    data-value="{{ day|date:'Y-m-d' }}" data-today="{{ today|date:'Y-m-d' }}"
+                    data-max="{{ last_day|date:'Y-m-d' }}" data-marks="plan-marks">
+              {% include "includes/icons/calendar.html" %}
+              <span data-day-text>{% if day == today %}Today · {% endif %}{{ day|date:"D j M" }}</span>
+              <span class="visually-hidden">, choose a day</span>
+            </button>
+          </span>
+          <a class="icon-button" data-day-link="1" href="?date={{ next_day|date:'Y-m-d' }}{% if pass_slug %}&pass={{ pass_slug }}{% endif %}" aria-label="Next day">{% include "includes/icons/chevron-right.html" %}</a>
         </nav>
         <a class="icon-button icon-button--boxed" style="border-radius:50%" href="{% url 'accounts:settings' %}" aria-label="Your account">{% include "includes/icons/user.html" %}</a>
       </div>
@@ -43,8 +51,10 @@
     </div>
   </main>
   {{ resort_index|json_script:"resort-index" }}
+  {{ marks|json_script:"plan-marks" }}
 {% endblock %}
 {% block scripts %}
   <script src="{% static 'vendor/maplibre-gl-4.7.1.js' %}"></script>
+  <script src="{% static 'js/calendar.js' %}"></script>
   <script src="{% static 'js/map.js' %}"></script>
 {% endblock %}
