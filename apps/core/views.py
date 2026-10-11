@@ -7,18 +7,25 @@ apps/core/views.py — The front page and the installable-app plumbing.
   on a phone. The worker is served from the root so it controls every page.
 * ``offline`` is the page the worker shows when there is no signal and the
   page asked for was never cached.
+* ``livez`` and ``healthz`` are the health checks: Render's (the process is
+  up) and the one bin/titan and uptime monitors use (the database answers).
 """
 
 from __future__ import annotations
 
 import json
+import logging
 
 from django.conf import settings
+from django.contrib.auth import get_user_model
+from django.db import DatabaseError
 from django.http import HttpRequest, HttpResponse, JsonResponse
 from django.shortcuts import redirect, render
 from django.templatetags.static import static
-from django.views.decorators.cache import cache_control
+from django.views.decorators.cache import cache_control, never_cache
 from django.views.decorators.http import require_GET
+
+logger = logging.getLogger(__name__)
 
 
 @require_GET
@@ -92,3 +99,29 @@ def service_worker(request: HttpRequest) -> HttpResponse:
 def offline(request: HttpRequest) -> HttpResponse:
     """Say there's no signal."""
     return render(request, "core/offline.html")
+
+
+@never_cache
+def livez(request: HttpRequest) -> HttpResponse:
+    """Answer 200 while the process can answer at all (Render's health check).
+
+    It does no work and never reads ``request.user`` (a session lookup is a
+    database query), so a database outage shows on /healthz without Render
+    restarting a healthy web process over it.
+    """
+    return HttpResponse("ok", content_type="text/plain")
+
+
+@never_cache
+def healthz(request: HttpRequest) -> HttpResponse:
+    """Answer 200 when the database answers a read, 503 otherwise.
+
+    The error is logged, never returned: a driver's message can carry the
+    database host and role.
+    """
+    try:
+        get_user_model().objects.exists()
+    except DatabaseError:
+        logger.exception("healthz: database read failed")
+        return HttpResponse("error", status=503, content_type="text/plain")
+    return HttpResponse("ok", content_type="text/plain")
