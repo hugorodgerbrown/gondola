@@ -49,7 +49,7 @@
     </div>
     <p class="small muted" data-passkey-unsupported>This browser can't make passkeys.</p>
   </section>
-  <form method="post" action="{% url 'accounts:sign_out' %}">
+  <form method="post" action="{% url 'accounts:sign_out' %}" data-sign-out>
     {% csrf_token %}
     <button type="submit" class="button button--secondary button--block">Sign out</button>
   </form>

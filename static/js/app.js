@@ -3,7 +3,9 @@
  *
  * Opens the bottom sheet when HTMX swaps a fragment into it, closes it on
  * a close button or a tap on the backdrop, and wires share buttons to the
- * phone's share sheet (falling back to copying the link).
+ * phone's share sheet (falling back to copying the link). Before a sign-out
+ * (or account deletion) form posts, drops the pages the service worker
+ * cached, so the next person on this device can't open them offline.
  */
 (function () {
   "use strict";
@@ -108,6 +110,35 @@
     } catch (error) {
       window.prompt("Copy this link", url);
     }
+  });
+
+  async function forgetPages() {
+    if (!window.caches) {
+      return;
+    }
+    const names = await caches.keys();
+    await Promise.all(names.filter(function (name) {
+      return name.startsWith("pages-");
+    }).map(function (name) {
+      return caches.delete(name);
+    }));
+  }
+
+  document.addEventListener("submit", function (event) {
+    const form = event.target;
+    if (!(form instanceof HTMLFormElement) || !form.hasAttribute("data-sign-out")) {
+      return;
+    }
+    if (form.dataset.cleared) {
+      return;
+    }
+    event.preventDefault();
+    function submit() {
+      form.dataset.cleared = "1";
+      form.submit();
+    }
+    // Sign out whether or not the cleanup worked.
+    forgetPages().then(submit, submit);
   });
 
   if ("serviceWorker" in navigator) {

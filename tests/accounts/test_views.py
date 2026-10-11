@@ -109,10 +109,15 @@ def test_settings_saves(client: Client) -> None:
     assert user.evening_email_enabled is False
 
 
-def test_sign_out_clears_cache(client: Client) -> None:
+def test_sign_out_goes_straight_home(client: Client) -> None:
     client.force_login(UserFactory.create())
+    page = client.get(reverse("accounts:settings"))
+    # The page drops the worker's cached pages before posting (app.js).
+    assert b"data-sign-out" in page.content
     response = client.post(reverse("accounts:sign_out"))
-    assert response["Clear-Site-Data"] == '"cache"'
+    assert response["Location"] == reverse("core:home")
+    # Chrome on Android held the redirect while it cleared the cache.
+    assert "Clear-Site-Data" not in response
     assert "_auth_user_id" not in client.session
 
 
