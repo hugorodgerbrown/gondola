@@ -84,14 +84,45 @@
 
   /* --- The resort map ---------------------------------------------------- */
 
+  // The resort map's last view, so leaving the map and coming back (another
+  // tab, a resort page, Back) finds it where it was left. Per tab, so a
+  // fresh visit still opens on the day's action.
+  const VIEW_KEY = "resort-map-view";
+
+  function savedView() {
+    try {
+      const view = JSON.parse(sessionStorage.getItem(VIEW_KEY));
+      if (view && isFinite(view.lng) && isFinite(view.lat) && isFinite(view.zoom)) {
+        return view;
+      }
+    } catch (error) {
+      // No storage (private mode) or a bad value: open as new.
+    }
+    return null;
+  }
+
+  function saveView(map) {
+    const center = map.getCenter();
+    try {
+      sessionStorage.setItem(VIEW_KEY, JSON.stringify({ lng: center.lng, lat: center.lat, zoom: map.getZoom() }));
+    } catch (error) {
+      // No storage: the map opens on the day's action next time.
+    }
+  }
+
   async function resortMap(container) {
-    const map = await createMap(container);
+    const view = savedView();
+    const map = await createMap(container, view ? { center: [view.lng, view.lat], zoom: view.zoom, bounds: undefined } : {});
     const markers = [];
     let selected = null;
 
-    map.on("zoom", function () {
+    map.on("moveend", function () { saveView(map); });
+
+    function markZoom() {
       container.classList.toggle("map-zoomed", map.getZoom() >= 9.5);
-    });
+    }
+    map.on("zoom", markZoom);
+    markZoom();
 
     // A pass's pins carry its class (pin--pass-magic-pass), and its name in
     // the label, taken from the pass's chip.
@@ -161,7 +192,8 @@
         }
       });
       // Open on the day's action: where friends are, not the whole country.
-      // A pass change keeps the view where the person left it.
+      // A pass or day change, or a return to the map, keeps the view where
+      // the person left it.
       if (fit && !busy.isEmpty()) {
         map.fitBounds(busy, {
           padding: { top: 160, bottom: 80, left: 60, right: 60 },
@@ -284,7 +316,7 @@
       showView(isDay(date) ? date : shownDate, params.get("pass") || "");
     });
 
-    map.on("load", function () { loadPins(true); });
+    map.on("load", function () { loadPins(!view); });
 
     const search = document.querySelector("[data-map-search]");
     if (search) {
