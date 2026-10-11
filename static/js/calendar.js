@@ -122,7 +122,7 @@
     const todayButton = el("button", "button button--secondary calendar__today", "Today");
     todayButton.type = "button";
     const legend = el("p", "calendar__legend");
-    [["resort", "Skiing"], ["not_sure", "Not sure"]].forEach(function (pair) {
+    [["skiing", "Skiing"], ["not_sure", "Not sure"]].forEach(function (pair) {
       const item = el("span", "calendar__key");
       item.append(el("span", "calendar__mark calendar__mark--" + pair[0]), pair[1]);
       legend.appendChild(item);
