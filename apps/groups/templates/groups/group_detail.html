@@ -33,12 +33,15 @@
         <li class="row">
           <span class="row__main"><span>{% if person.pk == user.pk %}You{% else %}{{ person }}{% endif %}</span></span>
           {% if membership.role == "owner" %}<span class="tag">Owner</span>{% endif %}
-          <span class="mono small muted">{{ membership.created_at|date:"j M" }}</span>
+          <span class="small muted">{{ membership.created_at|date:"j M" }}</span>
           {% if is_owner and person.pk != user.pk %}
-            <form method="post" action="{% url 'planning:remove_member' group.uuid person.uuid %}">
-              {% csrf_token %}
-              <button type="submit" class="icon-button" aria-label="Remove {{ person }}">{% include "includes/icons/close.html" %}</button>
-            </form>
+            <details class="row-menu">
+              <summary class="icon-button" aria-label="More for {{ person }}">{% include "includes/icons/more.html" %}</summary>
+              <form class="row-menu__panel" method="post" action="{% url 'planning:remove_member' group.uuid person.uuid %}">
+                {% csrf_token %}
+                <button type="submit" class="row-menu__item row-menu__item--danger">Remove {{ person }}</button>
+              </form>
+            </details>
           {% endif %}
         </li>
       {% endfor %}
