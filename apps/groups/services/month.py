@@ -1,15 +1,11 @@
 """
 apps/groups/services/month.py — the calendar, one month at a time.
 
-One month at a time, weeks starting Monday. Each day carries what the
-viewer said about it and what their groups are up to: which friends are
-in town somewhere, and how many of them in the viewer's resort (the
-calendar marks one or several).
-
-With one resort highlighted, each day also says which friends are there.
-The highlight never touches the viewer's own days: a day they are in a
-resort stays as it is, its mark still the friends with them. It picks out
-the free days, the ones a friend is at that resort.
+One month at a time, weeks starting Monday. The calendar answers three
+questions, all about the viewer: where am I, who'll be with me, and, on
+the days I haven't said, where are my friends? So each day carries the
+viewer's plan and the friends with them; a day without a plan carries the
+resort most of their friends are in instead.
 """
 
 from __future__ import annotations
@@ -20,11 +16,10 @@ from collections import defaultdict
 from dataclasses import dataclass, field
 
 from apps.accounts.models import User
-from apps.resorts.models import Resort
 
 from ..models import PlanDay
 from .people import visible_friend_plans
-from .plans import is_plannable, join_names, last_plannable_day, today
+from .plans import ResortFriends, is_plannable, join_names, last_plannable_day, today
 
 
 @dataclass
@@ -38,17 +33,8 @@ class MonthDay:
     plan: PlanDay | None = None
     friends: list[str] = field(default_factory=list)
     with_me: int = 0
-    # The highlighted resort's name, if one is, and the friends there that day.
-    highlight: str = ""
-    there: list[str] = field(default_factory=list)
-
-    @property
-    def lit(self) -> bool:
-        """Return whether a highlight leaves the day standing out.
-
-        Your own days always do; a free day does when a friend is there.
-        """
-        return bool(self.highlight) and (self.plan is not None or bool(self.there))
+    # On a day without your plan: the resort most friends are in, and them.
+    crowd: ResortFriends | None = None
 
     @property
     def friends_out(self) -> int:
@@ -59,9 +45,11 @@ class MonthDay:
     def count(self) -> int:
         """Return the friends the day marks.
 
-        On your days, the friends with you; on a free day, those at the highlight.
+        On your days, the friends with you; on the others, those in the crowd.
         """
-        return self.with_me if self.plan is not None else len(self.there)
+        if self.plan is not None:
+            return self.with_me
+        return len(self.crowd.friends) if self.crowd is not None else 0
 
     @property
     def plan_words(self) -> str:
@@ -81,8 +69,8 @@ class MonthDay:
             parts.append(f"friends at resorts: {join_names(self.friends)}")
         if self.with_me:
             parts.append(f"{self.with_me} with you")
-        if self.there:
-            parts.append(f"at {self.highlight}: {join_names(self.there)}")
+        if self.crowd is not None:
+            parts.append(f"most at {self.crowd.resort.name}: {self.crowd.names}")
         return ", ".join(parts)
 
 
@@ -117,14 +105,24 @@ def month_dates(first: datetime.date) -> list[datetime.date]:
     ]
 
 
-def build_month(
-    viewer: User, first: datetime.date, highlight: Resort | None = None
-) -> Month:
-    """Return ``viewer``'s calendar for the month starting ``first``.
+def _crowd(plans: list[PlanDay]) -> ResortFriends | None:
+    """Return the resort most of ``plans``' friends are in (ties by name)."""
+    by_resort: dict[int, ResortFriends] = {}
+    for plan in plans:
+        entry = by_resort.setdefault(plan.resort_id, ResortFriends(plan.resort))
+        entry.friends.append(plan.user)
+    if not by_resort:
+        return None
+    crowd = min(
+        by_resort.values(),
+        key=lambda e: (-len(e.friends), e.resort.name.lower()),
+    )
+    crowd.friends.sort(key=lambda f: f.to_string().lower())
+    return crowd
 
-    ``highlight`` is a resort to pick out: each day then names the friends
-    there.
-    """
+
+def build_month(viewer: User, first: datetime.date) -> Month:
+    """Return ``viewer``'s calendar for the month starting ``first``."""
     first = month_start(first)
     weeks_of_dates = calendar.Calendar(firstweekday=0).monthdatescalendar(
         first.year, first.month
@@ -138,11 +136,11 @@ def build_month(
     }
     friends: dict[datetime.date, list[str]] = defaultdict(list)
     with_me: dict[datetime.date, int] = defaultdict(int)
-    there: dict[datetime.date, list[str]] = defaultdict(list)
+    free: dict[datetime.date, list[PlanDay]] = defaultdict(list)
     for plan in visible_friend_plans(viewer, dates):
         friends[plan.date].append(plan.user.to_string())
-        if highlight is not None and plan.resort_id == highlight.pk:
-            there[plan.date].append(plan.user.to_string())
+        if plan.date not in mine:
+            free[plan.date].append(plan)
         own = mine.get(plan.date)
         if own is not None and own.resort_id == plan.resort_id:
             with_me[plan.date] += 1
@@ -157,8 +155,7 @@ def build_month(
                 plan=mine.get(day),
                 friends=sorted(friends[day], key=str.lower),
                 with_me=with_me[day],
-                highlight=highlight.name if highlight is not None else "",
-                there=sorted(there[day], key=str.lower),
+                crowd=_crowd(free[day]),
             )
             for day in week
         ]

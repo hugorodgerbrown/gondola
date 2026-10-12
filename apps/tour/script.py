@@ -78,8 +78,9 @@ CHAPTERS: tuple[Chapter, ...] = (
             ),
             Frame(
                 "1.1",
-                "Tap a resort to light up the days your friends will be there.",
-                ("nav.month-resorts",),
+                "A pale day is one you haven't said: it shows where most of your "
+                "friends will be.",
+                (".mday--friends",),
             ),
             Frame(
                 "1.2",

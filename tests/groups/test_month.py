@@ -82,7 +82,7 @@ def test_month_day_plan_words(crew: Crew) -> None:
     )
 
 
-def test_month_day_count_is_friends_with_you_or_at_the_highlight(crew: Crew) -> None:
+def test_month_day_count_is_friends_with_you_or_in_the_crowd(crew: Crew) -> None:
     mine = plans.set_plan(crew.sam, crew.day, crew.verbier)
     day = month.MonthDay(
         date=crew.day,
@@ -91,11 +91,13 @@ def test_month_day_count_is_friends_with_you_or_at_the_highlight(crew: Crew) -> 
         plannable=True,
         plan=mine,
         with_me=2,
-        highlight="Zermatt",
-        there=["Ben"],
+        crowd=plans.ResortFriends(crew.zermatt, [crew.ben]),
     )
-    # Your day counts the friends with you, whatever is highlighted.
+    # Your day counts the friends with you.
     assert day.count == 2
-    # A free day counts the friends at the highlight.
+    # An unsaid day counts the friends in the crowd, and names them.
     day.plan = None
     assert day.count == 1
+    assert day.summary.endswith("most at Zermatt: Ben")
+    day.crowd = None
+    assert day.count == 0

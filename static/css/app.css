@@ -1444,8 +1444,9 @@ a.mday:focus-visible {
   color: #fff;
 }
 
-/* Friends with you (or at the highlighted resort): one person, or two for
-   more, with no number. White on your blue days, blue on any other. */
+/* Friends with you (or, on a day you haven't said, at the resort most of
+   them are in): one person, or two for more, with no number. White on your
+   blue days, blue on any other. */
 .mday__friends {
   display: inline-flex;
   color: var(--accent);
@@ -1460,6 +1461,16 @@ a.mday:focus-visible {
   color: #fff;
 }
 
+/* A day you haven't said that friends have: pale blue, with their resort's
+   code where yours would be. */
+.mday--friends {
+  background: var(--accent-soft);
+}
+
+.mday--friends .mday__resort {
+  color: var(--accent);
+}
+
 /* The cell's blue, beside your answer in the day panel. */
 .day-panel__swatch {
   display: inline-block;
@@ -1467,37 +1478,6 @@ a.mday:focus-visible {
   height: 14px;
   border-radius: 4px;
   background: var(--accent);
-}
-
-/* --- Calendar: one resort highlighted ----------------------------------- */
-
-.month-resorts {
-  margin: 0 -16px;
-  padding: 2px 16px 4px;
-  scrollbar-width: none;
-}
-
-.month-resorts .chip {
-  box-shadow: none;
-  flex: none;
-  color: var(--text-1);
-}
-
-.month-resorts .chip[aria-current="true"] {
-  color: #ffffff;
-}
-
-/* Free days nobody is at the resort step back; your own days never do. */
-.month--highlight .mday:not(.mday--lit):not(.mday--out) {
-  opacity: 0.28;
-}
-
-.month--highlight .mday--past.mday--lit {
-  opacity: 0.55;
-}
-
-.month--highlight .mday--lit:not(.mday--in) {
-  background: var(--accent-soft);
 }
 
 /* --- Calendar: selecting several days ------------------------------------ */
@@ -1520,12 +1500,6 @@ a.mday:focus-visible {
 .month-head__nav {
   display: flex;
   gap: 4px;
-}
-
-.month-resorts .chip {
-  height: 36px;
-  padding: 0 16px;
-  font-size: 14px;
 }
 
 .day-panel {
