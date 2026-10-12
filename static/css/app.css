@@ -1682,39 +1682,76 @@ a.mday:focus-visible {
 }
 
 .day-panel__title {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
   font-size: 20px;
   line-height: 28px;
   font-weight: 600;
 }
 
-.day-panel__mine {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 4px 8px;
-  font-weight: 500;
-}
-
-/* The calendar's blue, beside a day you're skiing. */
-.day-panel__dot {
-  width: 12px;
-  height: 12px;
-  border-radius: 3px;
-  background: var(--accent);
-}
-
-.day-panel__private {
+/* A private day: the same lock as the cell, beside the date. */
+.day-panel__lock {
   display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 13px;
-  font-weight: 400;
   color: var(--text-2);
 }
 
-.day-panel__private svg {
-  width: 12px;
-  height: 12px;
+.day-panel__lock svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* Where you are, with the cell's own colour as its swatch. */
+.day-panel__mine {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 500;
+}
+
+.month-key__swatch--none {
+  background: var(--sunk);
+  box-shadow: inset 0 0 0 1px var(--rule-strong);
+}
+
+/* The friends the day's number counts: the number first, then the names. */
+.day-panel__here {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.day-panel__count {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.day-panel__count svg {
+  width: 16px;
+  height: 16px;
+}
+
+.day-panel__others {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.day-panel__friends {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 14px;
+}
+
+.day-panel__resort {
+  font-weight: 500;
 }
 
 .day-panel__meetup {
@@ -1723,32 +1760,6 @@ a.mday:focus-visible {
   gap: 8px;
   align-self: flex-start;
   font-size: 14px;
-}
-
-.day-panel__friends {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.day-panel__friends li {
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-}
-
-.day-panel__resort {
-  font-weight: 500;
-}
-
-.day-panel__with-you {
-  margin-left: 4px;
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--ok);
 }
 
 /* Every day gets an empty tick circle; a picked day fills it. */

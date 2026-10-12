@@ -1,8 +1,11 @@
-{# The selected day under the month: your answer, who is where, the meet-up, and Add or Edit plans. Needs selected, selected_friends and back_query. #}
+{# The selected day under the month: where you are, who is with you (the day's number), where the others are, any meet-up, and Add or Edit plans. Needs selected, here_resort, here, elsewhere, highlight and back_query. #}
 {% with day=selected plan=selected.plan %}
   <section id="day-panel" class="day-panel" aria-labelledby="day-panel-heading" aria-live="polite">
     <div class="day-panel__head">
-      <h2 class="day-panel__title" id="day-panel-heading">{{ day.date|date:"j F" }}</h2>
+      <h2 class="day-panel__title" id="day-panel-heading">
+        {{ day.date|date:"j F" }}
+        {% if plan.is_private %}<span class="day-panel__lock" role="img" aria-label="Only you see this day">{% include "includes/icons/lock.html" %}</span>{% endif %}
+      </h2>
       {% if day.plannable %}
         <a class="button button--small{% if plan %} button--secondary{% endif %}" data-day-plan
            href="{% url 'planning:day' day.date %}{% if back_query %}?{{ back_query }}{% endif %}"
@@ -10,26 +13,33 @@
            hx-target="#sheet-body" hx-push-url="false">{% if plan %}Edit plans{% else %}Add plans{% endif %}</a>
       {% endif %}
     </div>
-    {% if plan %}
-      <p class="day-panel__mine">{% if plan.skiing == 'skiing' %}<span class="day-panel__dot" aria-hidden="true"></span>{% endif %}{{ day.plan_words }}{% if plan.is_private %}<span class="day-panel__private">{% include "includes/icons/lock.html" %}Only you see this day</span>{% endif %}</p>
-      {% if plan.note %}<p class="small muted">“{{ plan.note }}”</p>{% endif %}
+    <p class="day-panel__mine">
+      {% if plan %}
+        <span class="month-key__swatch{% if plan.skiing != 'skiing' %} month-key__swatch--around{% endif %}{% if plan.skiing != 'skiing' and not plan.resort %} month-key__swatch--none{% endif %}" aria-hidden="true"></span>{{ day.plan_words }}
+      {% else %}
+        <span class="muted">No plans</span>
+      {% endif %}
+    </p>
+    {% if day.count %}
+      <div class="day-panel__here">
+        <p class="day-panel__count">{% include "includes/icons/people.html" %}{{ day.count }} {% if highlight %}at {{ here_resort.name }}{% else %}with you{% endif %}</p>
+        {% if here %}<p class="small">{{ here.names }}</p>{% endif %}
+      </div>
+    {% endif %}
+    {% if elsewhere %}
+      <div class="day-panel__others">
+        <span class="eyebrow">{% if here_resort %}Elsewhere{% else %}Friends out{% endif %}</span>
+        <ul class="day-panel__friends" aria-label="Friends elsewhere that day">
+          {% for entry in elsewhere %}
+            <li><span class="day-panel__resort">{{ entry.resort.name }}</span> <span class="muted">{{ entry.names }}</span></li>
+          {% endfor %}
+        </ul>
+      </div>
+    {% elif not day.count %}
+      <p class="small muted">No friends out this day.</p>
     {% endif %}
     {% if day.meetup %}
       <a class="day-panel__meetup" href="{% url 'planning:meetup' day.meetup.share_token %}"><span class="mday__meetup" aria-hidden="true"></span>Meet-up at {{ day.meetup.resort.name }}{% if day.meetup.start_time %}, {{ day.meetup.start_time|time:"H:i" }}{% endif %}</a>
-    {% endif %}
-    {% if selected_friends %}
-      <ul class="day-panel__friends" aria-label="Friends that day">
-        {% for entry in selected_friends %}
-          <li>
-            <span class="day-panel__resort">{{ entry.resort.name }}{% if plan.resort_id == entry.resort.pk %} <span class="day-panel__with-you">with you</span>{% endif %}</span>
-            <span class="small muted">{{ entry.names }}</span>
-          </li>
-        {% endfor %}
-      </ul>
-    {% elif not plan %}
-      <p class="muted">No ski plans shown for this date.</p>
-    {% else %}
-      <p class="muted">No friends have plans for this date.</p>
     {% endif %}
   </section>
 {% endwith %}

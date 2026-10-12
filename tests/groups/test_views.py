@@ -56,10 +56,13 @@ def test_calendar_is_this_month(sam: Client, crew: Crew) -> None:
     assert b"mday--skiing mday--selected" in response.content
     assert response.context["selected"].count == 1
     assert b'class="mday__friends"' in response.content
-    # The panel: your answer, kept private, who's where, and Edit plans.
+    # The panel: where you are, the lock by the date, the one friend with
+    # you (the cell's number), and Edit plans.
     assert b"Skiing at Verbier" in response.content
-    assert b"Only you see this day" in response.content
-    assert b"with you</span>" in response.content
+    assert b'aria-label="Only you see this day"' in response.content
+    assert b"1 with you</p>" in response.content
+    assert response.context["here"].resort == crew.verbier
+    assert response.context["elsewhere"] == []
     assert b"Edit plans" in response.content
     assert f"{today:%A} {today.day} {today:%B}, today, Verbier, private".encode() in (
         response.content
@@ -173,10 +176,13 @@ def test_the_panel_shows_the_picked_day(sam: Client, crew: Crew) -> None:
     url = reverse("planning:calendar")
     page = sam.get(url, {"day": crew.day.isoformat()})
     assert page.context["selected"].date == crew.day
-    assert [e.resort for e in page.context["selected_friends"]] == [
+    # Sam has no resort that day, so every friend is "out", none "with you".
+    assert page.context["here"] is None
+    assert [e.resort for e in page.context["elsewhere"]] == [
         crew.verbier,
         crew.zermatt,
     ]
+    assert b"Friends out" in page.content
     assert b"Add plans" in page.content and b"Edit plans" not in page.content
     assert b"Meet-up at Verbier" in page.content
     assert b"Ben (around)" in page.content
@@ -184,14 +190,35 @@ def test_the_panel_shows_the_picked_day(sam: Client, crew: Crew) -> None:
     assert b'class="mday__friends"' not in page.content
     # A day with nothing on says so.
     empty = sam.get(url, {"day": (crew.day + datetime.timedelta(days=1)).isoformat()})
-    assert b"No ski plans shown for this date." in empty.content
+    assert b"No friends out this day." in empty.content
+
+
+def test_the_panel_splits_with_you_from_elsewhere(sam: Client, crew: Crew) -> None:
+    """The panel's number is the cell's: your resort, or the highlighted one."""
+    plans.set_plan(crew.sam, crew.day, S.YES, resort=crew.verbier)
+    plans.set_plan(crew.anna, crew.day, S.YES, resort=crew.verbier)
+    plans.set_plan(crew.ben, crew.day, S.NO, resort=crew.zermatt)
+    url = reverse("planning:calendar")
+    page = sam.get(url, {"day": crew.day.isoformat()})
+    assert page.context["selected"].count == 1
+    assert b"1 with you</p>" in page.content
+    assert [e.resort for e in page.context["elsewhere"]] == [crew.zermatt]
+    assert b"Elsewhere" in page.content
+    # Highlighting Zermatt counts Ben there, and Verbier becomes elsewhere.
+    lit = sam.get(
+        url, {"day": crew.day.isoformat(), "highlight": str(crew.zermatt.uuid)}
+    )
+    assert lit.context["selected"].count == 1
+    assert lit.context["here"].resort == crew.zermatt
+    assert b"1 at Zermatt</p>" in lit.content
+    assert [e.resort for e in lit.context["elsewhere"]] == [crew.verbier]
 
 
 def test_the_panel_without_friends_out(sam: Client, crew: Crew) -> None:
     plans.set_plan(crew.sam, crew.day, S.NOT_SURE)
     page = sam.get(reverse("planning:calendar"), {"day": crew.day.isoformat()})
     assert b"Not sure yet" in page.content
-    assert b"No friends have plans for this date." in page.content
+    assert b"No friends out this day." in page.content
 
 
 @pytest.mark.parametrize("value", ["nope", "2099-01-01"])

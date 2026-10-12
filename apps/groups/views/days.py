@@ -9,8 +9,9 @@ resort (``?highlight=``): the days anyone is there stand out, and the
 count is the friends there instead.
 
 Tapping a day selects it (``?day=``) and fills the panel below the month:
-your answer, where every friend is that day, any meet-up, and Add plans or
-Edit plans, which opens a sheet with two separate answers: where you'll
+where you are, the friends with you (the day's number, so the highlighted
+resort's while one is picked), where the others are, any meet-up, and Add
+plans or Edit plans, which opens a sheet with two separate answers: where you'll
 be (the resorts friends picked first, then a search over every resort, or
 no resort) and whether you're skiing (yes, not sure yet, no); then an
 optional note, and a switch to keep the day private.
@@ -51,6 +52,7 @@ from ..services.month import (
     month_start,
 )
 from ..services.plans import (
+    ResortFriends,
     clear_plan,
     clear_plans,
     friends_by_resort,
@@ -90,6 +92,10 @@ def calendar(request: HttpRequest) -> HttpResponse:
     window_from = _later_month(month.first)
     back = _back(window_from, highlight)
     selected = _selected(month, picked)
+    here_resort = highlight or (selected.plan.resort if selected.plan else None)
+    here, elsewhere = _split_friends(
+        friends_by_resort(user, selected.date), here_resort
+    )
     return render(
         request,
         "groups/calendar.html",
@@ -97,7 +103,10 @@ def calendar(request: HttpRequest) -> HttpResponse:
             "month": month,
             "today": today(),
             "selected": selected,
-            "selected_friends": friends_by_resort(user, selected.date),
+            # The resort the day's number counts, its friends, and the rest.
+            "here_resort": here_resort,
+            "here": here,
+            "elsewhere": elsewhere,
             # Only a later month needs carrying through a plain form post.
             "window_from": window_from,
             "back_query": urlencode(back),
@@ -128,6 +137,20 @@ def _selected(month: Month, picked: datetime.date | None) -> MonthDay:
             if day.date == wanted:
                 return day
     return days[0]
+
+
+def _split_friends(
+    entries: list[ResortFriends], resort: Resort | None
+) -> tuple[ResortFriends | None, list[ResortFriends]]:
+    """Return the friends at ``resort``, if any, and those everywhere else."""
+    here = None
+    elsewhere = []
+    for entry in entries:
+        if resort is not None and entry.resort.pk == resort.pk:
+            here = entry
+        else:
+            elsewhere.append(entry)
+    return here, elsewhere
 
 
 def _later_month(first: datetime.date) -> datetime.date | None:
