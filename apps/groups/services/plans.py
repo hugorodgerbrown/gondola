@@ -70,7 +70,6 @@ def update_plans(
     *,
     skiing: str | Keep = KEEP,
     resort: Resort | None | Keep = KEEP,
-    note: str | Keep = KEEP,
 ) -> list[PlanDay]:
     """Set the answers given on each of ``days``, keeping the ones left out.
 
@@ -87,8 +86,6 @@ def update_plans(
             plan.skiing = skiing
         if not isinstance(resort, Keep):
             plan.resort = resort
-        if not isinstance(note, Keep):
-            plan.note = note.strip()
         plan.save()
         saved.append(plan)
     return saved
@@ -100,10 +97,9 @@ def set_plan(
     skiing: str,
     *,
     resort: Resort | None = None,
-    note: str = "",
 ) -> PlanDay:
     """Create or replace ``user``'s whole plan for ``day``."""
-    (plan,) = update_plans(user, [day], skiing=skiing, resort=resort, note=note)
+    (plan,) = update_plans(user, [day], skiing=skiing, resort=resort)
     return plan
 
 

@@ -47,7 +47,6 @@ WEEK = {
     "Ella": ["CHAM", "CHAM-", "CHAM-", "CHAM", "CHAM-", "", ""],
     "Felix": ["", "", "", "", "", "CRA", "CRA"],
 }
-NOTES = {("Anna", 0): "First lift, then Mont Fort", ("you", 5): "With the kids"}
 # Out of season, the demo week starts on the first Saturday on or after
 # this January day.
 JANUARY_DAY = 9
@@ -156,9 +155,7 @@ class Command(BaseCommand):
         PlanDay.objects.filter(user__in=people.values(), date__in=days).delete()
         for key, cells in WEEK.items():
             for index, cell in enumerate(cells):
-                self._plan(
-                    people[key], days[index], cell, resorts, NOTES.get((key, index), "")
-                )
+                self._plan(people[key], days[index], cell, resorts)
 
     def _plan(
         self,
@@ -166,7 +163,6 @@ class Command(BaseCommand):
         day: datetime.date,
         cell: str,
         resorts: dict[str, Resort],
-        note: str,
     ) -> None:
         """Write one cell of the demo week."""
         code = cell
@@ -176,10 +172,4 @@ class Command(BaseCommand):
         if code[-1] == "-":
             skiing = PlanDay.Skiing.NO
             code = code[:-1]
-        set_plan(
-            user,
-            day,
-            skiing,
-            resort=resorts[code] if code else None,
-            note=note,
-        )
+        set_plan(user, day, skiing, resort=resorts[code] if code else None)

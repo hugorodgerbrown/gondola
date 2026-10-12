@@ -274,13 +274,12 @@ def test_day_sheet_saves(sam: Client, crew: Crew) -> None:
         {
             "skiing": "skiing",
             "resort": str(crew.verbier.uuid),
-            "note": "first lift",
         },
         headers=HTMX,
     )
     assert response.status_code == 204 and response["HX-Refresh"] == "true"
     plan = PlanDay.objects.get(user=crew.sam, date=crew.day)
-    assert (plan.resort, plan.note) == (crew.verbier, "first lift")
+    assert (plan.resort, plan.skiing) == (crew.verbier, S.YES)
 
 
 def test_day_sheet_where_and_skiing_apart(sam: Client, crew: Crew) -> None:
@@ -401,20 +400,18 @@ def test_several_days_titles(
 @freeze_time("2026-10-11 09:00:00+02:00")
 def test_several_days_change_only_what_is_touched(sam: Client, crew: Crew) -> None:
     days = [datetime.date(2026, 12, d) for d in (19, 20)]
-    plans.set_plan(crew.sam, days[0], S.NO, resort=crew.verbier, note="spa")
+    plans.set_plan(crew.sam, days[0], S.NO, resort=crew.verbier)
     plans.set_plan(crew.sam, days[1], S.YES, resort=crew.zermatt)
     url = several(*(d.isoformat() for d in days))
     sheet = sam.get(url, headers=HTMX)
-    assert sheet.context["mixed"] == {"skiing", "resort", "note"}
-    assert b'name="note_keep"' in sheet.content
+    assert sheet.context["mixed"] == {"skiing", "resort"}
     assert b'data-keep-for="skiing"' in sheet.content
-    # Only skiing is picked; everything else keeps each day's own answer.
+    # Only skiing is picked; each day keeps its own resort.
     sam.post(
         url,
         {
             "skiing": "not_skiing",
             "resort": "keep",
-            "note_keep": "on",
         },
         headers=HTMX,
     )
@@ -423,7 +420,6 @@ def test_several_days_change_only_what_is_touched(sam: Client, crew: Crew) -> No
         (S.NO, crew.verbier),
         (S.NO, crew.zermatt),
     ]
-    assert [saved[d].note for d in days] == ["spa", ""]
     # A day with no resort yet can't keep one.
     unplanned = several("2026-12-19", "2026-12-21")
     refused = sam.post(unplanned, {"resort": "keep"}, headers=HTMX)
@@ -533,10 +529,10 @@ def test_map_pins_json(sam: Client, crew: Crew) -> None:
 
 
 def test_resort_sheet_and_plan_here(sam: Client, crew: Crew) -> None:
-    plans.set_plan(crew.anna, crew.day, S.YES, resort=crew.verbier, note="first lift")
+    plans.set_plan(crew.anna, crew.day, S.YES, resort=crew.verbier)
     url = reverse("planning:resort_sheet", kwargs={"resort_uuid": crew.verbier.uuid})
     sheet = sam.get(url, {"date": crew.day.isoformat()}, headers=HTMX)
-    assert b"first lift" in sheet.content
+    assert b"Anna" in sheet.content
     assert b"I'll be here" in sheet.content
     plans.set_plan(crew.ben, crew.day, S.NO, resort=crew.verbier)
     assert (

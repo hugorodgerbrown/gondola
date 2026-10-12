@@ -203,7 +203,6 @@ class PlanDay(BaseModel):
         related_name="plan_days",
         help_text="Where they'll be, skiing or not. Empty: not at a resort.",
     )
-    note = models.CharField(max_length=140, blank=True)
 
     objects = PlanDayQuerySet.as_manager()
 

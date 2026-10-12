@@ -89,7 +89,7 @@ def cell_for(plan: PlanDay | None, *, mine: bool) -> Cell:
         text = "–" if plan.skiing == PlanDay.Skiing.NO else "?"
     return Cell(
         text=text,
-        title=plan.describe() + (f" · {plan.note}" if plan.note else ""),
+        title=plan.describe(),
         # Only a day out skiing is drawn at full strength.
         quiet=not plan.is_skiing,
     )

@@ -50,16 +50,6 @@
     <input id="day-skiing" type="checkbox" name="skiing" value="skiing"{% if form.skiing.value == "skiing" %} checked{% endif %}>
   </label>
 
-  <div class="field">
-    <label for="{{ form.note.id_for_label }}">Note for your groups</label>
-    {% if "note" in mixed %}
-      <input type="hidden" name="note_keep" value="on" data-keep-for="note">
-      <input type="text" name="note" id="{{ form.note.id_for_label }}" class="input" maxlength="140" placeholder="Differs across these days">
-    {% else %}
-      {{ form.note }}
-    {% endif %}
-  </div>
-
 
   <div class="field">
     <button type="submit" class="button button--block">{{ save_label }}</button>

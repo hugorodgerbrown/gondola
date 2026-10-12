@@ -83,8 +83,7 @@ on the control that leads to the next page.
 | 2.1 | Friends' resorts | Next | We show you where friends will be that day. Tap one to join them. |
 | 2.2 | Search | Next | Somewhere else? Look up any resort. |
 | 2.3 | Skiing toggle | Next | Skiing is on when you're up for the slopes. Switch it off if you'll be around but not skiing. |
-| 2.4 | Note | Next | Add a note for your groups, like "first lift". |
-| 2.5 | Save | Tap Save | Save shares the day with your groups. |
+| 2.4 | Save | Tap Save | Save shares the day with your groups. |
 
 ## Chapter 3: Your group
 
@@ -163,8 +162,7 @@ their first day before it, so they don't count in either.
 
 ## Left out on purpose
 
-Passkeys (asked just before the tour), notes beyond one line, reset link,
-leave and delete.
+Passkeys (asked just before the tour), reset link, leave and delete.
 
 ## How it's built
 

@@ -49,7 +49,6 @@ WEEK = {
     "Ella": ["CHAM", "CHAM-", "CHAM-", "CHAM", "CHAM-", "", ""],
     "Felix": ["", "", "", "", "", "CRA", "CRA"],
 }
-NOTES = {("Anna", 0): "First lift, then Mont Fort"}
 # The tour's own resort: the one opened on the map.
 TOUR_RESORT = "VERB"
 # Longer than anyone takes; past it, the copy is stale and deleted.
@@ -104,7 +103,7 @@ def _friend(name: str) -> User:
 
 
 def _write_cell(
-    user: User, day: datetime.date, cell: str, resorts: dict[str, Resort], note: str
+    user: User, day: datetime.date, cell: str, resorts: dict[str, Resort]
 ) -> None:
     """Write one friend's day: a code, a code with ? or -, or nothing."""
     if not cell:
@@ -115,7 +114,7 @@ def _write_cell(
     if code[-1] == "-":
         skiing = PlanDay.Skiing.NO
         code = code[:-1]
-    set_plan(user, day, skiing, resort=resorts[code] if code else None, note=note)
+    set_plan(user, day, skiing, resort=resorts[code] if code else None)
 
 
 @transaction.atomic
@@ -132,13 +131,7 @@ def create_demo(owner: User) -> Group:
     days = [start + datetime.timedelta(days=n) for n in range(len(WEEK["Sam"]))]
     for name, cells in WEEK.items():
         for index, cell in enumerate(cells):
-            _write_cell(
-                friends[name],
-                days[index],
-                cell,
-                resorts,
-                NOTES.get((name, index), ""),
-            )
+            _write_cell(friends[name], days[index], cell, resorts)
     group = Group.objects.create(owner=owner, name=GROUP_NAME, is_demo=True)
     Membership.objects.create(group=group, user=owner, role=Membership.Role.OWNER)
     for friend in friends.values():

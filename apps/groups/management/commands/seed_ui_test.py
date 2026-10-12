@@ -7,7 +7,7 @@ and the board have to draw:
 
 - skiing and not skiing ("around"), as single days and as runs of days,
   with friends at your resort and elsewhere;
-- days left unsaid, days with a note (one long);
+- days left unsaid;
 - a ten-day run in one resort with mixed skiing, and a run that crosses a
   month end;
 - friends at your resort, friends elsewhere, a friend "around", and a
@@ -58,10 +58,6 @@ RESORTS = {
 SKIING = {"Y": PlanDay.Skiing.YES, "N": PlanDay.Skiing.NO}
 # The day the tester says nothing about, while friends do.
 UNSAID = 6
-LONG_NOTE = (
-    "Meeting the ski school at the Médran lift, then lunch at Chez Dany if "
-    "the weather holds"
-)
 
 
 @dataclass(frozen=True)
@@ -75,7 +71,6 @@ class Run:
     start: int
     skiing: str
     where: str
-    note: str = ""
     label: str = ""
 
     def days(self, first: datetime.date) -> list[datetime.date]:
@@ -106,8 +101,8 @@ def tester_runs(first: datetime.date) -> list[Run]:
         Run(3, "Y", "CHAM", label="Skiing, friends elsewhere"),
         Run(5, "N", "CHAM", label="Around, friends elsewhere"),
         # Offset UNSAID is left out: friends out, nothing from you.
-        Run(9, "Y", "SAASF", note="First lift", label="Short note"),
-        Run(10, "N", "GRIME", note=LONG_NOTE, label="Long note"),
+        Run(9, "Y", "SAASF", label="Skiing alone, one day"),
+        Run(10, "N", "GRIME", label="Around alone, one day"),
         # Runs.
         Run(14, "YYNNYYYNYN", "VERB", label="Ten days in one resort, mixed skiing"),
         Run(26, "YYYYY", "CRA", label="Five days alike"),
@@ -261,5 +256,4 @@ class Command(BaseCommand):
                 day,
                 SKIING[letter],
                 resort=resorts[run.where],
-                note=run.note,
             )

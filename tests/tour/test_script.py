@@ -19,8 +19,8 @@ from apps.tour.script import (
 DOC = (settings.BASE_DIR / "docs" / "onboarding-tour.md").read_text()
 
 
-def test_the_tour_has_twenty_six_frames() -> None:
-    assert frame_count() == 26
+def test_the_tour_has_twenty_five_frames() -> None:
+    assert frame_count() == 25
 
 
 @pytest.mark.parametrize(

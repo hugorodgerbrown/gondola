@@ -37,7 +37,7 @@ def test_map_pins_and_pass_filter(crew: Crew) -> None:
 def test_resort_day(crew: Crew) -> None:
     second = create_group(crew.anna, "Uni friends")
     join_group(second, crew.sam)
-    plans.set_plan(crew.anna, crew.day, S.YES, resort=crew.verbier, note="first lift")
+    plans.set_plan(crew.anna, crew.day, S.YES, resort=crew.verbier)
     plans.set_plan(crew.ben, crew.day, S.YES, resort=crew.verbier)
     plans.set_plan(crew.sam, crew.day, S.NO, resort=crew.zermatt)
     info = resort_map.resort_day(crew.sam, crew.verbier, crew.day)

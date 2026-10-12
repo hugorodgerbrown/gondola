@@ -12,7 +12,7 @@ where you are, the friends with you (the day's number, so the highlighted
 resort's while one is picked), where the others are, and Add plans or
 Edit plans, which opens a sheet with two separate answers: where you'll be
 (the resorts friends picked first, then a search over every resort) and
-whether you're skiing (an on/off switch); then an optional note.
+whether you're skiing (an on/off switch).
 
 Pressing and holding a day starts selecting: tap more days (or drag
 across a run), then one sheet plans them all (``?days=``). An answer that
@@ -203,7 +203,7 @@ def _calendar_url(back: dict[str, str], days: list[datetime.date] | None = None)
 
 
 # What a day with no plan yet starts from in the sheet.
-FRESH = {"skiing": PlanDay.Skiing.YES, "resort": "", "note": ""}
+FRESH = {"skiing": PlanDay.Skiing.YES, "resort": ""}
 
 
 def _answers(plan: PlanDay | None) -> dict[str, object]:
@@ -213,7 +213,6 @@ def _answers(plan: PlanDay | None) -> dict[str, object]:
     return {
         "skiing": plan.skiing,
         "resort": str(plan.resort.uuid) if plan.resort else "",
-        "note": plan.note,
     }
 
 

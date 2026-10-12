@@ -39,10 +39,10 @@ def test_members_owner_first(crew: Crew) -> None:
 
 
 def test_set_plan_upserts_and_clears(crew: Crew) -> None:
-    plans.set_plan(crew.sam, crew.day, S.YES, resort=crew.verbier, note=" first lift ")
+    plans.set_plan(crew.sam, crew.day, S.YES, resort=crew.zermatt)
     plan = plans.set_plan(crew.sam, crew.day, S.NO, resort=crew.verbier)
     # Where and skiing are separate: in Verbier, not skiing.
-    assert plan.resort == crew.verbier and plan.note == ""
+    assert (plan.resort, plan.skiing) == (crew.verbier, S.NO)
     assert PlanDay.objects.filter(user=crew.sam).count() == 1
     plans.clear_plan(crew.sam, crew.day)
     assert not PlanDay.objects.filter(user=crew.sam).exists()
@@ -88,16 +88,16 @@ def test_friends_by_resort_over_several_days(crew: Crew) -> None:
 
 def test_update_plans_changes_only_what_is_given(crew: Crew) -> None:
     days = [crew.day + datetime.timedelta(days=n) for n in range(4)]
-    plans.set_plan(crew.sam, days[0], S.NO, note="spa")
+    plans.set_plan(crew.sam, days[0], S.NO)
     # Ten days in Verbier, then skiing on some of them.
     plans.update_plans(crew.sam, days, resort=crew.verbier, skiing=S.NO)
-    made = plans.update_plans(crew.sam, days[:2], skiing=S.YES, note=" a ")
-    assert [(p.date, p.resort, p.skiing, p.note) for p in made] == [
-        (days[0], crew.verbier, S.YES, "a"),
-        (days[1], crew.verbier, S.YES, "a"),
+    made = plans.update_plans(crew.sam, days[:2], skiing=S.YES)
+    assert [(p.date, p.resort, p.skiing) for p in made] == [
+        (days[0], crew.verbier, S.YES),
+        (days[1], crew.verbier, S.YES),
     ]
     rest = PlanDay.objects.filter(user=crew.sam, date__in=days[2:])
-    assert {(p.resort, p.skiing, p.note) for p in rest} == {(crew.verbier, S.NO, "")}
+    assert {(p.resort, p.skiing) for p in rest} == {(crew.verbier, S.NO)}
     # A new day starts out skiing, at no resort.
     (fresh,) = plans.update_plans(crew.sam, [days[0] + datetime.timedelta(9)])
     assert (fresh.skiing, fresh.resort) == (S.YES, None)
@@ -163,7 +163,7 @@ def test_remove_member_rules(crew: Crew) -> None:
 def test_board_cells(crew: Crew) -> None:
     start = plans.today()
     plans.set_plan(crew.sam, start, S.YES, resort=crew.verbier)
-    plans.set_plan(crew.anna, start, S.YES, resort=crew.verbier, note="first lift")
+    plans.set_plan(crew.anna, start, S.YES, resort=crew.verbier)
     plans.set_plan(
         crew.ben, start, S.YES
     )  # an older day, from before resorts were required
@@ -175,7 +175,7 @@ def test_board_cells(crew: Crew) -> None:
     assert rows[crew.sam].cells[0].text == "VERB"
     assert rows[crew.anna].cells[2] == board.EMPTY
     assert rows[crew.anna].cells[0].text == "VERB"
-    assert rows[crew.anna].cells[0].title == "Verbier · first lift"
+    assert rows[crew.anna].cells[0].title == "Verbier"
     assert rows[crew.anna].cells[1].text == "–"
     assert rows[crew.ben].cells[0].text == "?"
 

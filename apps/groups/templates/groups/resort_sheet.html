@@ -7,7 +7,7 @@
       <span class="eyebrow">{{ entry.group.name }}</span>
       <div>
         {% for plan in entry.plans %}
-          <div class="friend-line"><span>{{ plan.user }}{% if plan.skiing == "not_skiing" %} <span class="tag">Around</span>{% endif %}</span><span class="small muted">{{ plan.note }}</span></div>
+          <div class="friend-line"><span>{{ plan.user }}{% if plan.skiing == "not_skiing" %} <span class="tag">Around</span>{% endif %}</span></div>
         {% endfor %}
       </div>
     </section>

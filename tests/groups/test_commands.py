@@ -171,7 +171,6 @@ def test_seed_ui_test_covers_every_case_and_reruns() -> None:
     # Every day has a resort; both skiing answers.
     assert not mine.filter(resort__isnull=True).exists()
     assert {plan.skiing for plan in mine} == set(S.values)
-    assert mine.exclude(note="").count() == 2
     # Nothing from the tester on the unsaid day, but friends out.
     unsaid = plans.today() + datetime.timedelta(days=UNSAID)
     assert not mine.filter(date=unsaid).exists()
