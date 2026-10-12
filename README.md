@@ -27,7 +27,7 @@ cp .env.example .env
 uv sync
 uv run python manage.py migrate
 uv run python manage.py import_resorts --commit             # resorts and passes
-uv run python manage.py seed_demo --commit --email you@example.com  # a busy demo group
+uv run python manage.py seed_demo --commit --email you@example.com  # a busy January week
 uv run python manage.py seed_ui_test --commit  # "UI test"; join via Testers in the admin
 uv run python manage.py runserver
 ```
