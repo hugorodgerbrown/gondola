@@ -1,4 +1,4 @@
-{# One day of the calendar: blue if you ski, bordered if you're at a resort but not skiing, the friends-with-you count, the lock and the meet-up dot. Needs day, selected and highlight. #}
+{# One day of the calendar: blue if you ski, light blue if you're at a resort but not skiing, the friends-with-you count, the lock and the meet-up dot. Needs day, selected and highlight. #}
 {% with plan=day.plan %}
   {% if day.plannable %}
     <a data-date="{{ day.date|date:'Y-m-d' }}"

@@ -17,6 +17,8 @@
   --rule-strong: rgba(0, 0, 0, 0.16);
   --accent: #2563eb;
   --accent-soft: rgba(37, 99, 235, 0.12);
+  /* A day at a resort but not skiing: the skiing blue, lightened. */
+  --accent-light: #bcd0fa;
   /* Magic Pass resorts on the map: a violet square instead of a round pin. */
   --pass-magic: #7c3aed;
   /* A meet-up on My days: an amber dot, apart from your own (blue) days. */
@@ -1528,17 +1530,16 @@ a.mday:focus-visible {
   height: 10px;
 }
 
-/* Blue is a day you're skiing; a blue border is a day you're at a resort
-   but not skiing. Where, and anything else, is in the panel. */
+/* Blue is a day you're skiing; light blue is a day you're at a resort but
+   not skiing. Fill only, so the outline stays free for the selected day.
+   Where, and anything else, is in the panel. */
 .mday--skiing {
   background: var(--accent);
   color: #fff;
 }
 
 .mday--around {
-  background: var(--card);
-  outline: 2px solid var(--accent);
-  outline-offset: -2px;
+  background: var(--accent-light);
 }
 
 /* Friends where you are that day (or at the highlighted resort). */
@@ -1595,8 +1596,7 @@ a.mday:focus-visible {
 }
 
 .month-key__swatch--around {
-  background: var(--card);
-  box-shadow: inset 0 0 0 2px var(--accent);
+  background: var(--accent-light);
 }
 
 .month-key svg {
