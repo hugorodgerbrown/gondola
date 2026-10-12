@@ -48,24 +48,24 @@ email by hand with `send_evening_emails --commit` from a Render shell.
 Migrations and the resort import run before each deploy; `/livez` is
 Render's health check and `/healthz` also reads the database.
 
-The one-click setup is `bin/titan` in
-[django-titan-template](https://github.com/hugorodgerbrown/django-titan-template)
-(its README lists the keys it needs). From a checkout of the template, next
-to this one:
+Setup is [titan](https://github.com/hugorodgerbrown/django-titan-template/tree/main/titan),
+installed once with `uv tool install` (its README lists the keys it reads
+from 1Password):
 
 ```bash
-bin/titan new gondola              # plan: changes nothing
-bin/titan new gondola --commit     # stops once for the Blueprint, then:
-                                   # database, Resend key, env vars, domain, deploy
-bin/titan golive gondola           # prints the CNAME to add
-bin/titan golive gondola --commit  # waits for DNS, sets SITE_URL
+titan status gondola   # what exists and what is missing
+titan deploy gondola   # fills the env groups, links them, deploys; asks first
+titan golive gondola   # after the CNAME: waits for DNS, sets SITE_URL
 ```
 
-The repository already exists, so `new` skips generating it. There is no
-`gondola-purge` cron job, so `bin/titan` provisions the web service alone.
-The settings read Titan's `DJANGO_SECRET_KEY`, `DJANGO_ALLOWED_HOSTS` and
-`DJANGO_DEBUG` as well as the bare names, and the host in `SITE_URL` is
-always allowed.
+The service reads two env groups: `titan`, shared by every Titan app
+(debug off, the Python version, hosts and CSRF origins under
+ultraniche.ai, the SMTP relay), and `gondola`, its own (`DATABASE_URL`,
+`DJANGO_SECRET_KEY`, the mail key and sender, `SITE_URL`). Only
+`DJANGO_SETTINGS_MODULE` is set in `render.yaml`. To override a shared
+value for Gondola alone, set it on the service, which wins over both
+groups. The settings read Titan's `DJANGO_*` names as well as the bare
+ones, and the host in `SITE_URL` is always allowed.
 
 `SITE_URL` must be the address people use, because passkeys are tied to its
 domain: a passkey added on `gondola.ultraniche.ai` won't work on the

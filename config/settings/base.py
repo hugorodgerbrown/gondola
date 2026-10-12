@@ -14,7 +14,7 @@ from decouple import Csv, config
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
-# The DJANGO_* names are the ones bin/titan (the Titan provisioner) writes;
+# The DJANGO_* names are the ones titan (the Titan provisioner) writes;
 # the bare names are what the first deployment set, and still work.
 SECRET_KEY = config("DJANGO_SECRET_KEY", default="") or config("SECRET_KEY")
 DEBUG = config(

@@ -1,37 +1,20 @@
 # render.yaml — Render blueprint: one web service, named after the app as
-# bin/titan (the Titan provisioner in django-titan-template) expects.
+# titan (the Titan provisioner in django-titan-template) expects.
 #
 # It uses the existing shared-db Postgres instance rather than a database of
 # its own, and there are no scheduled jobs for now (so no <app>-purge cron
 # job): run `send_evening_emails --commit` by hand (Render shell) when wanted.
 #
-# DATABASE_URL points at a database of the app's own on shared-db (e.g.
-# .../gondola), never at another app's database: Django's tables
-# (auth, sessions, migrations) would clash. Secrets marked `sync: false`
-# are entered in the Render dashboard when the blueprint is first applied
-# (Render only prompts for them at service scope, never inside an
-# environment group); nothing secret lives in this file.
-
-envVarGroups:
-  - name: gondola
-    envVars:
-      - key: DJANGO_SETTINGS_MODULE
-        value: config.settings.production
-      - key: PYTHON_VERSION
-        value: "3.14"
-      - key: SECRET_KEY
-        generateValue: true
-      - key: ALLOWED_HOSTS
-        value: .onrender.com
-      - key: CSRF_TRUSTED_ORIGINS
-        value: https://*.onrender.com
-      - key: SITE_NAME
-        value: Gondola
-      # SMTP host, user, password and sender are set per service below.
-      - key: EMAIL_PORT
-        value: "587"
-      - key: EMAIL_USE_TLS
-        value: "True"
+# Settings come from two env groups that titan makes and fills; they are
+# referenced here, not declared, so a Blueprint sync never overwrites them:
+#
+# - titan: shared by every Titan app (DJANGO_DEBUG, PYTHON_VERSION, hosts
+#   and CSRF origins under ultraniche.ai, the SMTP relay).
+# - gondola: this app's own (DATABASE_URL, DJANGO_SECRET_KEY, the mail key
+#   and sender, SITE_URL).
+#
+# A value set on the service itself wins over both groups, so an override
+# for this app goes there. Nothing secret lives in this file.
 
 services:
   - type: web
@@ -48,24 +31,12 @@ services:
       uv run --no-sync python manage.py import_resorts --commit
     startCommand: uv run --no-sync gunicorn config.wsgi:application --bind 0.0.0.0:$PORT
     # Answers 200 while the process is up; no sign-in, no database query.
-    # (/healthz also reads the database; bin/titan checks it after a deploy.)
+    # (/healthz also reads the database; titan checks it after a deploy.)
     healthCheckPath: /livez
     envVars:
+      - fromGroup: titan
       - fromGroup: gondola
-      # The shared-db internal URL, with this app's own database name.
-      - key: DATABASE_URL
-        sync: false
-      # The public address, for links in emails (e.g. https://gondola.ultraniche.ai).
-      - key: SITE_URL
-        sync: false
-      # SMTP for sign-in links and the evening email (e.g. Resend's relay:
-      # smtp.resend.com, 587, user "resend", the API key as the password).
-      - key: EMAIL_HOST
-        sync: false
-      - key: EMAIL_HOST_USER
-        sync: false
-      - key: EMAIL_HOST_PASSWORD
-        sync: false
-      - key: DEFAULT_FROM_EMAIL
-        sync: false
-
+      # manage.py defaults to development settings; the pre-deploy commands
+      # run through it.
+      - key: DJANGO_SETTINGS_MODULE
+        value: config.settings.production

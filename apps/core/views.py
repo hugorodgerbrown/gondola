@@ -8,7 +8,7 @@ apps/core/views.py — The front page and the installable-app plumbing.
 * ``offline`` is the page the worker shows when there is no signal and the
   page asked for was never cached.
 * ``livez`` and ``healthz`` are the health checks: Render's (the process is
-  up) and the one bin/titan and uptime monitors use (the database answers).
+  up) and the one titan and uptime monitors use (the database answers).
 """
 
 from __future__ import annotations

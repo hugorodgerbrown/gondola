@@ -1,4 +1,4 @@
-"""Tests for config/settings/base.py: the environment names bin/titan writes."""
+"""Tests for the settings: the environment names titan writes."""
 
 import importlib
 from collections.abc import Callable, Iterator
@@ -17,6 +17,8 @@ NAMES = (
     "DJANGO_ALLOWED_HOSTS",
     "RENDER_EXTERNAL_HOSTNAME",
     "SITE_URL",
+    "CSRF_TRUSTED_ORIGINS",
+    "DJANGO_CSRF_TRUSTED_ORIGINS",
 )
 
 
@@ -71,3 +73,19 @@ def test_site_url_host_is_allowed(load: Callable[..., ModuleType]) -> None:
     """Setting SITE_URL alone is enough for the site to answer there."""
     base = load(SECRET_KEY="k", SITE_URL="https://gondola.example.com")
     assert base.ALLOWED_HOSTS == ["gondola.example.com"]
+
+
+def test_production_trusts_both_origin_lists_and_the_service(
+    load: Callable[..., ModuleType], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Titan's DJANGO_CSRF_TRUSTED_ORIGINS adds to the bare name and the onrender.com host."""
+    load(SECRET_KEY="k", RENDER_EXTERNAL_HOSTNAME="gondola-f915.onrender.com")
+    monkeypatch.setenv("DATABASE_URL", "postgresql://u:p@h:5432/gondola")
+    monkeypatch.setenv("CSRF_TRUSTED_ORIGINS", "https://*.onrender.com")
+    monkeypatch.setenv("DJANGO_CSRF_TRUSTED_ORIGINS", "https://*.ultraniche.ai")
+    production = importlib.reload(importlib.import_module("config.settings.production"))
+    assert production.CSRF_TRUSTED_ORIGINS == [
+        "https://*.onrender.com",
+        "https://*.ultraniche.ai",
+        "https://gondola-f915.onrender.com",
+    ]
