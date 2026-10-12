@@ -54,7 +54,7 @@ from 1Password):
 
 ```bash
 titan status gondola   # what exists and what is missing
-titan new gondola      # fills the env groups, links them, deploys; asks first
+titan deploy gondola   # fills the env groups, links them, deploys; asks first
 titan golive gondola   # after the CNAME: waits for DNS, sets SITE_URL
 ```
 
