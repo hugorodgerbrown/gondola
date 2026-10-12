@@ -129,7 +129,7 @@ def test_calendar_highlights_a_resort(sam: Client, crew: Crew) -> None:
     assert b"month--highlight" in lit.content and b"mday--lit" in lit.content
     assert b"Verbier in " not in lit.content  # no who's-there card
     # The picked chip and All resorts clear it; the arrows, day links and
-    # selection keep it. The count is the friends at the resort.
+    # selection keep it. On a free day the count is the friends there.
     assert lit.context["selected"].count == 1
     assert f'aria-current="true" href="?day={far.isoformat()}"'.encode() in lit.content
     back = f"from={first}&amp;highlight={crew.verbier.uuid}"
@@ -196,7 +196,7 @@ def test_the_panel_shows_the_picked_day(sam: Client, crew: Crew) -> None:
 
 
 def test_the_panel_splits_with_you_from_elsewhere(sam: Client, crew: Crew) -> None:
-    """The panel names the cell's friends: your resort's, or the highlighted one's."""
+    """The panel names the friends with you, whichever resort is highlighted."""
     plans.set_plan(crew.sam, crew.day, crew.verbier)
     plans.set_plan(crew.anna, crew.day, crew.verbier)
     plans.set_plan(crew.ben, crew.day, crew.zermatt)
@@ -207,14 +207,33 @@ def test_the_panel_splits_with_you_from_elsewhere(sam: Client, crew: Crew) -> No
     assert [e.resort for e in page.context["elsewhere"]] == [crew.zermatt]
     assert b"Elsewhere" in page.content
     assert b'<span class="muted">Ben</span>' in page.content
-    # Highlighting Zermatt counts Ben there, and Verbier becomes elsewhere.
+    # Highlighting Zermatt changes nothing about your day: Anna is still
+    # with you, and Ben stays elsewhere.
     lit = sam.get(
         url, {"day": crew.day.isoformat(), "highlight": str(crew.zermatt.uuid)}
     )
     assert lit.context["selected"].count == 1
-    assert lit.context["here"].resort == crew.zermatt
-    assert b"<span>Ben at Zermatt</span>" in lit.content
-    assert [e.resort for e in lit.context["elsewhere"]] == [crew.verbier]
+    assert lit.context["here"].resort == crew.verbier
+    assert b"<span>Anna</span>" in lit.content
+    assert [e.resort for e in lit.context["elsewhere"]] == [crew.zermatt]
+
+
+def test_the_highlighted_resort_leads_elsewhere(sam: Client, crew: Crew) -> None:
+    plans.set_plan(crew.anna, crew.day, crew.verbier)
+    plans.set_plan(crew.ben, crew.day, crew.zermatt)
+    url = reverse("planning:calendar")
+    day = crew.day.isoformat()
+    plain = sam.get(url, {"day": day})
+    assert [e.resort for e in plain.context["elsewhere"]] == [
+        crew.verbier,
+        crew.zermatt,
+    ]
+    lit = sam.get(url, {"day": day, "highlight": str(crew.zermatt.uuid)})
+    assert lit.context["here"] is None
+    assert [e.resort for e in lit.context["elsewhere"]] == [
+        crew.zermatt,
+        crew.verbier,
+    ]
 
 
 def test_the_panel_without_friends_out(sam: Client, crew: Crew) -> None:

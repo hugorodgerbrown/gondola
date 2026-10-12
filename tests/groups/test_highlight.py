@@ -48,13 +48,13 @@ def test_month_days_pick_out_the_highlighted_resort(crew: Crew) -> None:
         for week in month.build_month(crew.sam, dec(1), crew.verbier).weeks
         for d in week
     }
-    assert (days[dec(5)].there, days[dec(5)].me_there, days[dec(5)].lit) == (
-        ["Anna"],
-        True,
-        True,
-    )
-    assert not days[dec(6)].lit
+    assert (days[dec(5)].there, days[dec(5)].lit) == (["Anna"], True)
+    # Your own days ignore the highlight: Zermatt stands out as it is, and
+    # its mark is still the friends with you (none).
+    assert days[dec(6)].lit and days[dec(6)].count == 0
     assert days[dec(7)].lit and days[dec(7)].there == ["Ben"]
+    assert days[dec(7)].count == 1
+    assert not days[dec(8)].lit
     assert days[dec(7)].summary.endswith("at Verbier: Ben")
     # Without a highlight, nothing is lit.
     plain = month.build_month(crew.sam, dec(1))

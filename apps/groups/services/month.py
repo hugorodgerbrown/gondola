@@ -6,8 +6,10 @@ viewer said about it and what their groups are up to: which friends are
 in town somewhere, and how many of them in the viewer's resort (the
 calendar marks one or several).
 
-With one resort highlighted, each day also says which friends are there,
-and whether the viewer is, so the calendar can pick those days out.
+With one resort highlighted, each day also says which friends are there.
+The highlight never touches the viewer's own days: a day they are in a
+resort stays as it is, its mark still the friends with them. It picks out
+the free days, the ones a friend is at that resort.
 """
 
 from __future__ import annotations
@@ -36,16 +38,17 @@ class MonthDay:
     plan: PlanDay | None = None
     friends: list[str] = field(default_factory=list)
     with_me: int = 0
-    # The highlighted resort's name, if one is; the friends there that day;
-    # and whether you are.
+    # The highlighted resort's name, if one is, and the friends there that day.
     highlight: str = ""
     there: list[str] = field(default_factory=list)
-    me_there: bool = False
 
     @property
     def lit(self) -> bool:
-        """Return whether anyone is at the highlighted resort that day."""
-        return self.me_there or bool(self.there)
+        """Return whether a highlight leaves the day standing out.
+
+        Your own days always do; a free day does when a friend is there.
+        """
+        return bool(self.highlight) and (self.plan is not None or bool(self.there))
 
     @property
     def friends_out(self) -> int:
@@ -54,8 +57,11 @@ class MonthDay:
 
     @property
     def count(self) -> int:
-        """Return the friends the day marks: where you are (or at the highlight)."""
-        return len(self.there) if self.highlight else self.with_me
+        """Return the friends the day marks.
+
+        On your days, the friends with you; on a free day, those at the highlight.
+        """
+        return self.with_me if self.plan is not None else len(self.there)
 
     @property
     def plan_words(self) -> str:
@@ -117,7 +123,7 @@ def build_month(
     """Return ``viewer``'s calendar for the month starting ``first``.
 
     ``highlight`` is a resort to pick out: each day then names the friends
-    there and says whether the viewer is.
+    there.
     """
     first = month_start(first)
     weeks_of_dates = calendar.Calendar(firstweekday=0).monthdatescalendar(
@@ -153,9 +159,6 @@ def build_month(
                 with_me=with_me[day],
                 highlight=highlight.name if highlight is not None else "",
                 there=sorted(there[day], key=str.lower),
-                me_there=highlight is not None
-                and day in mine
-                and mine[day].resort_id == highlight.pk,
             )
             for day in week
         ]

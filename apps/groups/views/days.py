@@ -4,12 +4,12 @@ apps/groups/views/days.py — the calendar, and the sheet for one day.
 The calendar is about you: a month, this month by default; arrows step a
 month (``?from=``, any day in it) as far as plans can be made. A day shows
 which resort you'll be in and whether friends will be there too. Chips
-above it highlight one resort (``?highlight=``): the days anyone is there
-stand out, and the friends shown are the ones there instead.
+above it highlight one resort (``?highlight=``): your own days stay as
+they are, and the free days a friend is there stand out.
 
 Tapping a day selects it (``?day=``) and fills the panel below the month:
-where you are, the friends with you (the highlighted resort's while one
-is picked), where the others are, and Add plans or
+where you are, the friends with you, where the others are (the
+highlighted resort first), and Add plans or
 Edit plans, which opens a sheet with one answer: where you'll be (the
 resorts friends picked first, then a search over every resort).
 
@@ -86,9 +86,9 @@ def calendar(request: HttpRequest) -> HttpResponse:
     window_from = _later_month(month.first)
     back = _back(window_from, highlight)
     selected = _selected(month, picked)
-    here_resort = highlight or (selected.plan.resort if selected.plan else None)
+    here_resort = selected.plan.resort if selected.plan else None
     here, elsewhere = _split_friends(
-        friends_by_resort(user, selected.date), here_resort
+        friends_by_resort(user, selected.date), here_resort, highlight
     )
     return render(
         request,
@@ -97,7 +97,7 @@ def calendar(request: HttpRequest) -> HttpResponse:
             "month": month,
             "today": today(),
             "selected": selected,
-            # The resort the day's number counts, its friends, and the rest.
+            # Your resort that day, the friends with you, and the rest.
             "here_resort": here_resort,
             "here": here,
             "elsewhere": elsewhere,
@@ -134,9 +134,12 @@ def _selected(month: Month, picked: datetime.date | None) -> MonthDay:
 
 
 def _split_friends(
-    entries: list[ResortFriends], resort: Resort | None
+    entries: list[ResortFriends], resort: Resort | None, first: Resort | None
 ) -> tuple[ResortFriends | None, list[ResortFriends]]:
-    """Return the friends at ``resort``, if any, and those everywhere else."""
+    """Return the friends at ``resort``, if any, and those everywhere else.
+
+    The rest lead with ``first`` (the highlighted resort), if anyone is there.
+    """
     here = None
     elsewhere = []
     for entry in entries:
@@ -144,6 +147,8 @@ def _split_friends(
             here = entry
         else:
             elsewhere.append(entry)
+    if first is not None:
+        elsewhere.sort(key=lambda entry: entry.resort.pk != first.pk)
     return here, elsewhere
 
 

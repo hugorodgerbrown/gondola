@@ -1487,7 +1487,7 @@ a.mday:focus-visible {
   color: #ffffff;
 }
 
-/* Days nobody is at the resort step back, so the ones somebody is stand out. */
+/* Free days nobody is at the resort step back; your own days never do. */
 .month--highlight .mday:not(.mday--lit):not(.mday--out) {
   opacity: 0.28;
 }
