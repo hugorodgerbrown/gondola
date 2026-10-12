@@ -71,7 +71,8 @@ class MonthDay:
             parts.append("today")
         plan = self.plan
         parts.append("no plan" if plan is None else plan.describe())
-        if self.friends:
+        # A pale day speaks for the picked group alone, as the square shows.
+        if self.friends and self.crowd is None:
             parts.append(f"friends at resorts: {join_names(self.friends)}")
         if self.with_me:
             parts.append(f"{self.with_me} with you")

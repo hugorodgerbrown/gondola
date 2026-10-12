@@ -101,3 +101,17 @@ def test_month_day_count_is_friends_with_you_or_in_the_crowd(crew: Crew) -> None
     assert day.summary.endswith("most at Zermatt: Ben")
     day.crowd = None
     assert day.count == 0
+
+
+def test_a_pale_day_names_only_the_picked_groups_people(crew: Crew) -> None:
+    """With a group picked, the summary leaves out friends in other groups."""
+    day = month.MonthDay(
+        date=crew.day,
+        in_month=True,
+        is_today=False,
+        plannable=True,
+        friends=["Anna", "Ben", "Zoe"],
+        crowd=plans.ResortFriends(crew.zermatt, [crew.ben]),
+    )
+    assert "friends at resorts" not in day.summary
+    assert day.summary.endswith("most at Zermatt: Ben")

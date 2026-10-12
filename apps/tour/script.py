@@ -62,9 +62,11 @@ HANDOFF = (
 # What a quiet group's Tell the group button shares with the invite link.
 TELL_THE_GROUP = "My ski days are on Gondola, add yours"
 
-# The demo group's chip: during the tour it is the only group, so the
-# only chip not already picked.
-GROUP_CHIP = "nav.month-groups a.chip:not([aria-current])"
+# The demo group's chip, while it isn't picked: during the tour it is the
+# only group. Only an unpicked group's chip links with ``group=``, so this
+# never matches My calendar, and with the group already picked (a reload
+# that lost the tour's place) 1.1 shows with Next instead.
+GROUP_CHIP = 'nav.month-groups a.chip[href*="group="]'
 
 # The selected day's Add plans (or Edit plans) under the month.
 PLAN_DAY = "#day-panel [data-day-plan]"
