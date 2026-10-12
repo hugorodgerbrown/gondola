@@ -25,14 +25,21 @@ with every frame drawn on the real screens, is the
   day saved in the demo would show in their real groups too. Save and
   Propose are intercepted.
 - **Always clearly a demo.** An amber "Demo · nothing is saved · End tour"
-  bar sits just above the tab bar on every tour screen. Demo groups never
-  count on the map, the board or in the evening email.
+  bar sits just above the tab bar on every tour screen. While someone
+  tours, their demo copy is the only group every screen shows, the map and
+  the board included, so the tour is full. Outside the tour, demo groups
+  never show anywhere: not on the map, the board, My days or in the
+  evening email.
 - **Cleaned up.** Finishing or ending the tour deletes the copy. Someone who
   closes the tab has theirs deleted on their next page load, since the app
   runs no scheduled jobs.
 - **One script for everyone.** The demo is always busy, so only the
-  hand-off in chapter 7 depends on the person's real group: a quiet group
-  adds a Tell the group button that shares the invite link.
+  hand-off in chapter 7 depends on the person's real groups, read across
+  all of them: **busy** when anyone else in any of them has said something
+  about a day from today on, **quiet** when they're in a group but nobody
+  else has yet, and **none** when they're in no group. A quiet group adds a
+  Tell the group button that shares the invite link of their first group
+  by name.
 
 ## The pattern
 
@@ -140,7 +147,7 @@ on the control that leads to the next page.
 
 **Page intro:** That's the tour. The demo group is gone. This is your real calendar: tap a day you might ski, and your group will see it.
 
-*Why:* The amber bar disappears, so the switch from practice to real is visible, and they land where the measured goal happens. In a quiet group the card adds Tell the group; an organiser with no group lands on Groups to start one.
+*Why:* The amber bar disappears, so the switch from practice to real is visible, and they land where the measured goal happens. In a quiet group the card adds Tell the group; an organiser with no group lands on Groups to start one. Someone who signed up through an invite link is offered the tour only after tapping Join, so they arrive here already in the group; if they started it with the invite still pending, Let's go goes back to that invite, which comes before Groups.
 
 | Frame | Element | Advances on | Coach mark |
 |---|---|---|---|
@@ -155,6 +162,8 @@ it. Add that site in fivebar for the counts to show.
 
 | Event | Sent when | Data |
 |---|---|---|
+| `Tour offered` | The welcome (chapter 0) is shown | none |
+| `Tour skipped` | Not now is tapped | none |
 | `Tour started` | Show me round is tapped | `replay`: true / false |
 | `Tour ended` | End tour is tapped | `chapter`: 1 to 6 |
 | `Tour finished` | Chapter 7 is reached | `group`: busy / quiet / none |
@@ -162,8 +171,13 @@ it. Add that site in fivebar for the counts to show.
 | `Invite shared` | The invite link is shared | `from`: tour / group |
 | `Meet-up proposed` | A real meet-up is saved | `from`: board / map |
 
-The number to watch is `Day planned` (first, after tour) over
-`Tour finished`, against people who skipped the tour.
+The number to watch is first days planned after the tour against those
+planned without it. `Tour offered` counts everyone who saw the welcome,
+and splits into `Tour skipped` and `Tour started`, so both groups have a
+denominator. Toured: `Day planned` with `first` and `after_tour` true, over
+`Tour finished`. Skipped: `Day planned` with `first` true and `after_tour`
+false, over `Tour skipped`; accounts made before the tour shipped had
+their first day before it, so they don't count in either.
 
 ## Left out on purpose
 

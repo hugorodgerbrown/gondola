@@ -35,6 +35,7 @@ from .script import WELCOME, WELCOME_TITLE
 def offer(request: HttpRequest) -> HttpResponse:
     """Show the welcome and offer the tour."""
     next_url = safe_next(request.GET.get("next"), request)
+    record(request, "Tour offered")
     return render(
         request,
         "tour/offer.html",

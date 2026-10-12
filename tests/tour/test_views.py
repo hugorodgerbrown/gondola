@@ -326,6 +326,17 @@ def fivebar(settings: object) -> None:
 
 
 @pytest.mark.usefixtures("fivebar")
+def test_the_offer_is_counted_and_not_now_is_tagged(
+    client: Client, tourist: User
+) -> None:
+    client.force_login(tourist)
+    page = client.get(reverse("tour:offer"))
+    assert b'"Tour offered"' in page.content
+    assert b'data-tally="Tour skipped"' in page.content
+    assert _events(client) == []
+
+
+@pytest.mark.usefixtures("fivebar")
 def test_tour_events_are_counted(
     client: Client, tourist: User, resorts: dict[str, Resort]
 ) -> None:
