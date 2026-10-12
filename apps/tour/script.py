@@ -62,6 +62,10 @@ HANDOFF = (
 # What a quiet group's Tell the group button shares with the invite link.
 TELL_THE_GROUP = "My ski days are on Gondola, add yours"
 
+# The demo group's chip: during the tour it is the only group, so the
+# only chip not already picked.
+GROUP_CHIP = "nav.month-groups a.chip:not([aria-current])"
+
 # The selected day's Add plans (or Edit plans) under the month.
 PLAN_DAY = "#day-panel [data-day-plan]"
 
@@ -73,14 +77,15 @@ CHAPTERS: tuple[Chapter, ...] = (
         (
             Frame(
                 "1.0",
-                "This is your calendar. Blue days are the days you're in a "
-                "resort, and the people mark shows friends will be there too.",
+                "This is your calendar. A day you say you're in a resort turns "
+                "blue, and the people mark shows friends will be there too.",
             ),
             Frame(
                 "1.1",
-                "Pick a group to see, in pale, where its people will be on the "
+                "Tap a group to see, in pale, where its people will be on the "
                 "days you haven't said.",
                 ("nav.month-groups",),
+                tap=GROUP_CHIP,
             ),
             Frame(
                 "1.2",

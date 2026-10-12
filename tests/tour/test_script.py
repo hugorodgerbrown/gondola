@@ -9,6 +9,7 @@ from apps.resorts.models import Resort
 from apps.tour.demo import demo_week
 from apps.tour.script import (
     CHAPTERS,
+    GROUP_CHIP,
     HANDOFF,
     WELCOME,
     WELCOME_TITLE,
@@ -60,3 +61,10 @@ def test_chapters_for_a_page_fill_in_the_demo_week(
     pins = chapters_for("map", week)[0]["frames"][-2]["tap"]  # type: ignore[index]
     assert str(resorts["VERB"].uuid) in pins
     assert chapters_for("account", week) == []
+
+
+def test_chapter_one_has_them_pick_the_demo_group() -> None:
+    """A new calendar is blank until a group is picked, so 1.1 taps its chip."""
+    chip = CHAPTERS[0].frames[1]
+    assert chip.id == "1.1"
+    assert chip.tap == GROUP_CHIP
