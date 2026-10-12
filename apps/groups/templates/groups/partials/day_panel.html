@@ -14,7 +14,7 @@
     </div>
     <p class="day-panel__mine">
       {% if plan %}
-        <span class="month-key__swatch{% if plan.skiing != 'skiing' %} month-key__swatch--around{% endif %}{% if plan.skiing != 'skiing' and not plan.resort %} month-key__swatch--none{% endif %}" aria-hidden="true"></span>{{ day.plan_words }}
+        <span class="day-panel__swatch{% if plan.skiing != 'skiing' %} day-panel__swatch--around{% endif %}{% if plan.skiing != 'skiing' and not plan.resort %} day-panel__swatch--none{% endif %}" aria-hidden="true"></span>{{ day.plan_words }}
       {% else %}
         <span class="muted">No plans</span>
       {% endif %}

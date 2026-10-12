@@ -1496,61 +1496,8 @@ a.mday:focus-visible {
   color: #fff;
 }
 
-/* The key sits behind a small (?) under the month, closed by default. */
-.month-help {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 8px;
-}
-
-.month-help summary {
-  width: 24px;
-  height: 24px;
-  display: grid;
-  place-items: center;
-  border-radius: 50%;
-  box-shadow: inset 0 0 0 1.5px var(--rule-strong);
-  color: var(--text-2);
-  font: 600 13px var(--font-sans);
-  list-style: none;
-  cursor: pointer;
-}
-
-.month-help summary::-webkit-details-marker {
-  display: none;
-}
-
-.month-help[open] summary {
-  background: var(--text-1);
-  box-shadow: none;
-  color: var(--card);
-}
-
-.month-help summary:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
-}
-
-.month-key {
-  align-self: stretch;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px 18px;
-  margin: 0;
-  padding: 0 4px;
-  list-style: none;
-  font-size: 13px;
-  color: var(--text-2);
-}
-
-.month-key li {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.month-key__swatch {
+/* A colour swatch, as the day panel shows beside your answer. */
+.day-panel__swatch {
   display: inline-block;
   width: 14px;
   height: 14px;
@@ -1558,13 +1505,8 @@ a.mday:focus-visible {
   background: var(--accent);
 }
 
-.month-key__swatch--around {
+.day-panel__swatch--around {
   background: var(--accent-light);
-}
-
-.month-key svg {
-  width: 16px;
-  height: 16px;
 }
 
 /* --- Calendar: one resort highlighted ----------------------------------- */
@@ -1658,7 +1600,7 @@ a.mday:focus-visible {
   font-weight: 500;
 }
 
-.month-key__swatch--none {
+.day-panel__swatch--none {
   background: var(--sunk);
   box-shadow: inset 0 0 0 1px var(--rule-strong);
 }

@@ -58,16 +58,6 @@
     {% endfor %}
   </div>
 
-  <details class="month-help">
-    <summary aria-label="What the calendar shows">?</summary>
-    <ul class="month-key" aria-label="Key">
-      <li><span class="month-key__swatch"></span>You're skiing</li>
-      <li><span class="month-key__swatch month-key__swatch--around"></span>At a resort, not skiing</li>
-      <li>{% include "includes/icons/user.html" %}{% if highlight %}A friend at {{ highlight.name }}{% else %}A friend with you{% endif %}</li>
-      <li>{% include "includes/icons/people.html" %}{% if highlight %}Friends at {{ highlight.name }}{% else %}Friends with you{% endif %}</li>
-    </ul>
-  </details>
-
   <div class="select-bar" data-select-bar role="region" aria-label="Selected days" hidden>
     <button type="button" class="button button--secondary button--small" data-select-cancel>Cancel</button>
     <span class="select-bar__count" data-select-count aria-live="polite"></span>
