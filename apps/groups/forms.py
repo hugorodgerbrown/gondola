@@ -33,13 +33,6 @@ class DayForm(forms.Form):
 
     skiing = forms.ChoiceField(choices=PlanDay.Skiing.choices, required=False)
     resort = forms.CharField(required=False)
-    note = forms.CharField(
-        max_length=140,
-        required=False,
-        widget=forms.TextInput(
-            attrs={"class": "input", "placeholder": "Optional, e.g. first lift"}
-        ),
-    )
 
     def clean_resort(self) -> Resort | Keep:
         """Return the resort picked, or KEEP; a day can't be at no resort."""
