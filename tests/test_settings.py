@@ -56,14 +56,14 @@ def test_allowed_hosts_add_up(load: Callable[..., ModuleType]) -> None:
     base = load(
         SECRET_KEY="k",
         ALLOWED_HOSTS=".onrender.com",
-        DJANGO_ALLOWED_HOSTS="resort-planner.ultraniche.ai",
-        RENDER_EXTERNAL_HOSTNAME="resort-planner.onrender.com",
-        SITE_URL="https://resort-planner.ultraniche.ai",
+        DJANGO_ALLOWED_HOSTS="gondola.ultraniche.ai",
+        RENDER_EXTERNAL_HOSTNAME="gondola.onrender.com",
+        SITE_URL="https://gondola.ultraniche.ai",
     )
     assert base.ALLOWED_HOSTS == [
         ".onrender.com",
-        "resort-planner.ultraniche.ai",
-        "resort-planner.onrender.com",
+        "gondola.ultraniche.ai",
+        "gondola.onrender.com",
     ]
 
 
