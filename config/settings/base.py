@@ -14,9 +14,20 @@ from decouple import Csv, config
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
-SECRET_KEY = config("SECRET_KEY")
-DEBUG = config("DEBUG", default=False, cast=bool)
-ALLOWED_HOSTS: list[str] = config("ALLOWED_HOSTS", default="", cast=Csv())
+# The DJANGO_* names are the ones bin/titan (the Titan provisioner) writes;
+# the bare names are what the first deployment set, and still work.
+SECRET_KEY = config("DJANGO_SECRET_KEY", default="") or config("SECRET_KEY")
+DEBUG = config(
+    "DJANGO_DEBUG", default=config("DEBUG", default=False, cast=bool), cast=bool
+)
+ALLOWED_HOSTS: list[str] = [
+    *config("ALLOWED_HOSTS", default="", cast=Csv()),
+    *config("DJANGO_ALLOWED_HOSTS", default="", cast=Csv()),
+]
+# Render sets this to the service's onrender.com name, so the service always
+# answers there, before and after a custom domain is added.
+if RENDER_EXTERNAL_HOSTNAME := config("RENDER_EXTERNAL_HOSTNAME", default=""):
+    ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -101,6 +112,10 @@ SITE_NAME = config("SITE_NAME", default="Gondola")
 # Absolute origin for links in emails sent outside a request (the evening
 # email runs from a scheduled command), e.g. https://planner.example.com
 SITE_URL = config("SITE_URL", default="http://localhost:8000")
+# Whatever address SITE_URL names, when set, is one the site answers on.
+_site_host = urlsplit(config("SITE_URL", default="")).hostname
+if _site_host and _site_host not in ALLOWED_HOSTS:
+    ALLOWED_HOSTS.append(_site_host)
 
 # Signing in is an emailed link; there are no passwords for people.
 LOGIN_URL = "accounts:sign_in"

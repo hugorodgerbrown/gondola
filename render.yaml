@@ -1,8 +1,9 @@
-# render.yaml — Render blueprint for a user-test deployment.
+# render.yaml — Render blueprint: one web service, named after the app as
+# bin/titan (the Titan provisioner in django-titan-template) expects.
 #
-# One web service. It uses the existing shared-db Postgres instance rather
-# than a database of its own, and there are no scheduled jobs for now: run
-# `send_evening_emails --commit` by hand (Render shell) when wanted.
+# It uses the existing shared-db Postgres instance rather than a database of
+# its own, and there are no scheduled jobs for now (so no <app>-purge cron
+# job): run `send_evening_emails --commit` by hand (Render shell) when wanted.
 #
 # DATABASE_URL points at a database of the app's own on shared-db (e.g.
 # .../resort_planner), never at another app's database: Django's tables
@@ -46,7 +47,9 @@ services:
       uv run --no-sync python manage.py migrate --noinput &&
       uv run --no-sync python manage.py import_resorts --commit
     startCommand: uv run --no-sync gunicorn config.wsgi:application --bind 0.0.0.0:$PORT
-    healthCheckPath: /
+    # Answers 200 while the process is up; no sign-in, no database query.
+    # (/healthz also reads the database; bin/titan checks it after a deploy.)
+    healthCheckPath: /livez
     envVars:
       - fromGroup: resort-planner
       # The shared-db internal URL, with this app's own database name.
@@ -65,3 +68,4 @@ services:
         sync: false
       - key: DEFAULT_FROM_EMAIL
         sync: false
+
