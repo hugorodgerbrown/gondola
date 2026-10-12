@@ -9,9 +9,8 @@ its lifetime ends the tour.
 Nothing is saved in the demo: plan days belong to a person, not a group,
 so a day saved in the demo would show in their real groups. Any form
 posted to the planning screens is answered here instead of by its view.
-Saving a day moves the tour on to the group (chapter 3), proposing a
-meet-up moves it on to the map (chapter 6), and anything else stays where
-it was, saying nothing was saved.
+Saving a day moves the tour on to the group (chapter 3), and anything
+else stays where it was, saying nothing was saved.
 
 Someone not touring who still has a demo copy (a closed tab, a sign-out,
 another device) has it deleted on their next page load.
@@ -30,12 +29,11 @@ from django.utils.http import url_has_allowed_host_and_scheme
 from apps.accounts.models import User
 from apps.core.http import is_htmx
 
-from .demo import demo_week, discard_demos, live_demo
+from .demo import discard_demos, live_demo
 from .session import TOUR_KEY, Tour, tour_state
 
 # Where a post that would have saved goes instead: the next chapter's page.
 SAVES_DAY = {"day", "several_days"}
-PROPOSES_MEETUP = {"meetup_new"}
 
 
 def go(request: HttpRequest, url: str) -> HttpResponse:
@@ -48,13 +46,13 @@ def go(request: HttpRequest, url: str) -> HttpResponse:
 
 
 def _back(request: HttpRequest) -> str:
-    """Return the page the post came from, if it's ours, else My days."""
+    """Return the page the post came from, if it's ours, else the calendar."""
     referer = request.headers.get("Referer", "")
     if referer and url_has_allowed_host_and_scheme(
         referer, allowed_hosts={request.get_host()}, require_https=request.is_secure()
     ):
         return referer
-    return reverse("planning:my_days")
+    return reverse("planning:calendar")
 
 
 def guard(request: HttpRequest, tour: Tour, url_name: str) -> HttpResponse:
@@ -64,9 +62,6 @@ def guard(request: HttpRequest, tour: Tour, url_name: str) -> HttpResponse:
             request,
             reverse("planning:group_detail", kwargs={"group_uuid": tour.group.uuid}),
         )
-    if url_name in PROPOSES_MEETUP:
-        day = demo_week().start
-        return go(request, f"{reverse('planning:map')}?date={day.isoformat()}")
     messages.info(request, "That's the demo: nothing was saved.")
     if is_htmx(request):
         response = HttpResponse(status=204)

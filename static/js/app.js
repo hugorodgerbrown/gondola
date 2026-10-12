@@ -5,9 +5,7 @@
  * a close button or a tap on the backdrop, and wires share buttons to the
  * phone's share sheet (falling back to copying the link). Before a sign-out
  * (or account deletion) form posts, drops the pages the service worker
- * cached, so the next person on this device can't open them offline. In
- * a day sheet over several days, changing an answer that differed across
- * them drops its "keep as is" flag. The
+ * cached, so the next person on this device can't open them offline. The
  * signed-out front page drops them again, which covers a sign-out posted
  * from a page loaded before this script had the handler. ``onSwipe`` turns
  * a sideways swipe into "previous" or "next", for the month calendars.
@@ -49,69 +47,12 @@
     }
   });
 
-  // Day sheet over several days: a note or privacy that differs across
-  // them is kept unless changed. Changing it drops the "keep" flag.
-  function dropKeep(event) {
-    const form = event.target.closest("[data-day-form]");
-    if (!form || !event.target.name) {
-      return;
-    }
-    const keep = form.querySelector('[data-keep-for="' + event.target.name + '"]');
-    if (keep) {
-      keep.remove();
-    }
-  }
-
   document.addEventListener("click", function (event) {
     document.querySelectorAll("details.row-menu[open]").forEach(function (menu) {
       if (!menu.contains(event.target)) {
         menu.open = false;
       }
     });
-  });
-
-  document.addEventListener("input", dropKeep);
-  document.addEventListener("change", dropKeep);
-
-  // A resort list where nothing picked means no resort: tapping the picked
-  // resort again clears it. "Leave as it is" stays a plain radio.
-  function clearableRadio(event) {
-    const choice = event.target.closest("[data-clearable] .choice");
-    const radio = choice && choice.querySelector("input[type=radio]");
-    return radio && radio.value !== "keep" ? radio : null;
-  }
-
-  function clear(radio) {
-    radio.checked = false;
-    radio.dispatchEvent(new Event("change", { bubbles: true }));
-  }
-
-  // Note whether the radio was already picked before the tap checks it.
-  document.addEventListener("pointerdown", function (event) {
-    const radio = clearableRadio(event);
-    if (radio) {
-      radio.dataset.wasChecked = radio.checked ? "1" : "";
-    }
-  });
-
-  // Space on the picked radio clears it too (the browser does nothing).
-  document.addEventListener("keydown", function (event) {
-    const radio = event.key === " " ? clearableRadio(event) : null;
-    if (radio && event.target === radio && radio.checked) {
-      event.preventDefault();
-      clear(radio);
-    }
-  });
-
-  document.addEventListener("click", function (event) {
-    const radio = clearableRadio(event);
-    if (!radio || event.target !== radio) {
-      return; // A click on the label arrives again on the radio itself.
-    }
-    if (radio.dataset.wasChecked) {
-      clear(radio);
-    }
-    radio.dataset.wasChecked = "";
   });
 
   document.addEventListener("htmx:afterSwap", function (event) {
@@ -217,7 +158,7 @@
     element.addEventListener("dragstart", function (event) { event.preventDefault(); });
     element.addEventListener("pointerup", function (event) {
       if (!start || !event.isPrimary) return;
-      // My days: a drag that is picking a run of days isn't a swipe.
+      // Calendar: a drag that is picking a run of days isn't a swipe.
       if (element.isPicking && element.isPicking()) {
         start = null;
         return;
@@ -241,7 +182,7 @@
   }
   window.onSwipe = onSwipe;
 
-  // My days: swipe between months, as the arrows do.
+  // Calendar: swipe between months, as the arrows do.
   document.querySelectorAll("[data-swipe-previous], [data-swipe-next]").forEach(function (element) {
     function go(url) {
       if (url) location.href = url;

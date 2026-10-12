@@ -1,17 +1,15 @@
-"""Tests for one resort highlighted on My days (services/highlight.py, month.py)."""
+"""Tests for one resort highlighted on the calendar (services/highlight.py, month.py)."""
 
 import datetime
 
 import pytest
 from freezegun import freeze_time
 
-from apps.groups.models import PlanDay
 from apps.groups.services import highlight, month, plans
 from tests.factories import ResortFactory, UserFactory
 from tests.groups.conftest import Crew
 
 pytestmark = pytest.mark.django_db
-S = PlanDay.Skiing
 DEC = month.month_dates(datetime.date(2026, 12, 1))
 
 
@@ -27,25 +25,23 @@ def test_month_dates_is_the_whole_month() -> None:
 
 @freeze_time("2026-10-11 09:00:00+02:00")
 def test_resorts_in_play_are_busiest_first(crew: Crew) -> None:
-    plans.set_plan(crew.sam, dec(5), S.YES, resort=crew.zermatt)
+    plans.set_plan(crew.sam, dec(5), crew.zermatt)
     for day in (5, 6):
-        plans.set_plan(crew.anna, dec(day), S.YES, resort=crew.verbier)
-    # Private, outsider and no-resort days put nothing in play.
+        plans.set_plan(crew.anna, dec(day), crew.verbier)
+    # Outsiders' days put nothing in play.
     lone = UserFactory.create(display_name="Lone")
     hidden = ResortFactory.create(name="Hidden", code="HIDE")
-    plans.set_plan(crew.ben, dec(7), S.YES, resort=hidden, is_private=True)
-    plans.set_plan(lone, dec(7), S.YES, resort=hidden)
-    plans.set_plan(crew.ben, dec(8), S.YES)
+    plans.set_plan(lone, dec(7), hidden)
     assert highlight.resorts_in_play(crew.sam, DEC) == [crew.verbier, crew.zermatt]
 
 
 @freeze_time("2026-10-11 09:00:00+02:00")
 def test_month_days_pick_out_the_highlighted_resort(crew: Crew) -> None:
-    plans.set_plan(crew.sam, dec(5), S.YES, resort=crew.verbier)
-    plans.set_plan(crew.anna, dec(5), S.YES, resort=crew.verbier)
-    plans.set_plan(crew.ben, dec(5), S.YES, resort=crew.zermatt)
-    plans.set_plan(crew.sam, dec(6), S.YES, resort=crew.zermatt)
-    plans.set_plan(crew.ben, dec(7), S.NO, resort=crew.verbier)
+    plans.set_plan(crew.sam, dec(5), crew.verbier)
+    plans.set_plan(crew.anna, dec(5), crew.verbier)
+    plans.set_plan(crew.ben, dec(5), crew.zermatt)
+    plans.set_plan(crew.sam, dec(6), crew.zermatt)
+    plans.set_plan(crew.ben, dec(7), crew.verbier)
 
     days = {
         d.date: d

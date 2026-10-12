@@ -8,7 +8,7 @@ import pytest
 from django.utils import timezone
 
 from apps.accounts.models import User
-from apps.groups.models import Group, MeetUp, PlanDay
+from apps.groups.models import Group, PlanDay
 from apps.groups.services.plans import today
 from apps.resorts.models import Resort
 from apps.tour.demo import (
@@ -43,10 +43,6 @@ def test_create_demo_makes_a_private_copy(
     assert friends.count() == len(FRIENDS)
     assert not friends.filter(is_active=True).exists()
     assert not friends.filter(evening_email_enabled=True).exists()
-    meetup = MeetUp.objects.get(group=group)
-    assert meetup.date == today() + datetime.timedelta(days=5)
-    assert meetup.resort == resorts["CRA"]
-    assert meetup.participants.count() == 3
     # Today is the busy day: Sam, Anna and Chloé in Verbier.
     verbier = PlanDay.objects.filter(date=today(), resort=resorts["VERB"])
     assert verbier.count() == 3
@@ -91,7 +87,6 @@ def test_missing_resorts_make_the_demo_unavailable(tourist: User) -> None:
 def test_demo_week_points_at_today_and_verbier(resorts: dict[str, Resort]) -> None:
     week = demo_week()
     assert week.start == today()
-    assert week.meetup_day == today() + datetime.timedelta(days=5)
     assert week.resort == resorts["VERB"]
 
 

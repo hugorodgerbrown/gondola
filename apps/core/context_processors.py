@@ -14,13 +14,11 @@ from django.http import HttpRequest
 TABS: dict[str, str] = {
     "map": "map",
     "resort_sheet": "map",
-    "my_days": "days",
-    "day": "days",
+    "calendar": "calendar",
+    "day": "calendar",
     "group_list": "groups",
     "group_detail": "groups",
     "board": "groups",
-    "meetup_new": "groups",
-    "meetup": "groups",
 }
 
 

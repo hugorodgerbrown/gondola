@@ -4,8 +4,8 @@
  * A button marked ``data-calendar`` opens it. The button carries the day it
  * shows (``data-value``), the first and last days that can be picked
  * (``data-min``, ``data-max``) and the id of a json_script holding your own
- * plans (``data-marks``: {"2026-12-13": "skiing", …}), which draw as dots so
- * Dec and Jan can be read at a glance.
+ * plans (``data-marks``: {"2026-12-13": "Verbier", …}), which draw as dots
+ * so Dec and Jan can be read at a glance.
  *
  * With ``data-navigate="?from=DATE"`` picking a day goes to that address.
  * Otherwise the page attaches its own handler: ``window.dayCalendar(button,
@@ -19,11 +19,6 @@
 (function () {
   "use strict";
 
-  const MARK_LABELS = {
-    skiing: "skiing",
-    not_sure: "not sure yet",
-    not_skiing: "not skiing",
-  };
   // The same strokes as templates/includes/icons/chevron-*.html.
   const CHEVRON_LEFT = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" ' +
     'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>';
@@ -121,13 +116,7 @@
     const footer = el("div", "calendar__footer");
     const todayButton = el("button", "button button--secondary calendar__today", "Today");
     todayButton.type = "button";
-    const legend = el("p", "calendar__legend");
-    [["skiing", "Skiing"], ["not_sure", "Not sure"]].forEach(function (pair) {
-      const item = el("span", "calendar__key");
-      item.append(el("span", "calendar__mark calendar__mark--" + pair[0]), pair[1]);
-      legend.appendChild(item);
-    });
-    footer.append(legend, todayButton);
+    footer.append(todayButton);
 
     panel.append(header, grid, footer);
     button.insertAdjacentElement("afterend", panel);
@@ -174,8 +163,8 @@
               pick.setAttribute("aria-pressed", "true");
             }
             if (marks[key]) {
-              pick.appendChild(el("span", "calendar__mark calendar__mark--" + marks[key]));
-              label.push(MARK_LABELS[marks[key]] || "planned");
+              pick.appendChild(el("span", "calendar__mark"));
+              label.push("in " + marks[key]);
             }
             pick.setAttribute("aria-label", label.join(", "));
             if (!allowed(day)) {

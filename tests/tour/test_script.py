@@ -19,8 +19,8 @@ from apps.tour.script import (
 DOC = (settings.BASE_DIR / "docs" / "onboarding-tour.md").read_text()
 
 
-def test_the_tour_has_thirty_four_frames() -> None:
-    assert frame_count() == 34
+def test_the_tour_has_twenty_four_frames() -> None:
+    assert frame_count() == 24
 
 
 @pytest.mark.parametrize(
@@ -45,7 +45,7 @@ def test_every_chapter_opens_with_an_intro_and_numbers_its_frames() -> None:
 
 def test_only_the_last_frame_finishes() -> None:
     finishing = [f.id for c in CHAPTERS for f in c.frames if f.finish]
-    assert finishing == ["6.5"]
+    assert finishing == ["5.5"]
 
 
 @pytest.mark.django_db
@@ -53,10 +53,10 @@ def test_chapters_for_a_page_fill_in_the_demo_week(
     resorts: dict[str, Resort],
 ) -> None:
     week = demo_week()
-    played = chapters_for("my_days", week)
+    played = chapters_for("calendar", week)
     assert [c["number"] for c in played] == [1, 2]
     tap = played[0]["frames"][-1]["tap"]  # type: ignore[index]
-    assert tap == f'.mday[data-date="{week.start.isoformat()}"]'
+    assert tap == "#day-panel [data-day-plan]"
     pins = chapters_for("map", week)[0]["frames"][-2]["tap"]  # type: ignore[index]
     assert str(resorts["VERB"].uuid) in pins
     assert chapters_for("account", week) == []

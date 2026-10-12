@@ -5,14 +5,12 @@ Makes "UI test" with a tester and four friends, and fills the tester's
 next couple of months with every case the calendar, the day sheet, the map
 and the board have to draw:
 
-- each where × skiing pair (a resort or none; skiing, not sure, not
-  skiing), as single days and as runs of days;
-- days left unsaid, private days, days with a note (one long);
-- a ten-day run in one resort with mixed skiing, a run that crosses a
-  month end, and a private run;
-- friends at your resort, friends elsewhere, a friend "around", a friend
-  whose days are all private, and meet-ups on days you've planned and on
-  one you haven't.
+- single days and runs of days, with friends at your resort and
+  elsewhere;
+- days left unsaid;
+- a ten-day run in one resort, and a run that crosses a month end;
+- friends at your resort, friends elsewhere, and a friend who has said
+  little.
 
 A bare run prints the plan, day by day, without writing; ``--commit``
 writes it. Re-running rewrites the made-up people's days from today, so the
@@ -34,8 +32,7 @@ from django.core.management.base import BaseCommand, CommandError, CommandParser
 from django.db import transaction
 
 from apps.accounts.models import User
-from apps.groups.models import MeetUp, PlanDay
-from apps.groups.services.meetups import join_meetup, propose_meetup
+from apps.groups.models import PlanDay
 from apps.groups.services.memberships import create_group
 from apps.groups.services.plans import set_plan, today
 from apps.groups.services.testers import (
@@ -56,36 +53,26 @@ RESORTS = {
     "CRA": "Crans-Montana",
     "CHAM": "Champéry",
 }
-# One letter a day for skiing: Y skiing, ? not sure, N not skiing.
-SKIING = {"Y": PlanDay.Skiing.YES, "?": PlanDay.Skiing.NOT_SURE, "N": PlanDay.Skiing.NO}
-# The day the tester says nothing about, while friends and a meet-up do.
+# The day the tester says nothing about, while friends do.
 UNSAID = 6
-LONG_NOTE = (
-    "Meeting the ski school at the Médran lift, then lunch at Chez Dany if "
-    "the weather holds"
-)
 
 
 @dataclass(frozen=True)
 class Run:
-    """Some consecutive days a person said the same place about.
+    """Some consecutive days a person said the same resort about.
 
-    ``skiing`` holds one letter per day, so a run can keep its resort while
-    skiing changes. ``where`` is a resort code, or "" for no resort.
+    ``where`` is a resort code.
     """
 
     start: int
-    skiing: str
-    where: str = ""
-    private: bool = False
-    note: str = ""
+    length: int
+    where: str
     label: str = ""
 
     def days(self, first: datetime.date) -> list[datetime.date]:
         """Return the run's dates, counting ``start`` days from ``first``."""
         return [
-            first + datetime.timedelta(days=self.start + n)
-            for n in range(len(self.skiing))
+            first + datetime.timedelta(days=self.start + n) for n in range(self.length)
         ]
 
 
@@ -103,26 +90,19 @@ def tester_runs(first: datetime.date) -> list[Run]:
     """Return the tester's days, each labelled with the case it covers."""
     edge = month_end_offset(first)
     return [
-        # Single days: every where × skiing pair, today first.
-        Run(0, "Y", "VERB", label="At a resort, skiing (today)"),
-        Run(1, "?", "VERB", label="At a resort, not sure"),
-        Run(2, "N", "VERB", label="At a resort, not skiing (around)"),
-        Run(3, "Y", label="No resort, skiing"),
-        Run(4, "?", label="No resort, not sure"),
-        Run(5, "N", label="No resort, not skiing"),
-        # Offset UNSAID is left out: friends and a meet-up, nothing from you.
-        Run(7, "Y", "VERB", private=True, label="At a resort, private"),
-        Run(8, "N", private=True, label="No resort, private"),
-        Run(9, "Y", "SAASF", note="First lift", label="Short note, meet-up"),
-        Run(10, "?", "GRIME", note=LONG_NOTE, label="Long note"),
+        # Single days, today first.
+        Run(0, 1, "VERB", label="With friends (today)"),
+        Run(2, 1, "VERB", label="With one friend"),
+        Run(3, 1, "CHAM", label="Friends elsewhere"),
+        # Offset UNSAID is left out: friends out, nothing from you.
+        Run(9, 1, "SAASF", label="With friends, one day"),
+        Run(10, 1, "GRIME", label="Alone, one day"),
         # Runs.
-        Run(14, "YY?NYYY?YN", "VERB", label="Ten days in one resort, mixed skiing"),
-        Run(26, "YYYYY", "CRA", label="Five days alike"),
-        Run(33, "NNNN", label="No resort, not skiing, four days"),
-        Run(38, "???", label="No resort, not sure, three days"),
-        Run(42, "YYY", "GRIME", private=True, label="Private run"),
-        Run(45, "YYY", label="No resort, skiing, three days"),
-        Run(edge, "YYYY", "CHAM", label="Run across a month end"),
+        Run(14, 10, "VERB", label="Ten days in one resort"),
+        Run(26, 5, "CRA", label="Five days alike"),
+        Run(33, 4, "CRA", label="Alone, four days"),
+        Run(45, 3, "SAASF", label="Alone, three days"),
+        Run(edge, 4, "CHAM", label="Run across a month end"),
     ]
 
 
@@ -131,43 +111,33 @@ def friend_runs() -> dict[str, list[Run]]:
     return {
         # Often with you: the calendar's "friends with me" mark.
         "Anna": [
-            Run(0, "YY", "VERB"),
-            Run(3, "Y", "VERB"),
-            Run(6, "Y", "SAASF"),
-            Run(9, "Y", "SAASF"),
-            Run(14, "YYYYYYYYYY", "VERB"),
-            Run(26, "YYY", "CRA"),
+            Run(0, 2, "VERB"),
+            Run(3, 1, "VERB"),
+            Run(6, 1, "SAASF"),
+            Run(9, 1, "SAASF"),
+            Run(14, 10, "VERB"),
+            Run(26, 3, "CRA"),
         ],
-        # Elsewhere: friends skiing, but not with you.
+        # Elsewhere: friends out, but not with you.
         "Ben": [
-            Run(0, "Y", "SAASF"),
-            Run(4, "YY", "CHAM"),
-            Run(6, "Y", "SAASF"),
-            Run(9, "Y", "SAASF"),
-            Run(20, "??", "GRIME"),
+            Run(0, 1, "SAASF"),
+            Run(4, 2, "CHAM"),
+            Run(6, 1, "SAASF"),
+            Run(9, 1, "SAASF"),
+            Run(20, 2, "GRIME"),
         ],
-        # Around: at your resort but not skiing, and unsure days with no resort.
+        # Sometimes with you, sometimes elsewhere.
         "Chloé": [
-            Run(0, "N", "VERB"),
-            Run(2, "N", "VERB"),
-            Run(5, "??"),
-            Run(16, "NNNN", "VERB"),
+            Run(0, 1, "VERB"),
+            Run(2, 1, "VERB"),
+            Run(5, 2, "SAASF"),
+            Run(16, 4, "VERB"),
         ],
-        # Everything private but one day: only that day should ever show.
+        # Says almost nothing: one day, far out.
         "Dan": [
-            Run(0, "YYYYYYY", "VERB", private=True),
-            Run(14, "YYYYY", "VERB", private=True),
-            Run(26, "Y", "CRA"),
+            Run(26, 1, "CRA"),
         ],
     }
-
-
-# (offset, resort code, organiser, others going)
-MEETUPS = [
-    (UNSAID, "SAASF", "Ben", ["Anna"]),
-    (9, "SAASF", "you", ["Anna", "Ben"]),
-    (17, "VERB", "Anna", ["you"]),
-]
 
 
 class Command(BaseCommand):
@@ -176,7 +146,7 @@ class Command(BaseCommand):
     verbosity = 1
 
     help = (
-        "Create a group whose tester covers every where/skiing case. "
+        "Create a group whose tester covers every calendar case. "
         "Dry run unless --commit."
     )
 
@@ -217,7 +187,7 @@ class Command(BaseCommand):
         if self.verbosity < 1:
             return
         unsaid = first + datetime.timedelta(days=UNSAID)
-        lines = [(unsaid, f"{unsaid:%a %d %b}", "Unsaid, friends and a meet-up")]
+        lines = [(unsaid, f"{unsaid:%a %d %b}", "Unsaid, friends out")]
         for run in runs:
             days = run.days(first)
             span = f"{days[0]:%a %d %b}"
@@ -243,7 +213,7 @@ class Command(BaseCommand):
         runs: list[Run],
         resorts: dict[str, Resort],
     ) -> int:
-        """Write the people, the group, the meet-ups and every plan.
+        """Write the people, the group and every plan.
 
         Returns how many real accounts in Testers are members.
         """
@@ -260,19 +230,6 @@ class Command(BaseCommand):
             real += user.pk not in made_up
         # Start clean from today, so a re-run leaves no stray days behind.
         PlanDay.objects.filter(user__in=people.values(), date__gte=first).delete()
-        MeetUp.objects.filter(group=group, date__gte=first).delete()
-        # Meet-ups first: joining one plans the day, which the runs then set.
-        for offset, code, organiser, going in MEETUPS:
-            meetup = propose_meetup(
-                group,
-                people[organiser],
-                first + datetime.timedelta(days=offset),
-                resorts[code],
-                start_time=datetime.time(9, 0),
-            )
-            for name in going:
-                join_meetup(meetup, people[name])
-        PlanDay.objects.filter(user__in=people.values(), date__gte=first).delete()
         everyone = {"you": runs, **friend_runs()}
         for key, person_runs in everyone.items():
             for run in person_runs:
@@ -287,12 +244,5 @@ class Command(BaseCommand):
         resorts: dict[str, Resort],
     ) -> None:
         """Write one run's days."""
-        for day, letter in zip(run.days(first), run.skiing, strict=True):
-            set_plan(
-                user,
-                day,
-                SKIING[letter],
-                resort=resorts[run.where] if run.where else None,
-                note=run.note,
-                is_private=run.private,
-            )
+        for day in run.days(first):
+            set_plan(user, day, resorts[run.where])

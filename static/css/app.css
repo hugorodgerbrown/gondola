@@ -17,11 +17,11 @@
   --rule-strong: rgba(0, 0, 0, 0.16);
   --accent: #2563eb;
   --accent-soft: rgba(37, 99, 235, 0.12);
+  /* A day at a resort but not skiing: the skiing blue, lightened. */
   /* Magic Pass resorts on the map: a violet square instead of a round pin. */
   --pass-magic: #7c3aed;
-  /* A meet-up on My days: an amber dot, apart from your own (blue) days. */
-  --meetup: #d97706;
-  --meetup-soft: rgba(217, 119, 6, 0.16);
+  /* The demo bar's amber, apart from your own (blue) days. */
+  --amber: #d97706;
   --danger: #b42318;
   --ok: #067647;
   --map-ground: #e9e7e1;
@@ -103,7 +103,7 @@ textarea {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: var(--ground);
+  background: var(--card);
   border-bottom: 1px solid var(--rule);
 }
 
@@ -117,9 +117,21 @@ textarea {
   text-decoration: none;
 }
 
-/* The bare gondola, no tile, so it sits on the page like a glyph. */
+/* The gondola in a bordered tile, so it reads the same on any ground. */
 .topbar__logo {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-control);
+  background: var(--card);
+  border: 1px solid var(--rule-strong);
+}
+
+.topbar__logo img {
   display: block;
+  width: 20px;
+  height: 25px;
 }
 
 .page {
@@ -510,50 +522,44 @@ fieldset.field {
   font-size: 15px;
 }
 
-.check input {
-  width: 22px;
-  height: 22px;
-  accent-color: var(--text-1);
+/* A checkbox in a .check row is drawn as an on/off switch. */
+.check input[type="checkbox"] {
+  appearance: none;
+  position: relative;
+  width: 44px;
+  height: 26px;
+  margin: 0;
   flex-shrink: 0;
-}
-
-/* Segmented control: a radio group drawn as one bar. */
-.segmented {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 4px;
-  padding: 4px;
-  background: var(--sunk);
-  border-radius: var(--radius-control);
-}
-
-.segmented input {
-  position: absolute;
-  opacity: 0;
-  pointer-events: none;
-}
-
-.segmented label {
-  height: 40px;
-  display: grid;
-  place-items: center;
-  border-radius: 6px;
-  font: 500 14px var(--font-sans);
-  color: var(--text-2);
-  text-transform: none;
-  letter-spacing: 0;
+  border-radius: 13px;
+  background: var(--rule-strong);
   cursor: pointer;
+  transition: background 0.15s;
 }
 
-.segmented input:checked + label {
-  background: var(--card);
-  color: var(--text-1);
-  font-weight: 600;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+.check input[type="checkbox"]::after {
+  content: "";
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+  transition: transform 0.15s;
 }
 
-.segmented input:focus-visible + label {
+.check input[type="checkbox"]:checked {
+  background: var(--accent);
+}
+
+.check input[type="checkbox"]:checked::after {
+  transform: translateX(18px);
+}
+
+.check input[type="checkbox"]:focus-visible {
   outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 
 /* Choice list: a radio group drawn as rows. */
@@ -782,52 +788,9 @@ fieldset.field {
   color: var(--text-1);
 }
 
-.board td.is-quiet {
-  color: var(--text-3);
-}
-
 .board td a {
   color: inherit;
   text-decoration: none;
-}
-
-.board__lock {
-  display: inline-flex;
-  align-items: center;
-  gap: 2px;
-  color: var(--text-3);
-}
-
-.board__lock svg {
-  width: 9px;
-  height: 9px;
-}
-
-.board__meetup {
-  display: inline-grid;
-  place-items: center;
-  width: 32px;
-  height: 32px;
-  margin: 6px 0;
-  border-radius: var(--radius-control);
-  text-decoration: none;
-}
-
-.board__meetup--set {
-  background: var(--text-1);
-  color: #ffffff !important;
-  font: 500 9px var(--font-mono);
-  letter-spacing: 0.04em;
-}
-
-.board__meetup--add {
-  border: 1px dashed var(--rule-strong);
-  color: var(--text-2);
-}
-
-.board__meetup--add svg {
-  width: 16px;
-  height: 16px;
 }
 
 .legend {
@@ -950,12 +913,6 @@ fieldset.field {
   color: var(--text-2);
 }
 
-/* My days: the same control, on the page rather than over the map. */
-.float--page {
-  align-self: flex-start;
-  background: var(--card);
-}
-
 .icon-button--off {
   color: var(--text-3);
   opacity: 0.35;
@@ -1063,6 +1020,7 @@ fieldset.field {
   width: 5px;
   height: 5px;
   border-radius: 50%;
+  background: var(--accent);
 }
 
 .calendar__day .calendar__mark {
@@ -1072,47 +1030,16 @@ fieldset.field {
   transform: translateX(-50%);
 }
 
-/* Skiing is a filled dot; not sure is a ring; not skiing a faint dot. */
-.calendar__mark--skiing {
-  background: var(--accent);
-}
-
-.calendar__mark--not_sure {
-  box-shadow: inset 0 0 0 1.25px var(--accent);
-}
-
-.calendar__mark--not_skiing {
-  background: var(--text-3);
-  opacity: 0.5;
-}
-
-.calendar__day--selected .calendar__mark--skiing {
+.calendar__day--selected .calendar__mark {
   background: var(--card);
-}
-
-.calendar__day--selected .calendar__mark--not_sure {
-  box-shadow: inset 0 0 0 1.25px var(--card);
 }
 
 .calendar__footer {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-end;
   gap: 8px;
   margin-top: 8px;
-}
-
-.calendar__legend {
-  display: flex;
-  gap: 12px;
-  font-size: 12px;
-  color: var(--text-2);
-}
-
-.calendar__key {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
 }
 
 .calendar .calendar__today {
@@ -1344,31 +1271,12 @@ fieldset.field {
   color: var(--text-1);
 }
 
-.pin--meetup .pin__dot {
-  border-color: var(--meetup);
-  box-shadow: 0 0 0 4px var(--meetup-soft);
-}
-
 .pin--selected .pin__dot {
   box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.3);
 }
 
 .pin--mine .pin__dot {
   background: var(--text-1);
-}
-
-.pin-picker {
-  position: relative;
-  height: 220px;
-  border-radius: var(--radius-card);
-  overflow: hidden;
-  background: var(--map-ground);
-  border: 1px solid var(--rule);
-}
-
-.meeting-pin {
-  width: 28px;
-  height: 36px;
 }
 
 .friend-line {
@@ -1450,19 +1358,21 @@ fieldset.field {
 }
 
 .month__weekday {
-  font: 600 10px var(--font-mono);
+  font: 600 11px var(--font-sans);
   color: var(--text-3);
   text-align: center;
   padding-bottom: 2px;
 }
 
-/* One day: the date, what you said, and how many friends are skiing. */
+/* One day: the date, whether you're skiing, and how many friends are with you. */
 .mday {
   position: relative;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  min-height: 64px;
+  /* Square at any width: the grid sets the width, the ratio the height. */
+  aspect-ratio: 1;
+  min-width: 0;
   padding: 4px 4px 5px;
   border-radius: var(--radius-control);
   background: var(--sunk);
@@ -1491,170 +1401,75 @@ a.mday:focus-visible {
   opacity: 0.4;
 }
 
-.mday__top {
+/* Two rows: the date and the friends with you on top; your resort's code
+   below. The friends mark keeps to the right. */
+.mday__row {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  min-height: 16px;
 }
 
-.mday__date {
-  font: 500 12px var(--font-mono);
+.mday__row > .mday__friends {
+  margin-left: auto;
 }
 
-.mday--today .mday__date {
-  display: inline-grid;
-  place-items: center;
-  min-width: 20px;
-  height: 20px;
-  margin: -2px 0 0 -2px;
-  border-radius: 10px;
-  background: var(--text-1);
-  color: var(--card);
-}
-
-.mday__plan {
-  display: flex;
-  align-items: center;
-  gap: 2px;
-  min-height: 14px;
-  font: 600 10px var(--font-mono);
+/* Your resort for the day, as on the board. */
+.mday__resort {
+  font: 500 9px var(--font-mono);
   letter-spacing: 0.02em;
+  overflow: hidden;
+  text-overflow: clip;
   white-space: nowrap;
 }
 
-.mday__marks {
-  display: inline-flex;
-  align-items: center;
-  gap: 2px;
+.mday__date {
+  font: 600 15px var(--font-sans);
 }
 
-.mday__marks svg {
-  width: 10px;
-  height: 10px;
+/* The day the panel below is showing. */
+.mday.mday--selected {
+  outline: 2px solid var(--text-1);
+  outline-offset: -2px;
 }
 
-/* The fill says skiing: filled is skiing, a dashed outline is not sure, a
-   plain outline is at a resort but not skiing, hatching is not skiing at
-   all. The code says where. */
-.mday--skiing {
+.month--selecting .mday--selected {
+  outline: none;
+}
+
+/* Blue is a day you're in a resort. Fill only, so the outline stays free
+   for the selected day. */
+.mday--in {
   background: var(--accent);
   color: #fff;
 }
 
-.mday--not_sure {
-  background: var(--card);
-  outline: 1.5px dashed var(--accent);
-  outline-offset: -1.5px;
-  color: var(--accent);
-}
-
-.mday--not_skiing {
-  background: repeating-linear-gradient(
-    -45deg,
-    var(--sunk) 0 4px,
-    var(--rule) 4px 5px
-  );
-  color: var(--text-3);
-}
-
-.mday--not_skiing .mday__plan {
-  color: var(--text-3);
-}
-
-.mday--not_skiing.mday--at {
-  background: var(--card);
-  outline: 1.5px solid var(--accent);
-  outline-offset: -1.5px;
-  color: var(--accent);
-}
-
-.mday--not_skiing.mday--at .mday__plan {
-  color: var(--accent);
-}
-
+/* Friends with you (or at the highlighted resort): one person, or two for
+   more, with no number. White on your blue days, blue on any other. */
 .mday__friends {
   display: inline-flex;
-  align-items: center;
-  gap: 2px;
-  align-self: flex-start;
-  padding: 1px 4px 1px 3px;
-  border-radius: 8px;
-  background: var(--card);
-  color: var(--text-2);
-  font: 600 10px var(--font-mono);
+  color: var(--accent);
 }
 
 .mday__friends svg {
-  width: 11px;
-  height: 11px;
+  width: 14px;
+  height: 14px;
 }
 
-.mday--skiing .mday__friends {
-  background: rgba(255, 255, 255, 0.22);
+.mday--in .mday__friends {
   color: #fff;
 }
 
-/* Friends at your resort that day. */
-.mday__friends--with-me,
-.mday--skiing .mday__friends--with-me {
-  background: var(--ok);
-  color: #fff;
-}
-
-.mday__meetup {
-  display: inline-block;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--meetup);
-  box-shadow: 0 0 0 1.5px var(--card);
-}
-
-.month-key {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px 14px;
-  margin: 0;
-  padding: 0 4px;
-  list-style: none;
-  font-size: 12px;
-  color: var(--text-2);
-}
-
-.month-key li {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.month-key__swatch {
+/* The cell's blue, beside your answer in the day panel. */
+.day-panel__swatch {
   display: inline-block;
   width: 14px;
   height: 14px;
-  min-height: 0;
-  padding: 0;
   border-radius: 4px;
-  background: var(--sunk);
-}
-
-.month-key__swatch.mday--skiing {
   background: var(--accent);
 }
 
-.month-key__swatch.mday--not_sure {
-  background: var(--card);
-}
-
-.month-key__swatch.mday--not_skiing.mday--at {
-  background: var(--card);
-  outline-width: 1.25px;
-}
-
-.month-key__swatch.mday--not_skiing {
-  background: repeating-linear-gradient(-45deg, var(--card) 0 3px, var(--rule-strong) 3px 4px);
-}
-
-/* --- My days: one resort highlighted ----------------------------------- */
+/* --- Calendar: one resort highlighted ----------------------------------- */
 
 .month-resorts {
   margin: 0 -16px;
@@ -1672,13 +1487,6 @@ a.mday:focus-visible {
   color: #ffffff;
 }
 
-.chip__x {
-  margin: 0 -4px 0 6px;
-  font-size: 16px;
-  line-height: 1;
-  opacity: 0.8;
-}
-
 /* Days nobody is at the resort step back, so the ones somebody is stand out. */
 .month--highlight .mday:not(.mday--lit):not(.mday--out) {
   opacity: 0.28;
@@ -1688,11 +1496,11 @@ a.mday:focus-visible {
   opacity: 0.55;
 }
 
-.month--highlight .mday--lit:not(.mday--skiing):not(.mday--not_sure):not(.mday--not_skiing) {
+.month--highlight .mday--lit:not(.mday--in) {
   background: var(--accent-soft);
 }
 
-/* --- My days: selecting several days ------------------------------------ */
+/* --- Calendar: selecting several days ------------------------------------ */
 
 .month a.mday {
   -webkit-user-select: none;
@@ -1700,8 +1508,91 @@ a.mday:focus-visible {
   -webkit-touch-callout: none;
 }
 
-.month-hint {
-  margin: -4px 4px 0;
+/* --- Calendar: the month heading and the selected day's panel ---------- */
+
+.month-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.month-head__nav {
+  display: flex;
+  gap: 4px;
+}
+
+.month-resorts .chip {
+  height: 36px;
+  padding: 0 16px;
+  font-size: 14px;
+}
+
+.day-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-top: 16px;
+  border-top: 1px solid var(--rule-strong);
+}
+
+.day-panel__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.day-panel__title {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 20px;
+  line-height: 28px;
+  font-weight: 600;
+}
+
+/* Where you are, with the cell's own colour as its swatch. */
+.day-panel__mine {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 500;
+}
+
+/* The friends with you, by name: the same ones the cell marks. */
+.day-panel__here {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.day-panel__here svg {
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+}
+
+.day-panel__others {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.day-panel__friends {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 14px;
+}
+
+.day-panel__resort {
+  font-weight: 500;
 }
 
 /* Every day gets an empty tick circle; a picked day fills it. */
@@ -1729,12 +1620,12 @@ a.mday.mday--picked:hover {
   box-shadow: inset 0 0 0 2px var(--accent);
 }
 
-.mday--picked:not(.mday--skiing) {
+.mday--picked:not(.mday--in) {
   background: var(--accent-soft);
 }
 
-.mday--skiing.mday--picked,
-a.mday.mday--skiing.mday--picked:hover {
+.mday--in.mday--picked,
+a.mday.mday--in.mday--picked:hover {
   box-shadow: inset 0 0 0 2px var(--text-1);
 }
 
@@ -1856,7 +1747,7 @@ a.mday.mday--skiing.mday--picked:hover {
   justify-content: center;
   gap: 12px;
   padding: 0 16px;
-  background: var(--meetup);
+  background: var(--amber);
   /* Dark on amber: white would miss AA contrast at this size. */
   color: var(--text-1);
   font-size: 13px;

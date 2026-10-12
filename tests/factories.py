@@ -12,7 +12,7 @@ import factory
 from factory.django import DjangoModelFactory
 
 from apps.accounts.models import Passkey, User
-from apps.groups.models import Group, MeetUp, MeetUpParticipant, Membership, PlanDay
+from apps.groups.models import Group, Membership, PlanDay
 from apps.resorts.models import Pass, Resort
 
 
@@ -106,31 +106,4 @@ class PlanDayFactory(DjangoModelFactory[PlanDay]):
 
     user = factory.SubFactory(UserFactory)
     date = factory.Sequence(lambda n: datetime.date(2027, 1, 1) + datetime.timedelta(n))
-    skiing = PlanDay.Skiing.YES
     resort = factory.SubFactory(ResortFactory)
-
-
-class MeetUpFactory(DjangoModelFactory[MeetUp]):
-    """Build a ``MeetUp`` with no time or pin."""
-
-    class Meta:
-        """Factory metadata."""
-
-        model = MeetUp
-
-    group = factory.SubFactory(GroupFactory)
-    organiser = factory.SelfAttribute("group.owner")
-    date = datetime.date(2027, 1, 9)
-    resort = factory.SubFactory(ResortFactory)
-
-
-class MeetUpParticipantFactory(DjangoModelFactory[MeetUpParticipant]):
-    """Build a ``MeetUpParticipant``."""
-
-    class Meta:
-        """Factory metadata."""
-
-        model = MeetUpParticipant
-
-    meetup = factory.SubFactory(MeetUpFactory)
-    user = factory.SubFactory(UserFactory)

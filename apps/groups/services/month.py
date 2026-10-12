@@ -1,11 +1,10 @@
 """
-apps/groups/services/month.py — My days as a month calendar.
+apps/groups/services/month.py — the calendar, one month at a time.
 
 One month at a time, weeks starting Monday. Each day carries what the
-viewer said about it and what their groups are up to: how many friends
-are at a resort (skiing or just around), how many of them at the viewer's
-resort, and whether one of the viewer's groups has a meet-up. Friends'
-private days count for nothing, as everywhere else.
+viewer said about it and what their groups are up to: which friends are
+in town somewhere, and how many of them in the viewer's resort (the
+calendar marks one or several).
 
 With one resort highlighted, each day also says which friends are there,
 and whether the viewer is, so the calendar can pick those days out.
@@ -21,7 +20,7 @@ from dataclasses import dataclass, field
 from apps.accounts.models import User
 from apps.resorts.models import Resort
 
-from ..models import Group, MeetUp, PlanDay
+from ..models import PlanDay
 from .people import visible_friend_plans
 from .plans import is_plannable, join_names, last_plannable_day, today
 
@@ -37,7 +36,6 @@ class MonthDay:
     plan: PlanDay | None = None
     friends: list[str] = field(default_factory=list)
     with_me: int = 0
-    meetup: MeetUp | None = None
     # The highlighted resort's name, if one is; the friends there that day;
     # and whether you are.
     highlight: str = ""
@@ -55,6 +53,16 @@ class MonthDay:
         return len(self.friends)
 
     @property
+    def count(self) -> int:
+        """Return the friends the day marks: where you are (or at the highlight)."""
+        return len(self.there) if self.highlight else self.with_me
+
+    @property
+    def plan_words(self) -> str:
+        """Return your answer for the day panel: "In Verbier"."""
+        return f"In {self.plan.resort.name}" if self.plan is not None else ""
+
+    @property
     def summary(self) -> str:
         """Return the day for a screen reader: date, plan, then friends."""
         day = self.date
@@ -63,14 +71,10 @@ class MonthDay:
             parts.append("today")
         plan = self.plan
         parts.append("no plan" if plan is None else plan.describe())
-        if plan is not None and plan.is_private:
-            parts.append("private")
         if self.friends:
             parts.append(f"friends at resorts: {join_names(self.friends)}")
         if self.with_me:
             parts.append(f"{self.with_me} with you")
-        if self.meetup is not None:
-            parts.append(f"meet-up at {self.meetup.resort.name}")
         if self.there:
             parts.append(f"at {self.highlight}: {join_names(self.there)}")
         return ", ".join(parts)
@@ -129,20 +133,13 @@ def build_month(
     friends: dict[datetime.date, list[str]] = defaultdict(list)
     with_me: dict[datetime.date, int] = defaultdict(int)
     there: dict[datetime.date, list[str]] = defaultdict(list)
-    for plan in visible_friend_plans(viewer, dates).at_resorts():
+    for plan in visible_friend_plans(viewer, dates):
         friends[plan.date].append(plan.user.to_string())
         if highlight is not None and plan.resort_id == highlight.pk:
             there[plan.date].append(plan.user.to_string())
         own = mine.get(plan.date)
         if own is not None and own.resort_id == plan.resort_id:
             with_me[plan.date] += 1
-    meetups: dict[datetime.date, MeetUp] = {}
-    for meetup in (
-        MeetUp.objects.filter(group__in=Group.objects.for_user(viewer), date__in=dates)
-        .select_related("resort")
-        .order_by("created_at")
-    ):
-        meetups.setdefault(meetup.date, meetup)
     now = today()
     weeks = [
         [
@@ -154,7 +151,6 @@ def build_month(
                 plan=mine.get(day),
                 friends=sorted(friends[day], key=str.lower),
                 with_me=with_me[day],
-                meetup=meetups.get(day),
                 highlight=highlight.name if highlight is not None else "",
                 there=sorted(there[day], key=str.lower),
                 me_there=highlight is not None

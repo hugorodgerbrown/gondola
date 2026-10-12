@@ -1,6 +1,5 @@
 /*
- * static/js/map.js — Every map in the app: the resort map, the meeting-pin
- * picker on the meet-up form, and the small map on a meet-up page.
+ * static/js/map.js — The resort map.
  *
  * The basemap is MAP_STYLE_URL (swisstopo's winter map by default). If it can't be
  * fetched (no signal, blocked host) the map draws a plain ground with
@@ -143,7 +142,6 @@
       button.dataset.resort = pin.id;
       passes.forEach(function (slug) { button.classList.add("pin--pass-" + slug); });
       if (pin.friends) button.classList.add("pin--friends");
-      if (pin.meetup) button.classList.add("pin--meetup");
       if (pin.mine) button.classList.add("pin--mine", "pin--friends");
       const dot = el("span", "pin__dot");
       if (pin.friends) {
@@ -189,7 +187,7 @@
           .setLngLat([pin.lng, pin.lat])
           .addTo(map);
         markers.push(marker);
-        if (pin.friends || pin.mine || pin.meetup) {
+        if (pin.friends || pin.mine) {
           busy.extend([pin.lng, pin.lat]);
         }
       });
@@ -445,74 +443,5 @@
     });
   }
 
-  /* --- Meeting-pin picker ------------------------------------------------ */
-
-  async function pinPicker(container) {
-    const lat = parseFloat(container.dataset.lat);
-    const lng = parseFloat(container.dataset.lng);
-    const form = container.closest("form");
-    const latInput = form.querySelector("[name=meeting_latitude]");
-    const lngInput = form.querySelector("[name=meeting_longitude]");
-    const clear = form.querySelector("[data-clear-pin]");
-    const options = isNaN(lat) ? {} : { center: [lng, lat], zoom: 13, bounds: undefined };
-    const map = await createMap(container, options);
-    let marker = null;
-
-    function place(lngLat) {
-      if (!marker) {
-        const node = el("div");
-        node.innerHTML = container.dataset.pinSvg;
-        marker = new maplibregl.Marker({ element: node.firstElementChild, anchor: "bottom" });
-        marker.setLngLat(lngLat).addTo(map);
-      } else {
-        marker.setLngLat(lngLat);
-      }
-      latInput.value = lngLat.lat.toFixed(6);
-      lngInput.value = lngLat.lng.toFixed(6);
-      if (clear) clear.hidden = false;
-    }
-
-    if (latInput.value && lngInput.value) {
-      place({ lat: parseFloat(latInput.value), lng: parseFloat(lngInput.value) });
-    }
-    map.on("click", function (event) { place(event.lngLat); });
-    if (clear) {
-      clear.addEventListener("click", function () {
-        if (marker) marker.remove();
-        marker = null;
-        latInput.value = "";
-        lngInput.value = "";
-        clear.hidden = true;
-      });
-    }
-    // Recentre on the resort when a different one is picked.
-    form.addEventListener("change", function (event) {
-      const option = event.target.closest("[data-lat]");
-      if (event.target.name === "resort" && option && option.dataset.lat) {
-        map.flyTo({ center: [parseFloat(option.dataset.lng), parseFloat(option.dataset.lat)], zoom: 13 });
-      }
-    });
-  }
-
-  /* --- A meet-up's small map --------------------------------------------- */
-
-  async function meetupMap(container) {
-    const lat = parseFloat(container.dataset.lat);
-    const lng = parseFloat(container.dataset.lng);
-    const map = await createMap(container, {
-      center: [lng, lat],
-      zoom: 13,
-      bounds: undefined,
-      interactive: false,
-    });
-    const node = el("div");
-    node.innerHTML = container.dataset.pinSvg;
-    new maplibregl.Marker({ element: node.firstElementChild, anchor: "bottom" })
-      .setLngLat([lng, lat])
-      .addTo(map);
-  }
-
   document.querySelectorAll("[data-resort-map]").forEach(resortMap);
-  document.querySelectorAll("[data-pin-picker]").forEach(pinPicker);
-  document.querySelectorAll("[data-meetup-map]").forEach(meetupMap);
 })();

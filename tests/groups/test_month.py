@@ -1,18 +1,14 @@
-"""Tests for My days' month calendar: apps/groups/services/month.py."""
+"""Tests for the calendar's month view: apps/groups/services/month.py."""
 
 import datetime
 
 import pytest
 from freezegun import freeze_time
 
-from apps.groups.models import PlanDay
-from apps.groups.services import meetups, month, plans
-from apps.groups.services.memberships import join_group
-from tests.factories import UserFactory
+from apps.groups.services import month, plans
 from tests.groups.conftest import Crew
 
 pytestmark = pytest.mark.django_db
-S = PlanDay.Skiing
 
 
 def days_of(cal: month.Month) -> dict[datetime.date, month.MonthDay]:
@@ -47,32 +43,50 @@ def test_month_has_monday_weeks_and_stays_plannable(crew: Crew) -> None:
 @freeze_time("2026-10-11 09:00:00+02:00")
 def test_month_day_shows_plan_and_group_activity(crew: Crew) -> None:
     day = datetime.date(2026, 12, 20)
-    plans.set_plan(crew.sam, day, S.YES, resort=crew.verbier)
-    plans.set_plan(crew.anna, day, S.YES, resort=crew.verbier)
-    plans.set_plan(crew.ben, day, S.YES, resort=crew.zermatt)
-    # Private days and people outside the group don't count.
-    dana = UserFactory.create(display_name="Dana")
-    join_group(crew.group, dana)
-    plans.set_plan(dana, day, S.YES, resort=crew.verbier, is_private=True)
-    plans.set_plan(crew.outsider, day, S.YES, resort=crew.verbier)
-    meetups.propose_meetup(crew.group, crew.anna, day, crew.verbier)
+    plans.set_plan(crew.sam, day, crew.verbier)
+    plans.set_plan(crew.anna, day, crew.verbier)
+    plans.set_plan(crew.ben, day, crew.zermatt)
+    # People outside the group don't count.
+    plans.set_plan(crew.outsider, day, crew.verbier)
 
     entry = days_of(month.build_month(crew.sam, day))[day]
     assert entry.plan is not None and entry.plan.resort == crew.verbier
     assert entry.friends == ["Anna", "Ben"]
     assert entry.friends_out == 2
     assert entry.with_me == 1
-    assert entry.meetup is not None and entry.meetup.resort == crew.verbier
     assert entry.summary == (
-        "Sunday 20 December, Verbier, friends at resorts: Anna and Ben, 1 with you, "
-        "meet-up at Verbier"
+        "Sunday 20 December, Verbier, friends at resorts: Anna and Ben, 1 with you"
     )
 
 
 @freeze_time("2026-10-11 09:00:00+02:00")
 def test_month_day_summary_for_quiet_days(crew: Crew) -> None:
     today = datetime.date(2026, 10, 11)
-    plans.set_plan(crew.sam, today, S.NOT_SURE, is_private=True)
+    plans.set_plan(crew.sam, today, crew.verbier)
     days = days_of(month.build_month(crew.sam, today))
-    assert days[today].summary == "Sunday 11 October, today, Not sure yet, private"
+    assert days[today].summary == "Sunday 11 October, today, Verbier"
     assert days[datetime.date(2026, 10, 12)].summary == "Monday 12 October, no plan"
+
+
+def test_month_day_plan_words(crew: Crew) -> None:
+    plan = plans.set_plan(crew.sam, crew.day, crew.verbier)
+    day = month.MonthDay(
+        date=crew.day, in_month=True, is_today=False, plannable=True, plan=plan
+    )
+    assert day.plan_words == "In Verbier"
+    assert (
+        month.MonthDay(
+            date=crew.day, in_month=True, is_today=False, plannable=True
+        ).plan_words
+        == ""
+    )
+
+
+def test_month_day_count_is_friends_with_you_or_at_the_highlight(crew: Crew) -> None:
+    day = month.MonthDay(
+        date=crew.day, in_month=True, is_today=False, plannable=True, with_me=2
+    )
+    assert day.count == 2
+    day.highlight = "Verbier"
+    day.there = ["Anna"]
+    assert day.count == 1

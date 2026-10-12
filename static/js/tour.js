@@ -15,12 +15,12 @@
  * chip tapped in chapter 1) resumes where it was.
  *
  * Saving is stopped on the server (apps/tour/middleware.py), not here.
- * After the tour, the hand-off card (chapter 7) only needs closing.
+ * After the tour, the hand-off card (chapter 6) only needs closing.
  */
 (function () {
   "use strict";
 
-  // Chapter 7: the hand-off over the real My days closes on Later or Let's go.
+  // Chapter 7: the hand-off over the real calendar closes on Later or Let's go.
   document.querySelectorAll("[data-tour-handoff]").forEach(function (layer) {
     layer.addEventListener("click", function (event) {
       if (event.target.closest("[data-tour-close]")) layer.remove();

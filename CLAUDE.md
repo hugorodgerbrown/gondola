@@ -1,6 +1,6 @@
 # CLAUDE.md — Gondola
 
-A standalone Django app for resort meet-ups among friends. It started as a
+A standalone Django app for friends to see who's skiing where. It started as a
 Snowdesk feature and was split out on purpose: it shares Snowdesk's tooling
 and conventions, not its code or database.
 
@@ -16,14 +16,16 @@ Python 3.14 / Django 6.0, pinned in `pyproject.toml`.
 - Group members see each other's names and days. Joining is the consent.
 - An invite link joins at once. The owner can reset it, which kills the old
   link. Opening the link never joins by itself: a Join button does.
-- A plan day belongs to a person, not a group. A day can be marked private,
-  and then group-mates see nothing for it.
-- A plan day answers two separate questions: where you'll be (a resort,
-  or none) and whether you're skiing (yes, not sure yet, no). Someone at a
-  resort who isn't skiing is "around": counted on the map, but not used to
-  pick a meet-up resort. Every answer is distinct from saying nothing.
-- A sheet for several days changes only the answers you touch.
-- A meet-up needs a resort; the time and meeting pin are optional.
+- Gondola is for planning ahead: who's in which resort over the coming
+  days and weeks. Whether anyone is skiing tomorrow is for the group chat.
+- A plan day belongs to a person, not a group, and group-mates see every
+  day said. There are no private days: someone who doesn't want to be
+  found doesn't say where they are.
+- A plan day answers one question: which resort you'll be in. There is no
+  skiing yes/no, no "not sure" and no "no resort": an unsaid day is the
+  undecided one, and a missing resort gets added to the sheet.
+- A sheet for several days puts them all in one resort.
+- Meet-ups are not in the app: friends agree them in their group chat.
 - Touring spots are not resorts and are never imported.
 - New accounts are offered a look-and-tap tour of a private demo group
   (docs/onboarding-tour.md). Nothing is saved in the demo, and demo groups

@@ -2,11 +2,9 @@
 apps/groups/services/evening.py — The evening-before email.
 
 Sent once a day, the evening before. A person gets it when they have said
-something about tomorrow (any status), or one of their groups has a
-meet-up tomorrow, and there is something from friends to tell them: who
-in each group is where tomorrow (marking who's around but not skiing), and
-the meet-ups. Private days are left
-out, as everywhere. Anyone can stop it with one tap from the footer.
+something about tomorrow and there is something from friends to tell
+them: who in each group is where tomorrow. Anyone can stop it with one
+tap from the footer.
 """
 
 from __future__ import annotations
@@ -17,14 +15,13 @@ from dataclasses import dataclass, field
 
 from django.conf import settings
 from django.core.mail import send_mail
-from django.db.models import Q
 from django.template.loader import render_to_string
 from django.urls import reverse
 
 from apps.accounts.models import User
 from apps.accounts.services import make_unsubscribe_token
 
-from ..models import Group, MeetUp, PlanDay
+from ..models import Group, PlanDay
 from .plans import join_names
 
 logger = logging.getLogger(__name__)
@@ -53,35 +50,21 @@ class GroupSection:
 
 
 @dataclass
-class MeetUpLine:
-    """A meet-up tomorrow in one of the person's groups."""
-
-    meetup: MeetUp
-    going: int
-    is_going: bool
-    url: str
-
-
-@dataclass
 class Digest:
     """Everything one person's evening email says."""
 
     user: User
     day: datetime.date
-    meetups: list[MeetUpLine]
     groups: list[GroupSection]
 
     @property
     def is_empty(self) -> bool:
         """Return whether there is nothing from friends worth sending."""
-        return not self.meetups and not any(g.lines for g in self.groups)
+        return not any(g.lines for g in self.groups)
 
     @property
     def subject(self) -> str:
         """Return the subject line."""
-        if self.meetups:
-            first = self.meetups[0]
-            return f"Tomorrow: meet-up at {first.meetup.resort}, {first.going} going"
         return "Tomorrow: who's where"
 
 
@@ -94,28 +77,21 @@ def build_digest(user: User, day: datetime.date) -> Digest:
     """Return what ``user``'s email for ``day`` would say."""
     groups = list(Group.objects.for_user(user).order_by("name"))
     shared = list(
-        PlanDay.objects.shared()
-        .filter(
+        PlanDay.objects.filter(
             date=day,
-            resort__isnull=False,
             user__group_memberships__group__in=groups,
         )
         .select_related("user", "resort")
         .distinct()
     )
-    own = PlanDay.objects.filter(user=user, date=day).select_related("resort").first()
     sections = []
     for group in groups:
         member_ids = set(group.memberships.values_list("user_id", flat=True))
         by_resort: dict[str, list[str]] = {}
         for plan in shared:
-            if plan.user_id in member_ids and plan.resort is not None:
+            if plan.user_id in member_ids:
                 name = "you" if plan.user_id == user.pk else plan.user.to_string()
-                if not plan.is_skiing and name != "you":
-                    name += " (around)"
                 by_resort.setdefault(plan.resort.name, []).append(name)
-        if own and own.is_private and own.resort is not None:
-            by_resort.setdefault(own.resort.name, []).append("you")
         lines = [
             ResortLine(
                 resort_name=resort, names=sorted(names, key=lambda n: n == "you")
@@ -131,31 +107,15 @@ def build_digest(user: User, day: datetime.date) -> Digest:
                 lines=lines,
             )
         )
-    meetups = [
-        MeetUpLine(
-            meetup=meetup,
-            going=meetup.participants.count(),
-            is_going=meetup.participants.filter(user=user).exists(),
-            url=_absolute(
-                reverse("planning:meetup", kwargs={"token": meetup.share_token})
-            ),
-        )
-        for meetup in MeetUp.objects.filter(group__in=groups, date=day).select_related(
-            "resort", "organiser", "group"
-        )
-    ]
-    return Digest(user=user, day=day, meetups=meetups, groups=sections)
+    return Digest(user=user, day=day, groups=sections)
 
 
 def recipients(day: datetime.date) -> list[User]:
-    """Return who to consider: a plan for ``day``, or a group meet-up then."""
+    """Return who to consider: anyone with a plan for ``day``."""
     planned = PlanDay.objects.filter(date=day).values("user_id")
-    meetup_groups = MeetUp.objects.filter(date=day, group__is_demo=False).values(
-        "group_id"
-    )
     return list(
         User.objects.wants_evening_email()
-        .filter(Q(pk__in=planned) | Q(group_memberships__group_id__in=meetup_groups))
+        .filter(pk__in=planned)
         .distinct()
         .order_by("-id")
     )

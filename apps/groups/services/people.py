@@ -3,7 +3,7 @@ apps/groups/services/people.py — Who can see whom.
 
 Group members see each other's names and days: joining is the consent.
 So a person's "friends" are everyone they share at least one group with,
-and a friend's day is visible unless they marked it private.
+and every day a friend has said something about is visible.
 """
 
 from __future__ import annotations
@@ -33,12 +33,10 @@ def friend_ids(user: User) -> set[int]:
 def visible_friend_plans(
     viewer: User, dates: Iterable[datetime.date]
 ) -> PlanDayQuerySet:
-    """Return friends' non-private plans on ``dates``, with user and resort."""
-    return (
-        PlanDay.objects.shared()
-        .filter(user_id__in=friend_ids(viewer), date__in=list(dates))
-        .select_related("user", "resort")
-    )
+    """Return friends' plans on ``dates``, with user and resort."""
+    return PlanDay.objects.filter(
+        user_id__in=friend_ids(viewer), date__in=list(dates)
+    ).select_related("user", "resort")
 
 
 def members_of(group: Group) -> list[User]:

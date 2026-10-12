@@ -91,14 +91,12 @@ def resort_sheet(request: HttpRequest, resort_uuid: str) -> HttpResponse:
     )
     day = parse_day(request.GET.get("date"))
     user = current_user(request)
-    groups = list(Group.objects.for_user(user).order_by("name"))
     return render_sheet(
         request,
         "groups/resort_sheet.html",
         {
             "info": resort_day(user, resort, day),
             "plannable": is_plannable(day),
-            "groups": groups,
         },
     )
 
@@ -112,7 +110,5 @@ def plan_here(request: HttpRequest, resort_uuid: str) -> HttpResponse:
     url = f"{reverse('planning:map')}?date={day.isoformat()}"
     if is_plannable(day):
         record_day_planned(request, current_user(request))
-        # Only where changes: skiing or not, and privacy, stay as they were
-        # (a new day is skiing).
-        update_plans(current_user(request), [day], resort=resort)
+        update_plans(current_user(request), [day], resort)
     return refresh(request, url)

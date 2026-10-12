@@ -1,8 +1,7 @@
 """
 apps/core/tokens.py — Unguessable tokens for share and invite links.
 
-One helper so the group invite link and the meet-up share link mint tokens
-the same way.
+One helper so every share and invite link mints tokens the same way.
 """
 
 import secrets

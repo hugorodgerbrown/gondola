@@ -1,12 +1,9 @@
 {% include "includes/sheet_header.html" with eyebrow=eyebrow title=title %}
-{% for card in meetups %}
-  {% include "groups/partials/meetup_card.html" %}
-{% endfor %}
 <form method="post" action="{{ form_url }}" hx-post="{{ form_url }}" hx-target="#sheet-body" class="stack" data-day-form>
   {% for name, value in back.items %}<input type="hidden" name="{{ name }}" value="{{ value }}">{% endfor %}
   {% csrf_token %}
   {% if mixed %}
-    <p class="help">These days don't all say the same. Anything you leave alone stays as each day has it.</p>
+    <p class="help">These days don't all say the same. Pick a resort to put them all there.</p>
   {% endif %}
   {% if form.non_field_errors or form.resort.errors %}
     <ul class="errors">{% for error in form.non_field_errors %}<li>{{ error }}</li>{% endfor %}{% for error in form.resort.errors %}<li>{{ error }}</li>{% endfor %}</ul>
@@ -14,16 +11,8 @@
 
   <div class="field">
     <span class="eyebrow">Where will you be?</span>
-    {# Nothing picked means no resort: tap a picked resort again to clear it. #}
-    <input type="hidden" name="resort" value="">
-    {% if friends or elsewhere or "resort" in mixed %}
-    <div class="choices" role="radiogroup" aria-label="Resort" data-clearable>
-      {% if "resort" in mixed %}
-        <label class="choice">
-          <input type="radio" name="resort" value="{{ keep_resort }}"{% if selected == keep_resort %} checked{% endif %}>
-          <span class="choice__main"><span class="choice__title">Leave as it is</span><span class="choice__meta">Each day keeps its own resort</span></span>
-        </label>
-      {% endif %}
+    {% if friends or elsewhere %}
+    <div class="choices" role="radiogroup" aria-label="Resort">
       {% for entry in friends %}
         <label class="choice">
           <input type="radio" name="resort" value="{{ entry.resort.uuid }}"{% if selected == entry.resort.uuid|stringformat:"s" %} checked{% endif %}>
@@ -43,37 +32,10 @@
       <p class="help">No friends have picked a resort for {% if span > 1 %}these days{% else %}this day{% endif %} yet.</p>
     {% endif %}
     <label for="resort-search" class="visually-hidden">Search resorts</label>
-    <input id="resort-search" class="input input--search" type="search" name="q" placeholder="{% if friends or elsewhere %}Somewhere else? Search resorts{% else %}Search resorts (optional){% endif %}" autocomplete="off"
+    <input id="resort-search" class="input input--search" type="search" name="q" placeholder="{% if friends or elsewhere %}Somewhere else? Search resorts{% else %}Search resorts{% endif %}" autocomplete="off"
            hx-get="{% url 'planning:resort_search' %}" hx-trigger="input changed delay:200ms, search" hx-target="#resort-results" hx-include="this" hx-sync="this:replace">
-    <div id="resort-results" class="choices" role="radiogroup" aria-label="Search results" data-clearable hidden></div>
+    <div id="resort-results" class="choices" role="radiogroup" aria-label="Search results" hidden></div>
   </div>
-
-  <fieldset class="field">
-    <legend class="eyebrow">Skiing?</legend>
-    <div class="segmented">
-      {% for value, label in form.fields.skiing.choices %}
-        <input type="radio" name="skiing" id="skiing-{{ value }}" value="{{ value }}"{% if form.skiing.value == value %} checked{% endif %}>
-        <label for="skiing-{{ value }}">{% if value == "not_sure" %}Not sure{% else %}{{ label }}{% endif %}</label>
-      {% endfor %}
-    </div>
-    {% if "skiing" in mixed %}<p class="help">Differs across these days: pick one to set them all.</p>{% endif %}
-  </fieldset>
-
-  <div class="field">
-    <label for="{{ form.note.id_for_label }}">Note for your groups</label>
-    {% if "note" in mixed %}
-      <input type="hidden" name="note_keep" value="on" data-keep-for="note">
-      <input type="text" name="note" id="{{ form.note.id_for_label }}" class="input" maxlength="140" placeholder="Differs across these days">
-    {% else %}
-      {{ form.note }}
-    {% endif %}
-  </div>
-
-  <label class="check" for="day-private">
-    <span class="row__main"><span>Keep {% if span > 1 %}these days{% else %}this day{% endif %} private</span><span class="small muted">{% if "is_private" in mixed %}Some of these days are private now.{% else %}Friends see nothing for {% if span > 1 %}these days{% else %}this day{% endif %}.{% endif %}</span></span>
-    {% if "is_private" in mixed %}<input type="hidden" name="private_keep" value="on" data-keep-for="is_private">{% endif %}
-    <input id="day-private" type="checkbox" name="is_private"{% if form.is_private.value %} checked{% endif %}>
-  </label>
 
   <div class="field">
     <button type="submit" class="button button--block">{{ save_label }}</button>

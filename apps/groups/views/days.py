@@ -1,21 +1,20 @@
 """
-apps/groups/views/days.py — My days, and the sheet for one day.
+apps/groups/views/days.py — the calendar, and the sheet for one day.
 
-My days is a month calendar, this month by default; arrows step a month
-(``?from=``, any day in it) as far as plans can be made. Each day shows
-what you said about it and what your groups are up to: friends at a
-resort, friends at yours, and a meet-up. Chips above it highlight one
-resort (``?highlight=``): the days anyone is there stand out, and the
-friends badge counts only the people there. Tapping a day opens a sheet with
-two separate answers: where you'll be (the resorts friends picked first,
-then a search over every resort, or no resort) and whether you're skiing
-(yes, not sure yet, no); then an optional note, and a switch to keep the
-day private.
+The calendar is about you: a month, this month by default; arrows step a
+month (``?from=``, any day in it) as far as plans can be made. A day shows
+which resort you'll be in and whether friends will be there too. Chips
+above it highlight one resort (``?highlight=``): the days anyone is there
+stand out, and the friends shown are the ones there instead.
+
+Tapping a day selects it (``?day=``) and fills the panel below the month:
+where you are, the friends with you (the highlighted resort's while one
+is picked), where the others are, and Add plans or
+Edit plans, which opens a sheet with one answer: where you'll be (the
+resorts friends picked first, then a search over every resort).
 
 Pressing and holding a day starts selecting: tap more days (or drag
-across a run), then one sheet plans them all (``?days=``). An answer that
-differs across the days is left out of the sheet and kept unless changed,
-so a sheet only ever saves what was touched.
+across a run), then one sheet puts them all in one resort (``?days=``).
 """
 
 from __future__ import annotations
@@ -36,12 +35,18 @@ from apps.core.http import refresh, render_sheet
 from apps.resorts.models import Resort
 from apps.resorts.search import search_resorts
 
-from ..forms import KEEP_RESORT, DayForm
+from ..forms import DayForm
 from ..models import Group, PlanDay
 from ..services.highlight import resorts_in_play
-from ..services.meetups import meetups_for
-from ..services.month import build_month, month_dates, month_start
+from ..services.month import (
+    Month,
+    MonthDay,
+    build_month,
+    month_dates,
+    month_start,
+)
 from ..services.plans import (
+    ResortFriends,
     clear_plan,
     clear_plans,
     friends_by_resort,
@@ -69,22 +74,33 @@ MAX_SELECTED_DAYS = 62
 
 @login_required
 @require_GET
-def my_days(request: HttpRequest) -> HttpResponse:
+def calendar(request: HttpRequest) -> HttpResponse:
     """Show a month of days: the person's plans and their groups' activity."""
     user = current_user(request)
     highlight = _highlight(request)
-    month = build_month(user, parse_day(request.GET.get("from")), highlight)
+    picked = _picked_day(request)
+    month = build_month(user, picked or parse_day(request.GET.get("from")), highlight)
     resorts = resorts_in_play(user, month_dates(month.first))
     if highlight is not None and highlight not in resorts:
         resorts.insert(0, highlight)
     window_from = _later_month(month.first)
     back = _back(window_from, highlight)
+    selected = _selected(month, picked)
+    here_resort = highlight or (selected.plan.resort if selected.plan else None)
+    here, elsewhere = _split_friends(
+        friends_by_resort(user, selected.date), here_resort
+    )
     return render(
         request,
-        "groups/my_days.html",
+        "groups/calendar.html",
         {
             "month": month,
             "today": today(),
+            "selected": selected,
+            # The resort the day's number counts, its friends, and the rest.
+            "here_resort": here_resort,
+            "here": here,
+            "elsewhere": elsewhere,
             # Only a later month needs carrying through a plain form post.
             "window_from": window_from,
             "back_query": urlencode(back),
@@ -96,13 +112,48 @@ def my_days(request: HttpRequest) -> HttpResponse:
     )
 
 
+def _picked_day(request: HttpRequest) -> datetime.date | None:
+    """Return the day tapped on the calendar (``day=``), if any and valid."""
+    value = request.GET.get("day")
+    if not value:
+        return None
+    try:
+        return datetime.date.fromisoformat(value)
+    except ValueError:
+        return None
+
+
+def _selected(month: Month, picked: datetime.date | None) -> MonthDay:
+    """Return the month's selected day: the one tapped, else today, else the 1st."""
+    days = [day for week in month.weeks for day in week if day.in_month]
+    for wanted in (picked, today()):
+        for day in days:
+            if day.date == wanted:
+                return day
+    return days[0]
+
+
+def _split_friends(
+    entries: list[ResortFriends], resort: Resort | None
+) -> tuple[ResortFriends | None, list[ResortFriends]]:
+    """Return the friends at ``resort``, if any, and those everywhere else."""
+    here = None
+    elsewhere = []
+    for entry in entries:
+        if resort is not None and entry.resort.pk == resort.pk:
+            here = entry
+        else:
+            elsewhere.append(entry)
+    return here, elsewhere
+
+
 def _later_month(first: datetime.date) -> datetime.date | None:
     """Return ``first`` if it is a month after this one, else ``None``."""
     return first if first > today().replace(day=1) else None
 
 
 def _highlight(request: HttpRequest) -> Resort | None:
-    """Return the resort My days highlights (``highlight=<uuid>``), if any."""
+    """Return the resort the calendar highlights (``highlight=<uuid>``), if any."""
     # Not "resort": that's the day sheet's own answer to where you'll be.
     value = request.POST.get("highlight") or request.GET.get("highlight")
     if not value:
@@ -114,7 +165,7 @@ def _highlight(request: HttpRequest) -> Resort | None:
 
 
 def _window_from(request: HttpRequest) -> datetime.date | None:
-    """Return the My days month a sheet was opened from, if not this month."""
+    """Return the calendar month a sheet was opened from, if not this month."""
     value = request.POST.get("from") or request.GET.get("from")
     return _later_month(month_start(parse_day(value))) if value else None
 
@@ -122,7 +173,7 @@ def _window_from(request: HttpRequest) -> datetime.date | None:
 def _back(
     window_from: datetime.date | None, highlight: Resort | None
 ) -> dict[str, str]:
-    """Return what takes My days back to how it was: the month and resort."""
+    """Return what takes the calendar back to how it was: the month and resort."""
     back = {}
     if window_from is not None:
         back["from"] = window_from.isoformat()
@@ -132,52 +183,33 @@ def _back(
 
 
 def _request_back(request: HttpRequest) -> dict[str, str]:
-    """Return the My days state a sheet was opened from."""
+    """Return the calendar state a sheet was opened from."""
     return _back(_window_from(request), _highlight(request))
 
 
-def _my_days_url(back: dict[str, str]) -> str:
-    """Return My days, as the person was looking at it."""
-    url = reverse("planning:my_days")
+def _calendar_url(back: dict[str, str], days: list[datetime.date] | None = None) -> str:
+    """Return the calendar, as the person was looking at it.
+
+    After one day's sheet, ``days`` keeps that day selected in the panel.
+    """
+    if days is not None and len(days) == 1:
+        back = {**back, "day": days[0].isoformat()}
+    url = reverse("planning:calendar")
     return f"{url}?{urlencode(back)}" if back else url
-
-
-# What a day with no plan yet starts from in the sheet.
-FRESH = {"skiing": PlanDay.Skiing.YES, "resort": "", "note": "", "is_private": False}
-
-
-def _answers(plan: PlanDay | None) -> dict[str, object]:
-    """Return one day's answers as the sheet's form values."""
-    if plan is None:
-        return dict(FRESH)
-    return {
-        "skiing": plan.skiing,
-        "resort": str(plan.resort.uuid) if plan.resort else "",
-        "note": plan.note,
-        "is_private": plan.is_private,
-    }
 
 
 def _initial(
     days: list[datetime.date], plans: dict[datetime.date, PlanDay]
-) -> tuple[dict[str, object], set[str]]:
-    """Return the sheet's starting values, and which answers differ by day.
+) -> tuple[dict[str, object], bool]:
+    """Return the sheet's starting resort, and whether the days differ.
 
-    An answer the days share is filled in; one that differs is left out
-    and named in the second value, so saving keeps it unless it's changed.
+    Days that all say the same resort start with it picked; days that say
+    different things (or some nothing) start with none picked.
     """
-    per_day = [_answers(plans.get(day)) for day in days]
-    initial: dict[str, object] = {}
-    mixed = set()
-    for name in FRESH:
-        values = {str(answers[name]) for answers in per_day}
-        if len(values) == 1:
-            initial[name] = per_day[0][name]
-        else:
-            mixed.add(name)
-    if "resort" in mixed:
-        initial["resort"] = KEEP_RESORT
-    return initial, mixed
+    said = {str(plans[day].resort.uuid) if day in plans else "" for day in days}
+    if len(said) == 1:
+        return {"resort": said.pop()}, False
+    return {}, True
 
 
 def _sheet(
@@ -199,14 +231,15 @@ def _sheet(
         )
     }
     initial, mixed = _initial(days, plans)
-    form = DayForm(request.POST or None, initial=initial)
+    # Bound on any POST, even an empty one, so a missing resort is an error.
+    form = DayForm(request.POST if request.method == "POST" else None, initial=initial)
     if request.method == "POST" and form.is_valid():
         record_day_planned(request, user)
-        update_plans(user, days, **form.changes())
-        return refresh(request, _my_days_url(_request_back(request)))
+        update_plans(user, days, form.cleaned_data["resort"])
+        return refresh(request, _calendar_url(_request_back(request), days))
     friends = friends_by_resort(user, days)
     listed = {entry.resort.pk for entry in friends}
-    picks = {plan.resort for plan in plans.values() if plan.resort is not None}
+    picks = {plan.resort for plan in plans.values()}
     selected = str(form["resort"].value() or "")
     return render_sheet(
         request,
@@ -229,10 +262,7 @@ def _sheet(
                 (r for r in picks if r.pk not in listed), key=lambda r: r.name
             ),
             "selected": selected,
-            "keep_resort": KEEP_RESORT,
             "groups_count": Group.objects.for_user(user).count(),
-            # One day's sheet lists that day's meet-ups in your groups.
-            "meetups": meetups_for(user, days[0]) if len(days) == 1 else [],
             "back": _request_back(request),
         },
     )
@@ -249,7 +279,7 @@ def day(request: HttpRequest, day: datetime.date) -> HttpResponse:
         form_url=reverse("planning:day", kwargs={"day": day}),
         clear_url=reverse("planning:day_clear", kwargs={"day": day}),
         title=f"{day:%A} {day.day} {day:%B}",
-        eyebrow="My days",
+        eyebrow="Calendar",
         save_label=f"Save {day:%a} {day.day} {day:%b}",
     )
 
@@ -259,7 +289,7 @@ def day(request: HttpRequest, day: datetime.date) -> HttpResponse:
 def day_clear(request: HttpRequest, day: datetime.date) -> HttpResponse:
     """Forget what the person said about a day."""
     clear_plan(current_user(request), day)
-    return refresh(request, _my_days_url(_request_back(request)))
+    return refresh(request, _calendar_url(_request_back(request), [day]))
 
 
 def _selected_days(request: HttpRequest) -> list[datetime.date]:
@@ -314,7 +344,7 @@ def several_days(request: HttpRequest) -> HttpResponse:
         form_url=reverse("planning:several_days") + query,
         clear_url=reverse("planning:several_days_clear") + query,
         title=_days_title(days),
-        eyebrow=f"My days · {count}",
+        eyebrow=f"Calendar · {count}",
         save_label=f"Save {count}",
     )
 
@@ -324,7 +354,7 @@ def several_days(request: HttpRequest) -> HttpResponse:
 def several_days_clear(request: HttpRequest) -> HttpResponse:
     """Forget what the person said about several selected days."""
     clear_plans(current_user(request), _selected_days(request))
-    return refresh(request, _my_days_url(_request_back(request)))
+    return refresh(request, _calendar_url(_request_back(request)))
 
 
 @login_required

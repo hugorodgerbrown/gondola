@@ -1,0 +1,38 @@
+{# The selected day under the month: where you are, who is with you (by name, the same friends the cell's mark counts), where the others are (names only), and Add or Edit plans. Needs selected, here_resort, here, elsewhere, highlight and back_query. #}
+{% with day=selected plan=selected.plan %}
+  <section id="day-panel" class="day-panel" aria-labelledby="day-panel-heading" aria-live="polite">
+    <div class="day-panel__head">
+      <h2 class="day-panel__title" id="day-panel-heading">
+        {{ day.date|date:"j F" }}
+      </h2>
+      {% if day.plannable %}
+        <a class="button button--small{% if plan %} button--secondary{% endif %}" data-day-plan
+           href="{% url 'planning:day' day.date %}{% if back_query %}?{{ back_query }}{% endif %}"
+           hx-get="{% url 'planning:day' day.date %}{% if back_query %}?{{ back_query }}{% endif %}"
+           hx-target="#sheet-body" hx-push-url="false">{% if plan %}Edit plans{% else %}Add plans{% endif %}</a>
+      {% endif %}
+    </div>
+    <p class="day-panel__mine">
+      {% if plan %}
+        <span class="day-panel__swatch" aria-hidden="true"></span>{{ day.plan_words }}
+      {% else %}
+        <span class="muted">No plans</span>
+      {% endif %}
+    </p>
+    {% if day.count and here %}
+      <p class="day-panel__here">{% if day.count == 1 %}{% include "includes/icons/user.html" %}{% else %}{% include "includes/icons/people.html" %}{% endif %}<span>{{ here.names }}{% if highlight %} at {{ here_resort.name }}{% endif %}</span></p>
+    {% endif %}
+    {% if elsewhere %}
+      <div class="day-panel__others">
+        <span class="eyebrow">{% if here_resort %}Elsewhere{% else %}Friends out{% endif %}</span>
+        <ul class="day-panel__friends" aria-label="Friends elsewhere that day">
+          {% for entry in elsewhere %}
+            <li><span class="day-panel__resort">{{ entry.resort.name }}</span> <span class="muted">{{ entry.names }}</span></li>
+          {% endfor %}
+        </ul>
+      </div>
+    {% elif not day.count %}
+      <p class="small muted">No friends out this day.</p>
+    {% endif %}
+  </section>
+{% endwith %}

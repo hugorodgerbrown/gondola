@@ -24,22 +24,10 @@
           <tr{% if row.is_me %} class="board__me"{% endif %}>
             <th scope="row" class="board__name">{% if row.is_me %}You{% else %}{{ row.person }}{% endif %}</th>
             {% for cell in row.cells %}
-              <td{% if cell.quiet %} class="is-quiet"{% endif %} title="{{ cell.title }}">{% if cell.private %}<span class="board__lock">{{ cell.text }}{% include "includes/icons/lock.html" %}<span class="visually-hidden">private</span></span>{% else %}{{ cell.text }}{% endif %}</td>
+              <td title="{{ cell.title }}">{{ cell.text }}</td>
             {% endfor %}
           </tr>
         {% endfor %}
-        <tr>
-          <th scope="row" class="board__name small muted">Meet-up</th>
-          {% for day in board.days %}
-            <td>
-              {% if day.meetup %}
-                <a class="board__meetup board__meetup--set" href="{% url 'planning:meetup' day.meetup.share_token %}" aria-label="Meet-up at {{ day.meetup.resort.name }} on {{ day.date|date:'D j' }}">{{ day.meetup.resort.display_code }}</a>
-              {% else %}
-                <a class="board__meetup board__meetup--add" href="{% url 'planning:meetup_new' board.group.uuid %}?date={{ day.date|date:'Y-m-d' }}&amp;from=board" aria-label="Propose a meet-up on {{ day.date|date:'D j' }}">{% include "includes/icons/plus.html" %}</a>
-              {% endif %}
-            </td>
-          {% endfor %}
-        </tr>
       </tbody>
     </table>
   </div>
@@ -51,9 +39,7 @@
 
   <dl class="legend">
     <dt>VERB</dt><dd>Resort code. Tap a day to see it on the map.</dd>
-    <dt>?</dt><dd>Not sure yet</dd>
-    <dt>–</dt><dd>Not skiing</dd>
     <dt>blank</dt><dd>Hasn't said</dd>
   </dl>
-  <a href="{% url 'planning:my_days' %}" class="small">Change my days →</a>
+  <a href="{% url 'planning:calendar' %}" class="small">Change your days →</a>
 {% endblock %}
