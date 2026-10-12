@@ -1827,13 +1827,6 @@ a.mday.mday--skiing.mday--picked:hover {
 
 /* --- Front page ---------------------------------------------------------- */
 
-.hero__logo {
-  display: block;
-  width: 52px;
-  height: 65px;
-  margin-bottom: 8px;
-}
-
 .hero-picture {
   display: block;
   width: 100%;
