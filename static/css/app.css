@@ -830,6 +830,10 @@ fieldset.field {
   color: var(--text-1);
 }
 
+.legend dt.is-quiet {
+  color: var(--text-3);
+}
+
 .legend dd {
   margin: 0;
 }
@@ -1052,13 +1056,9 @@ fieldset.field {
   transform: translateX(-50%);
 }
 
-/* Skiing is a filled dot; not sure is a ring; not skiing a faint dot. */
+/* Skiing is a filled dot; not skiing a faint dot. */
 .calendar__mark--skiing {
   background: var(--accent);
-}
-
-.calendar__mark--not_sure {
-  box-shadow: inset 0 0 0 1.25px var(--accent);
 }
 
 .calendar__mark--not_skiing {
@@ -1068,10 +1068,6 @@ fieldset.field {
 
 .calendar__day--selected .calendar__mark--skiing {
   background: var(--card);
-}
-
-.calendar__day--selected .calendar__mark--not_sure {
-  box-shadow: inset 0 0 0 1.25px var(--card);
 }
 
 .calendar__footer {
@@ -1452,8 +1448,8 @@ a.mday:focus-visible {
   opacity: 0.4;
 }
 
-/* Two rows: the date and the lock on top, the friends below. The lock keeps
-   to the right. */
+/* Two rows: the date and the friends with you on top; your resort's code
+   and the lock below. The count and the lock keep to the right. */
 .mday__row {
   display: flex;
   align-items: center;
@@ -1466,8 +1462,18 @@ a.mday:focus-visible {
   height: 10px;
 }
 
-.mday__row > svg {
+.mday__row > svg,
+.mday__row > .mday__friends {
   margin-left: auto;
+}
+
+/* Your resort for the day, as on the board. */
+.mday__resort {
+  font: 500 9px var(--font-mono);
+  letter-spacing: 0.02em;
+  overflow: hidden;
+  text-overflow: clip;
+  white-space: nowrap;
 }
 
 .mday__date {
@@ -1485,8 +1491,7 @@ a.mday:focus-visible {
 }
 
 /* Blue is a day you're skiing; light blue is a day you're at a resort but
-   not skiing. Fill only, so the outline stays free for the selected day.
-   Where, and anything else, is in the panel. */
+   not skiing. Fill only, so the outline stays free for the selected day. */
 .mday--skiing {
   background: var(--accent);
   color: #fff;
@@ -1501,14 +1506,14 @@ a.mday:focus-visible {
 .mday__friends {
   display: inline-flex;
   align-items: center;
-  gap: 3px;
+  gap: 2px;
   color: var(--accent);
-  font: 600 12px var(--font-sans);
+  font: 600 11px var(--font-sans);
 }
 
 .mday__friends svg {
-  width: 14px;
-  height: 14px;
+  width: 12px;
+  height: 12px;
 }
 
 .mday--skiing .mday__friends {

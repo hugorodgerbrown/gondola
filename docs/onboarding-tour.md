@@ -82,7 +82,7 @@ on the control that leads to the next page.
 | 2.0 | Page intro | Next | Planning a day. Here you tell your groups where you'll be and whether you're skiing. We show you where your friends are going first. |
 | 2.1 | Friends' resorts | Next | We show you where friends will be that day. Tap one to join them. |
 | 2.2 | Search | Next | Somewhere else? Look up any resort. |
-| 2.3 | Skiing? | Next | Tell everyone whether you're on the slopes. Not sure is fine. Not skiing means you'll be around, off the slopes. |
+| 2.3 | Skiing? | Next | Tell everyone whether you're on the slopes. Not skiing means you'll be around, off the slopes. |
 | 2.4 | Note | Next | Add a note for your groups, like "first lift". |
 | 2.5 | Private | Next | Keep a day to yourself: friends see nothing for it. |
 | 2.6 | Save | Tap Save | Save shares the day with your groups. |
@@ -109,7 +109,7 @@ on the control that leads to the next page.
 | Frame | Element | Advances on | Coach mark |
 |---|---|---|---|
 | 4.0 | Page intro | Next | The group's week at a glance. Everyone side by side, so you can see who overlaps where. |
-| 4.1 | Resort codes | Next | Each code is a resort: VERB is Verbier. ? is not sure, – is not skiing, blank hasn't said. |
+| 4.1 | Resort codes | Next | Each code is a resort: VERB is Verbier. – is not skiing, blank hasn't said. |
 | 4.2 | Map tab | Tap Map | Tap Map to see where your friends are on any day. |
 
 ## Chapter 5: The map

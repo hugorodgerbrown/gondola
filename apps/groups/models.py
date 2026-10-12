@@ -190,7 +190,6 @@ class PlanDay(BaseModel):
         """Whether the person is skiing that day."""
 
         YES = "skiing", "Skiing"
-        NOT_SURE = "not_sure", "Not sure yet"
         NO = "not_skiing", "Not skiing"
 
     user = models.ForeignKey(
@@ -235,13 +234,11 @@ class PlanDay(BaseModel):
         return self.skiing == self.Skiing.YES
 
     def describe(self) -> str:
-        """Return the day in words: "Verbier, not skiing", "Not sure yet"."""
+        """Return the day in words: "Verbier", "Verbier, not skiing"."""
         if self.resort is None:
             if self.skiing == self.Skiing.YES:
                 return "Skiing, not sure where"
             return self.get_skiing_display()
         if self.skiing == self.Skiing.NO:
             return f"{self.resort.name}, not skiing"
-        if self.skiing == self.Skiing.NOT_SURE:
-            return f"{self.resort.name}, maybe skiing"
         return self.resort.name

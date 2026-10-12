@@ -5,8 +5,8 @@ Makes "UI test" with a tester and four friends, and fills the tester's
 next couple of months with every case the calendar, the day sheet, the map
 and the board have to draw:
 
-- each where × skiing pair (a resort or none; skiing, not sure, not
-  skiing), as single days and as runs of days;
+- skiing and not skiing ("around"), as single days and as runs of days,
+  with friends at your resort and elsewhere;
 - days left unsaid, private days, days with a note (one long);
 - a ten-day run in one resort with mixed skiing, a run that crosses a
   month end, and a private run;
@@ -54,8 +54,8 @@ RESORTS = {
     "CRA": "Crans-Montana",
     "CHAM": "Champéry",
 }
-# One letter a day for skiing: Y skiing, ? not sure, N not skiing.
-SKIING = {"Y": PlanDay.Skiing.YES, "?": PlanDay.Skiing.NOT_SURE, "N": PlanDay.Skiing.NO}
+# One letter a day for skiing: Y skiing, N not skiing.
+SKIING = {"Y": PlanDay.Skiing.YES, "N": PlanDay.Skiing.NO}
 # The day the tester says nothing about, while friends do.
 UNSAID = 6
 LONG_NOTE = (
@@ -69,12 +69,12 @@ class Run:
     """Some consecutive days a person said the same place about.
 
     ``skiing`` holds one letter per day, so a run can keep its resort while
-    skiing changes. ``where`` is a resort code, or "" for no resort.
+    skiing changes. ``where`` is a resort code.
     """
 
     start: int
     skiing: str
-    where: str = ""
+    where: str
     private: bool = False
     note: str = ""
     label: str = ""
@@ -101,25 +101,22 @@ def tester_runs(first: datetime.date) -> list[Run]:
     """Return the tester's days, each labelled with the case it covers."""
     edge = month_end_offset(first)
     return [
-        # Single days: every where × skiing pair, today first.
+        # Single days: skiing and around, today first.
         Run(0, "Y", "VERB", label="At a resort, skiing (today)"),
-        Run(1, "?", "VERB", label="At a resort, not sure"),
         Run(2, "N", "VERB", label="At a resort, not skiing (around)"),
-        Run(3, "Y", label="No resort, skiing"),
-        Run(4, "?", label="No resort, not sure"),
-        Run(5, "N", label="No resort, not skiing"),
+        Run(3, "Y", "CHAM", label="Skiing, friends elsewhere"),
+        Run(5, "N", "CHAM", label="Around, friends elsewhere"),
         # Offset UNSAID is left out: friends out, nothing from you.
         Run(7, "Y", "VERB", private=True, label="At a resort, private"),
-        Run(8, "N", private=True, label="No resort, private"),
+        Run(8, "N", "VERB", private=True, label="Around, private"),
         Run(9, "Y", "SAASF", note="First lift", label="Short note"),
-        Run(10, "?", "GRIME", note=LONG_NOTE, label="Long note"),
+        Run(10, "N", "GRIME", note=LONG_NOTE, label="Long note"),
         # Runs.
-        Run(14, "YY?NYYY?YN", "VERB", label="Ten days in one resort, mixed skiing"),
+        Run(14, "YYNNYYYNYN", "VERB", label="Ten days in one resort, mixed skiing"),
         Run(26, "YYYYY", "CRA", label="Five days alike"),
-        Run(33, "NNNN", label="No resort, not skiing, four days"),
-        Run(38, "???", label="No resort, not sure, three days"),
+        Run(33, "NNNN", "CRA", label="Around, four days"),
         Run(42, "YYY", "GRIME", private=True, label="Private run"),
-        Run(45, "YYY", label="No resort, skiing, three days"),
+        Run(45, "YYY", "SAASF", label="Skiing alone, three days"),
         Run(edge, "YYYY", "CHAM", label="Run across a month end"),
     ]
 
@@ -142,13 +139,13 @@ def friend_runs() -> dict[str, list[Run]]:
             Run(4, "YY", "CHAM"),
             Run(6, "Y", "SAASF"),
             Run(9, "Y", "SAASF"),
-            Run(20, "??", "GRIME"),
+            Run(20, "NN", "GRIME"),
         ],
-        # Around: at your resort but not skiing, and unsure days with no resort.
+        # Around: at your resort but not skiing, and skiing elsewhere.
         "Chloé": [
             Run(0, "N", "VERB"),
             Run(2, "N", "VERB"),
-            Run(5, "??"),
+            Run(5, "YY", "SAASF"),
             Run(16, "NNNN", "VERB"),
         ],
         # Everything private but one day: only that day should ever show.
@@ -269,7 +266,7 @@ class Command(BaseCommand):
                 user,
                 day,
                 SKIING[letter],
-                resort=resorts[run.where] if run.where else None,
+                resort=resorts[run.where],
                 note=run.note,
                 is_private=run.private,
             )

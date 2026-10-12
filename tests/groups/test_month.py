@@ -69,9 +69,9 @@ def test_month_day_shows_plan_and_group_activity(crew: Crew) -> None:
 @freeze_time("2026-10-11 09:00:00+02:00")
 def test_month_day_summary_for_quiet_days(crew: Crew) -> None:
     today = datetime.date(2026, 10, 11)
-    plans.set_plan(crew.sam, today, S.NOT_SURE, is_private=True)
+    plans.set_plan(crew.sam, today, S.NO, is_private=True)
     days = days_of(month.build_month(crew.sam, today))
-    assert days[today].summary == "Sunday 11 October, today, Not sure yet, private"
+    assert days[today].summary == "Sunday 11 October, today, Not skiing, private"
     assert days[datetime.date(2026, 10, 12)].summary == "Monday 12 October, no plan"
 
 
@@ -80,8 +80,6 @@ def test_month_day_summary_for_quiet_days(crew: Crew) -> None:
     [
         (S.YES, True, "Skiing at Verbier"),
         (S.YES, False, "Skiing, not sure where"),
-        (S.NOT_SURE, True, "Maybe skiing at Verbier"),
-        (S.NOT_SURE, False, "Not sure yet"),
         (S.NO, True, "At Verbier, not skiing"),
         (S.NO, False, "Not skiing"),
     ],

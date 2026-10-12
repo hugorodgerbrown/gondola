@@ -97,7 +97,10 @@ def test_plain_forms_keep_the_month(sam: Client, crew: Crew) -> None:
     back = (
         f"{reverse('planning:calendar')}?from={first.isoformat()}&day={far.isoformat()}"
     )
-    saved = sam.post(day_url, {"skiing": S.NOT_SURE, "from": first.isoformat()})
+    saved = sam.post(
+        day_url,
+        {"skiing": S.NO, "resort": str(crew.verbier.uuid), "from": first.isoformat()},
+    )
     assert saved["Location"] == back
     cleared = sam.post(
         reverse("planning:day_clear", kwargs={"day": far}), {"from": first.isoformat()}
@@ -214,9 +217,9 @@ def test_the_panel_splits_with_you_from_elsewhere(sam: Client, crew: Crew) -> No
 
 
 def test_the_panel_without_friends_out(sam: Client, crew: Crew) -> None:
-    plans.set_plan(crew.sam, crew.day, S.NOT_SURE)
+    plans.set_plan(crew.sam, crew.day, S.NO, resort=crew.verbier)
     page = sam.get(reverse("planning:calendar"), {"day": crew.day.isoformat()})
-    assert b"Not sure yet" in page.content
+    assert b"At Verbier, not skiing" in page.content
     assert b"No friends out this day." in page.content
 
 
@@ -289,10 +292,10 @@ def test_day_sheet_where_and_skiing_apart(sam: Client, crew: Crew) -> None:
     )
     plan = PlanDay.objects.get(user=crew.sam)
     assert (plan.resort, plan.skiing) == (crew.verbier, S.NO)
-    # Skiing, no resort named yet.
-    sam.post(url, {"skiing": "skiing", "resort": ""}, headers=HTMX)
+    # Skiing there now: the resort stays as picked.
+    sam.post(url, {"skiing": "skiing", "resort": str(crew.verbier.uuid)}, headers=HTMX)
     plan.refresh_from_db()
-    assert (plan.resort, plan.skiing) == (None, S.YES)
+    assert (plan.resort, plan.skiing) == (crew.verbier, S.YES)
     bad = sam.post(
         url,
         {"skiing": "skiing", "resort": "00000000-0000-0000-0000-000000000000"},
@@ -301,24 +304,27 @@ def test_day_sheet_where_and_skiing_apart(sam: Client, crew: Crew) -> None:
     assert b"Pick a resort from the list" in bad.content
 
 
-def test_day_sheet_has_no_resort_option_for_none(sam: Client, crew: Crew) -> None:
+def test_day_sheet_needs_a_resort(sam: Client, crew: Crew) -> None:
     url = reverse("planning:day", kwargs={"day": crew.day})
-    assert b"Not at a resort" not in sam.get(url, headers=HTMX).content
-    # The form sends an empty resort first, then the picked one if any.
-    sam.post(url, {"resort": ["", str(crew.verbier.uuid)]}, headers=HTMX)
+    sheet = sam.get(url, headers=HTMX).content
+    assert b"Not at a resort" not in sheet and b"data-clearable" not in sheet
+    assert b"(optional)" not in sheet
+    missing = sam.post(url, {"skiing": "skiing"}, headers=HTMX)
+    assert b"Pick a resort." in missing.content
+    assert not PlanDay.objects.filter(user=crew.sam).exists()
+    sam.post(url, {"resort": str(crew.verbier.uuid)}, headers=HTMX)
     assert PlanDay.objects.get(user=crew.sam).resort == crew.verbier
-    sam.post(url, {"resort": [""]}, headers=HTMX)
-    assert PlanDay.objects.get(user=crew.sam).resort is None
 
 
-def test_day_sheet_not_sure_and_clear(sam: Client, crew: Crew) -> None:
+def test_day_sheet_not_skiing_and_clear(sam: Client, crew: Crew) -> None:
     url = reverse("planning:day", kwargs={"day": crew.day})
-    response = sam.post(url, {"skiing": "not_sure"})
+    response = sam.post(url, {"skiing": "not_skiing", "resort": str(crew.verbier.uuid)})
     # Back to the calendar with the day still in the panel.
     assert response["Location"] == (
         f"{reverse('planning:calendar')}?day={crew.day.isoformat()}"
     )
-    assert PlanDay.objects.get(user=crew.sam).skiing == S.NOT_SURE
+    assert PlanDay.objects.get(user=crew.sam).skiing == S.NO
+    assert b"Not sure" not in sam.get(url).content
     assert b"Clear this day" in sam.get(url).content
     sam.post(reverse("planning:day_clear", kwargs={"day": crew.day}), headers=HTMX)
     assert not PlanDay.objects.filter(user=crew.sam).exists()
@@ -342,7 +348,7 @@ def several(*days: str) -> str:
 def test_several_days_sheet(sam: Client, crew: Crew) -> None:
     plans.set_plan(crew.anna, datetime.date(2026, 12, 14), S.YES, resort=crew.verbier)
     plans.set_plan(crew.anna, datetime.date(2026, 12, 15), S.YES, resort=crew.verbier)
-    plans.set_plan(crew.sam, datetime.date(2026, 12, 15), S.NOT_SURE)
+    plans.set_plan(crew.sam, datetime.date(2026, 12, 15), S.NO, resort=crew.zermatt)
     days = [f"2026-12-{day}" for day in range(14, 21)]
     fragment = sam.get(several(*reversed(days)), headers=HTMX)
     assert fragment.status_code == 200
@@ -351,11 +357,17 @@ def test_several_days_sheet(sam: Client, crew: Crew) -> None:
     assert context["eyebrow"] == "Calendar · 7 days"
     assert context["save_label"] == "Save 7 days"
     assert [e.names for e in context["friends"]] == ["Anna"]  # once, not twice
-    # Sam is unsure about one day, and the rest start out skiing.
-    assert context["mixed"] == {"skiing"}
+    # Sam is around Zermatt one day; the rest start out skiing, nowhere.
+    assert context["mixed"] == {"skiing", "resort"}
+    # Some days have no resort yet, so "Leave as it is" isn't offered.
+    assert b"Leave as it is" not in fragment.content
     assert b"Differs across these days" in fragment.content
     assert b"Anything you leave alone stays" in fragment.content
-    plans.set_plan(crew.sam, datetime.date(2026, 12, 16), S.YES, resort=crew.verbier)
+    for day in days:
+        plans.update_plans(
+            crew.sam, [datetime.date.fromisoformat(day)], resort=crew.verbier
+        )
+    plans.update_plans(crew.sam, [datetime.date(2026, 12, 15)], resort=crew.zermatt)
     mixed = sam.get(several(*days), headers=HTMX)
     assert mixed.context["mixed"] == {"skiing", "resort"}
     assert b"Leave as it is" in mixed.content
@@ -389,7 +401,7 @@ def test_several_days_titles(
 
 @freeze_time("2026-10-11 09:00:00+02:00")
 def test_several_days_change_only_what_is_touched(sam: Client, crew: Crew) -> None:
-    days = [datetime.date(2026, 12, d) for d in (19, 20, 21)]
+    days = [datetime.date(2026, 12, d) for d in (19, 20)]
     plans.set_plan(crew.sam, days[0], S.NO, resort=crew.verbier, note="spa")
     plans.set_plan(crew.sam, days[1], S.YES, resort=crew.zermatt, is_private=True)
     url = several(*(d.isoformat() for d in days))
@@ -401,7 +413,7 @@ def test_several_days_change_only_what_is_touched(sam: Client, crew: Crew) -> No
     sam.post(
         url,
         {
-            "skiing": "not_sure",
+            "skiing": "not_skiing",
             "resort": "keep",
             "note_keep": "on",
             "private_keep": "on",
@@ -410,19 +422,22 @@ def test_several_days_change_only_what_is_touched(sam: Client, crew: Crew) -> No
     )
     saved = {p.date: p for p in PlanDay.objects.filter(user=crew.sam)}
     assert [(saved[d].skiing, saved[d].resort) for d in days] == [
-        (S.NOT_SURE, crew.verbier),
-        (S.NOT_SURE, crew.zermatt),
-        (S.NOT_SURE, None),
+        (S.NO, crew.verbier),
+        (S.NO, crew.zermatt),
     ]
     assert [(saved[d].note, saved[d].is_private) for d in days] == [
         ("spa", False),
         ("", True),
-        ("", False),
     ]
+    # A day with no resort yet can't keep one.
+    unplanned = several("2026-12-19", "2026-12-21")
+    refused = sam.post(unplanned, {"resort": "keep"}, headers=HTMX)
+    assert b"Pick a resort for all these days." in refused.content
+    assert PlanDay.objects.filter(user=crew.sam).count() == 2
     # Now put them all in Verbier, leaving skiing alone.
     sam.post(url, {"resort": str(crew.verbier.uuid)}, headers=HTMX)
     assert {(p.resort, p.skiing) for p in PlanDay.objects.filter(user=crew.sam)} == {
-        (crew.verbier, S.NOT_SURE)
+        (crew.verbier, S.NO)
     }
 
 

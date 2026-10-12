@@ -1,4 +1,4 @@
-{# One day of the calendar: blue if you ski, light blue if you're at a resort but not skiing, the date with the lock top right, and the friends-with-you count along the bottom. Needs day, selected and highlight. #}
+{# One day of the calendar: blue if you ski, light blue if you're at a resort but not skiing, the date with the friends-with-you count top right, and the resort code with the lock along the bottom. Needs day, selected and highlight. #}
 {% with plan=day.plan %}
   {% if day.plannable %}
     <a data-date="{{ day.date|date:'Y-m-d' }}"
@@ -12,12 +12,13 @@
   {% endif %}
     <span class="mday__row" aria-hidden="true">
       <span class="mday__date">{{ day.date.day }}</span>
-      {% if plan.is_private %}{% include "includes/icons/lock.html" %}{% endif %}
-    </span>
-    <span class="mday__row" aria-hidden="true">
       {% if day.count %}
         <span class="mday__friends">{% include "includes/icons/people.html" %}{{ day.count }}</span>
       {% endif %}
+    </span>
+    <span class="mday__row" aria-hidden="true">
+      {% if plan.resort %}<span class="mday__resort">{{ plan.resort.display_code }}</span>{% endif %}
+      {% if plan.is_private %}{% include "includes/icons/lock.html" %}{% endif %}
     </span>
   {% if day.plannable %}</a>{% else %}</span>{% endif %}
 {% endwith %}

@@ -2,8 +2,8 @@
 apps/groups/forms.py — Forms for days and groups.
 
 Resorts arrive as their public uuid (never the database id), from radio
-buttons in the day sheet. The resort can also be empty (not at a resort)
-or "keep".
+buttons in the day sheet. Every day needs a resort; a sheet for several
+days can also send "keep".
 """
 
 from __future__ import annotations
@@ -17,21 +17,6 @@ from apps.resorts.models import Resort
 
 from .models import Group, PlanDay
 from .services.plans import KEEP, Keep
-
-
-class ResortField(forms.UUIDField):
-    """A resort chosen by its uuid."""
-
-    def clean(self, value: Any) -> Resort | None:
-        """Return the resort the uuid names, or None when left empty."""
-        key = super().clean(value)
-        if key is None:
-            return None
-        try:
-            return Resort.objects.get(uuid=key)
-        except Resort.DoesNotExist as exc:
-            raise forms.ValidationError("Pick a resort from the list.") from exc
-
 
 # The resort radio's value for "leave each day's resort as it is".
 KEEP_RESORT = "keep"
@@ -60,13 +45,13 @@ class DayForm(forms.Form):
     is_private = forms.BooleanField(required=False)
     private_keep = forms.BooleanField(required=False)
 
-    def clean_resort(self) -> Resort | None | Keep:
-        """Return the resort picked, None for no resort, or KEEP."""
+    def clean_resort(self) -> Resort | Keep:
+        """Return the resort picked, or KEEP; a day can't be at no resort."""
         value = (self.cleaned_data.get("resort") or "").strip()
         if value == KEEP_RESORT:
             return KEEP
         if not value:
-            return None
+            raise forms.ValidationError("Pick a resort.")
         try:
             return Resort.objects.get(uuid=uuid.UUID(value))
         except ValueError, Resort.DoesNotExist:

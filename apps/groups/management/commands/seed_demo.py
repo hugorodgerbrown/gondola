@@ -38,16 +38,15 @@ RESORTS = {
     "CHAM": "Champéry",
 }
 # One row per person, one cell per day from today: a resort code (skiing
-# there), "?" for not sure, "-" for not skiing, "" for unsaid. A code can
-# take "-" (there, not skiing) or "?" (there, maybe skiing), and any cell a
-# trailing "*" for private.
+# there) or "" for unsaid. A code can take "-" (there, not skiing), and
+# any cell a trailing "*" for private.
 WEEK = {
-    "you": ["VERB", "VERB", "-", "?", "", "CRA", "SAASF*"],
-    "Anna": ["VERB", "GRIME", "?", "", "SAASF", "CRA", ""],
-    "Ben": ["SAASF", "VERB", "VERB", "?", "VERB", "", "-"],
-    "Chloé": ["VERB", "VERB", "VERB-", "", "VERB", "CRA", "?"],
-    "Ella": ["CHAM", "CHAM-", "CHAM-", "CHAM", "CHAM?", "", "?"],
-    "Felix": ["?", "", "", "", "", "CRA", "CRA"],
+    "you": ["VERB", "VERB", "VERB-", "", "", "CRA", "SAASF*"],
+    "Anna": ["VERB", "GRIME", "", "", "SAASF", "CRA", ""],
+    "Ben": ["SAASF", "VERB", "VERB", "", "VERB", "", "SAASF-"],
+    "Chloé": ["VERB", "VERB", "VERB-", "", "VERB", "CRA", ""],
+    "Ella": ["CHAM", "CHAM-", "CHAM-", "CHAM", "CHAM-", "", ""],
+    "Felix": ["", "", "", "", "", "CRA", "CRA"],
 }
 NOTES = {("Anna", 0): "First lift, then Mont Fort", ("you", 5): "With the kids"}
 # Out of season, the demo week starts on the first Saturday on or after
@@ -176,8 +175,8 @@ class Command(BaseCommand):
         if not code:
             return
         skiing = PlanDay.Skiing.YES
-        if code[-1] in "?-":
-            skiing = PlanDay.Skiing.NOT_SURE if code[-1] == "?" else PlanDay.Skiing.NO
+        if code[-1] == "-":
+            skiing = PlanDay.Skiing.NO
             code = code[:-1]
         set_plan(
             user,

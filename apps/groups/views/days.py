@@ -13,7 +13,7 @@ where you are, the friends with you (the day's number, so the highlighted
 resort's while one is picked), where the others are, and Add plans or
 Edit plans, which opens a sheet with two separate answers: where you'll be
 (the resorts friends picked first, then a search over every resort, or no
-resort) and whether you're skiing (yes, not sure yet, no); then an
+resort) and whether you're skiing (yes or no); then an
 optional note, and a switch to keep the day private.
 
 Pressing and holding a day starts selecting: tap more days (or drag
@@ -51,6 +51,7 @@ from ..services.month import (
     month_start,
 )
 from ..services.plans import (
+    KEEP,
     ResortFriends,
     clear_plan,
     clear_plans,
@@ -236,9 +237,17 @@ def _initial(
             initial[name] = per_day[0][name]
         else:
             mixed.add(name)
-    if "resort" in mixed:
+    # Every day needs a resort, so "keep" is only offered when each has one.
+    if "resort" in mixed and _all_at_resorts(days, plans):
         initial["resort"] = KEEP_RESORT
     return initial, mixed
+
+
+def _all_at_resorts(
+    days: list[datetime.date], plans: dict[datetime.date, PlanDay]
+) -> bool:
+    """Return whether every one of ``days`` already has a resort."""
+    return all(day in plans and plans[day].resort_id is not None for day in days)
 
 
 def _sheet(
@@ -260,7 +269,15 @@ def _sheet(
         )
     }
     initial, mixed = _initial(days, plans)
+    keepable = _all_at_resorts(days, plans)
     form = DayForm(request.POST or None, initial=initial)
+    if (
+        request.method == "POST"
+        and form.is_valid()
+        and form.cleaned_data["resort"] is KEEP
+        and not keepable
+    ):
+        form.add_error("resort", "Pick a resort for all these days.")
     if request.method == "POST" and form.is_valid():
         record_day_planned(request, user)
         update_plans(user, days, **form.changes())
@@ -282,6 +299,7 @@ def _sheet(
             "clear_url": clear_url,
             "has_plans": bool(plans),
             "mixed": mixed,
+            "keepable": keepable,
             "form": form,
             "friends": friends,
             # The days' own resorts that no friend has picked, to keep them

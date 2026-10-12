@@ -40,8 +40,8 @@ def test_members_owner_first(crew: Crew) -> None:
 
 def test_set_plan_upserts_and_clears(crew: Crew) -> None:
     plans.set_plan(crew.sam, crew.day, S.YES, resort=crew.verbier, note=" first lift ")
-    plan = plans.set_plan(crew.sam, crew.day, S.NOT_SURE, resort=crew.verbier)
-    # Where and skiing are separate: in Verbier, not sure about skiing.
+    plan = plans.set_plan(crew.sam, crew.day, S.NO, resort=crew.verbier)
+    # Where and skiing are separate: in Verbier, not skiing.
     assert plan.resort == crew.verbier and plan.note == ""
     assert PlanDay.objects.filter(user=crew.sam).count() == 1
     plans.clear_plan(crew.sam, crew.day)
@@ -90,7 +90,7 @@ def test_update_plans_changes_only_what_is_given(crew: Crew) -> None:
     days = [crew.day + datetime.timedelta(days=n) for n in range(4)]
     plans.set_plan(crew.sam, days[0], S.NO, note="spa", is_private=True)
     # Ten days in Verbier, then skiing on some of them.
-    plans.update_plans(crew.sam, days, resort=crew.verbier, skiing=S.NOT_SURE)
+    plans.update_plans(crew.sam, days, resort=crew.verbier, skiing=S.NO)
     made = plans.update_plans(crew.sam, days[:2], skiing=S.YES, note=" a ")
     assert [(p.date, p.resort, p.skiing, p.note) for p in made] == [
         (days[0], crew.verbier, S.YES, "a"),
@@ -99,9 +99,7 @@ def test_update_plans_changes_only_what_is_given(crew: Crew) -> None:
     first = PlanDay.objects.get(user=crew.sam, date=days[0])
     assert first.is_private  # untouched
     rest = PlanDay.objects.filter(user=crew.sam, date__in=days[2:])
-    assert {(p.resort, p.skiing, p.note) for p in rest} == {
-        (crew.verbier, S.NOT_SURE, "")
-    }
+    assert {(p.resort, p.skiing, p.note) for p in rest} == {(crew.verbier, S.NO, "")}
     # A new day starts out skiing, at no resort.
     (fresh,) = plans.update_plans(crew.sam, [days[0] + datetime.timedelta(9)])
     assert (fresh.skiing, fresh.resort, fresh.is_private) == (S.YES, None, False)
@@ -167,7 +165,9 @@ def test_board_cells(crew: Crew) -> None:
     start = plans.today()
     plans.set_plan(crew.sam, start, S.YES, resort=crew.verbier, is_private=True)
     plans.set_plan(crew.anna, start, S.YES, resort=crew.verbier, note="first lift")
-    plans.set_plan(crew.ben, start, S.NOT_SURE)
+    plans.set_plan(
+        crew.ben, start, S.YES
+    )  # an older day, from before resorts were required
     plans.set_plan(crew.anna, start + datetime.timedelta(days=1), S.NO)
     result = board.build_board(crew.group, crew.anna)
     assert len(result.days) == 7 and result.days[0].is_today
@@ -204,10 +204,10 @@ def test_board_weeks(crew: Crew) -> None:
 
 def test_upcoming_plans_and_marks(crew: Crew) -> None:
     today = plans.today()
-    plans.set_plan(crew.sam, today - datetime.timedelta(days=1), S.NOT_SURE)
+    plans.set_plan(crew.sam, today - datetime.timedelta(days=1), S.NO)
     plans.set_plan(crew.sam, today + datetime.timedelta(days=40), S.NO)
     plans.set_plan(crew.sam, today, S.YES, resort=crew.verbier)
-    plans.set_plan(crew.anna, today, S.NOT_SURE)
+    plans.set_plan(crew.anna, today, S.NO, resort=crew.zermatt)
     upcoming = plans.upcoming_plans(crew.sam)
     assert [plan.date for plan in upcoming] == [
         today,

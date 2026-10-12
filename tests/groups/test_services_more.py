@@ -39,11 +39,11 @@ def test_resort_day(crew: Crew) -> None:
     join_group(second, crew.sam)
     plans.set_plan(crew.anna, crew.day, S.YES, resort=crew.verbier, note="first lift")
     plans.set_plan(crew.ben, crew.day, S.YES, resort=crew.verbier)
-    plans.set_plan(crew.sam, crew.day, S.NOT_SURE)
+    plans.set_plan(crew.sam, crew.day, S.NO, resort=crew.zermatt)
     info = resort_map.resort_day(crew.sam, crew.verbier, crew.day)
     assert [g.group.name for g in info.groups] == ["Thursday crew", "Uni friends"]
     assert info.friend_count == 2
-    assert info.my_plan is not None and info.my_plan.skiing == S.NOT_SURE
+    assert info.my_plan is not None and info.my_plan.skiing == S.NO
 
 
 # --- evening email ----------------------------------------------------------------
@@ -76,7 +76,7 @@ def test_digest_without_news(crew: Crew) -> None:
 def test_recipients_respect_opt_out(crew: Crew) -> None:
     crew.sam.evening_email_enabled = False
     crew.sam.save()
-    plans.set_plan(crew.sam, crew.day, S.NOT_SURE)
+    plans.set_plan(crew.sam, crew.day, S.NO, resort=crew.zermatt)
     plans.set_plan(crew.anna, crew.day, S.YES, resort=crew.verbier)
     assert set(evening.recipients(crew.day)) == {crew.anna}
 

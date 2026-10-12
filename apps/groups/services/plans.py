@@ -2,14 +2,14 @@
 apps/groups/services/plans.py — Saying where you'll be, and if you're skiing.
 
 A plan day belongs to a person, not a group, and answers two separate
-questions: where they'll be (a resort, or none) and whether they're
-skiing (yes, not sure, no). Someone at a resort who isn't skiing is still
+questions: which resort they'll be at and whether they're skiing (yes
+or no). Someone at a resort who isn't skiing is still
 "around" for friends. ``update_plans`` is the one place plans are written,
 whether from the calendar or the map: over several days it changes only
 the answers given and keeps the rest, so ten days in Verbier stay in
-Verbier when three of them are then marked as skiing. Saying
-nothing is different from "Not sure yet" or "Not skiing": clearing a day
-deletes its row.
+Verbier when three of them are then marked as skiing. Saying nothing is
+different from "Not skiing": clearing a day deletes its row, and an unsaid
+day is the undecided one.
 """
 
 from __future__ import annotations

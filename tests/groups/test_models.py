@@ -89,14 +89,14 @@ def test_planday_to_string() -> None:
     at_resort = PlanDayFactory.create(
         user=user, date=SATURDAY, resort=ResortFactory.create(name="Zinal")
     )
-    unsure = PlanDayFactory.create(
+    around = PlanDayFactory.create(
         user=user,
         date=SATURDAY + datetime.timedelta(1),
-        skiing=PlanDay.Skiing.NOT_SURE,
-        resort=None,
+        skiing=PlanDay.Skiing.NO,
+        resort=at_resort.resort,
     )
     assert str(at_resort) == "Cleo · 2027-01-09 · Zinal"
-    assert str(unsure) == "Cleo · 2027-01-10 · Not sure yet"
+    assert str(around) == "Cleo · 2027-01-10 · Zinal, not skiing"
 
 
 def test_one_plan_per_user_per_day() -> None:
@@ -109,10 +109,8 @@ def test_one_plan_per_user_per_day() -> None:
     ("skiing", "named", "words"),
     [
         (PlanDay.Skiing.YES, True, "Zinal"),
-        (PlanDay.Skiing.NOT_SURE, True, "Zinal, maybe skiing"),
         (PlanDay.Skiing.NO, True, "Zinal, not skiing"),
         (PlanDay.Skiing.YES, False, "Skiing, not sure where"),
-        (PlanDay.Skiing.NOT_SURE, False, "Not sure yet"),
         (PlanDay.Skiing.NO, False, "Not skiing"),
     ],
 )

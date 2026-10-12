@@ -54,7 +54,7 @@ def test_commit_sends(crew: Crew) -> None:
 
 def test_nothing_new_is_skipped(crew: Crew) -> None:
     day = plans.today() + datetime.timedelta(days=5)
-    plans.set_plan(crew.sam, day, S.NOT_SURE)
+    plans.set_plan(crew.sam, day, S.NO, resort=crew.zermatt)
     out = StringIO()
     call_command(
         "send_evening_emails",
@@ -99,7 +99,8 @@ def test_seed_demo_dry_run_then_commit_twice() -> None:
     group = Group.objects.get()
     assert group.owner.email == "me@example.com"
     assert group.memberships.count() == 6
-    assert PlanDay.objects.filter(skiing=S.NOT_SURE).exists()
+    assert PlanDay.objects.filter(skiing=S.NO).exists()
+    assert not PlanDay.objects.filter(resort__isnull=True).exists()
     assert PlanDay.objects.filter(is_private=True).count() == 1
 
 
@@ -144,7 +145,7 @@ def test_seed_ui_test_dry_run_prints_the_cases() -> None:
     out = StringIO()
     call_command("seed_ui_test", stdout=out)
     assert "Dry run" in out.getvalue()
-    assert "No resort, not sure" in out.getvalue()
+    assert "Around, four days" in out.getvalue()
     assert "Unsaid, friends out" in out.getvalue()
     assert not Group.objects.exists()
     quiet = StringIO()
@@ -168,12 +169,11 @@ def test_seed_ui_test_covers_every_case_and_reruns() -> None:
     assert is_member(group, me)
     assert get_testers_group().user_set.count() == 6
     mine = PlanDay.objects.filter(user=tester)
-    pairs = {(plan.resort_id is not None, plan.skiing) for plan in mine}
-    assert pairs == {(at, s) for at in (True, False) for s in S.values}
-    # Skiing with no resort, as a single day and a run.
-    assert mine.filter(resort__isnull=True, skiing=S.YES).count() == 4
-    assert mine.filter(is_private=True, resort__isnull=True).exists()
-    assert mine.filter(is_private=True, resort__isnull=False).exists()
+    # Every day has a resort; both skiing answers, private and not.
+    assert not mine.filter(resort__isnull=True).exists()
+    assert {plan.skiing for plan in mine} == set(S.values)
+    assert mine.filter(is_private=True, skiing=S.YES).exists()
+    assert mine.filter(is_private=True, skiing=S.NO).exists()
     assert mine.exclude(note="").count() == 2
     # Nothing from the tester on the unsaid day, but friends out.
     unsaid = plans.today() + datetime.timedelta(days=UNSAID)
@@ -182,6 +182,8 @@ def test_seed_ui_test_covers_every_case_and_reruns() -> None:
     # Some run crosses a month end.
     months = {
         (plan.date.year, plan.date.month)
-        for plan in mine.filter(resort__name="Champéry")
+        for plan in mine.filter(
+            resort__name="Champéry", date__gte=plans.today() + datetime.timedelta(40)
+        )
     }
     assert len(months) == 2

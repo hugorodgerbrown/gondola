@@ -67,8 +67,6 @@ class MonthDay:
         resort = plan.resort.name if plan.resort is not None else ""
         if plan.skiing == PlanDay.Skiing.YES:
             return f"Skiing at {resort}" if resort else "Skiing, not sure where"
-        if plan.skiing == PlanDay.Skiing.NOT_SURE:
-            return f"Maybe skiing at {resort}" if resort else "Not sure yet"
         return f"At {resort}, not skiing" if resort else "Not skiing"
 
     @property

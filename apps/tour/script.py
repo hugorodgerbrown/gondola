@@ -124,7 +124,7 @@ CHAPTERS: tuple[Chapter, ...] = (
             ),
             Frame(
                 "2.3",
-                "Tell everyone whether you're on the slopes. Not sure is fine. "
+                "Tell everyone whether you're on the slopes. "
                 "Not skiing means you'll be around, off the slopes.",
                 ("[data-day-form] fieldset.field",),
             ),
@@ -188,7 +188,7 @@ CHAPTERS: tuple[Chapter, ...] = (
             ),
             Frame(
                 "4.1",
-                "Each code is a resort: VERB is Verbier. ? is not sure, – is not "
+                "Each code is a resort: VERB is Verbier. – is not "
                 "skiing, blank hasn't said.",
                 (".board",),
             ),

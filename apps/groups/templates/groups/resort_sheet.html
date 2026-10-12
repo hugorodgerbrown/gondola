@@ -7,7 +7,7 @@
       <span class="eyebrow">{{ entry.group.name }}</span>
       <div>
         {% for plan in entry.plans %}
-          <div class="friend-line"><span>{{ plan.user }}{% if plan.skiing == "not_skiing" %} <span class="tag">Around</span>{% elif plan.skiing == "not_sure" %} <span class="tag">Maybe skiing</span>{% endif %}</span><span class="small muted">{{ plan.note }}</span></div>
+          <div class="friend-line"><span>{{ plan.user }}{% if plan.skiing == "not_skiing" %} <span class="tag">Around</span>{% endif %}</span><span class="small muted">{{ plan.note }}</span></div>
         {% endfor %}
       </div>
     </section>
@@ -15,7 +15,7 @@
 
   {% if info.my_plan %}
     <div class="friend-line"><span>You</span>
-      {% if info.my_plan.resort_id == resort.pk %}<span class="tag tag--accent">{% if info.my_plan.skiing == "not_skiing" %}Around{% elif info.my_plan.skiing == "not_sure" %}Maybe skiing{% else %}Planned{% endif %}</span>
+      {% if info.my_plan.resort_id == resort.pk %}<span class="tag tag--accent">{% if info.my_plan.skiing == "not_skiing" %}Around{% else %}Planned{% endif %}</span>
       {% else %}<span class="small muted">{{ info.my_plan.describe }}</span>{% endif %}
     </div>
   {% endif %}

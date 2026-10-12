@@ -21,7 +21,6 @@
 
   const MARK_LABELS = {
     skiing: "skiing",
-    not_sure: "not sure yet",
     not_skiing: "not skiing",
   };
   // The same strokes as templates/includes/icons/chevron-*.html.
@@ -122,7 +121,7 @@
     const todayButton = el("button", "button button--secondary calendar__today", "Today");
     todayButton.type = "button";
     const legend = el("p", "calendar__legend");
-    [["skiing", "Skiing"], ["not_sure", "Not sure"]].forEach(function (pair) {
+    [["skiing", "Skiing"], ["not_skiing", "Not skiing"]].forEach(function (pair) {
       const item = el("span", "calendar__key");
       item.append(el("span", "calendar__mark calendar__mark--" + pair[0]), pair[1]);
       legend.appendChild(item);

@@ -39,16 +39,15 @@ RESORTS = {
     "CHAM": "Champéry",
 }
 # One row per friend, one cell per day from today: a resort code (skiing
-# there), "?" for not sure, "-" for not skiing, "" for unsaid. A code can
-# take "-" (there, not skiing) or "?" (there, maybe skiing). Today is the
-# day the tour opens, so it is the busiest: three in Verbier.
+# there) or "" for unsaid. A code can take "-" (there, not skiing). Today
+# is the day the tour opens, so it is the busiest: three in Verbier.
 WEEK = {
-    "Sam": ["VERB", "VERB", "-", "?", "", "CRA", "SAASF"],
-    "Anna": ["VERB", "GRIME", "?", "", "SAASF", "CRA", ""],
-    "Ben": ["SAASF", "VERB", "VERB", "?", "VERB", "", "-"],
-    "Chloé": ["VERB", "VERB", "VERB-", "", "VERB", "CRA", "?"],
-    "Ella": ["CHAM", "CHAM-", "CHAM-", "CHAM", "CHAM?", "", "?"],
-    "Felix": ["?", "", "", "", "", "CRA", "CRA"],
+    "Sam": ["VERB", "VERB", "VERB-", "", "", "CRA", "SAASF"],
+    "Anna": ["VERB", "GRIME", "", "", "SAASF", "CRA", ""],
+    "Ben": ["SAASF", "VERB", "VERB", "", "VERB", "", "SAASF-"],
+    "Chloé": ["VERB", "VERB", "VERB-", "", "VERB", "CRA", ""],
+    "Ella": ["CHAM", "CHAM-", "CHAM-", "CHAM", "CHAM-", "", ""],
+    "Felix": ["", "", "", "", "", "CRA", "CRA"],
 }
 NOTES = {("Anna", 0): "First lift, then Mont Fort"}
 # The tour's own resort: the one opened on the map.
@@ -113,8 +112,8 @@ def _write_cell(
         return
     skiing = PlanDay.Skiing.YES
     code = cell
-    if code[-1] in "?-":
-        skiing = PlanDay.Skiing.NOT_SURE if code[-1] == "?" else PlanDay.Skiing.NO
+    if code[-1] == "-":
+        skiing = PlanDay.Skiing.NO
         code = code[:-1]
     set_plan(user, day, skiing, resort=resorts[code] if code else None, note=note)
 
