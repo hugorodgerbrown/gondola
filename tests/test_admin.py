@@ -6,7 +6,6 @@ from django.test import Client
 from django.urls import reverse
 
 from tests.factories import (
-    MeetUpParticipantFactory,
     MembershipFactory,
     PasskeyFactory,
     PlanDayFactory,
@@ -26,13 +25,12 @@ def staff_client(client: Client) -> Client:
     # One row of everything, so change lists render real rows.
     MembershipFactory.create()
     PlanDayFactory.create()
-    MeetUpParticipantFactory.create()
     PasskeyFactory.create()
     return client
 
 
 def test_every_app_model_is_registered() -> None:
-    assert len(MODELS) == 9
+    assert len(MODELS) == 7
 
 
 @pytest.mark.django_db

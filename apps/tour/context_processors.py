@@ -4,7 +4,7 @@ apps/tour/context_processors.py — What a page needs to play the tour.
 While someone tours, every page gets ``tour.script``: the chapters played
 on that page, as data for ``static/js/tour.js``, and the URLs it posts to.
 The base template then shows the demo bar and loads the script. After the
-tour, the real calendar gets ``tour.handoff`` (chapter 7) once.
+tour, the real calendar gets ``tour.handoff`` (chapter 6) once.
 """
 
 from __future__ import annotations
@@ -45,7 +45,7 @@ def _script(request: HttpRequest, page: str) -> dict[str, object] | None:
 
 
 def _handoff(request: HttpRequest) -> dict[str, object] | None:
-    """Return chapter 7 for the real calendar, once, after the tour."""
+    """Return chapter 6 for the real calendar, once, after the tour."""
     handoff = take_handoff(request)
     if handoff is None:
         return None

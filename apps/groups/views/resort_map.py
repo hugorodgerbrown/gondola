@@ -91,14 +91,12 @@ def resort_sheet(request: HttpRequest, resort_uuid: str) -> HttpResponse:
     )
     day = parse_day(request.GET.get("date"))
     user = current_user(request)
-    groups = list(Group.objects.for_user(user).order_by("name"))
     return render_sheet(
         request,
         "groups/resort_sheet.html",
         {
             "info": resort_day(user, resort, day),
             "plannable": is_plannable(day),
-            "groups": groups,
         },
     )
 

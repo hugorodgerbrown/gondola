@@ -1,18 +1,14 @@
 """Tests for apps/groups/models.py."""
 
 import datetime
-import importlib
 
 import pytest
-from django.apps import apps as django_apps
 from django.db import IntegrityError
 from django.db.models import ProtectedError
 
-from apps.groups.models import Group, MeetUp, Membership, PlanDay
+from apps.groups.models import Group, Membership, PlanDay
 from tests.factories import (
     GroupFactory,
-    MeetUpFactory,
-    MeetUpParticipantFactory,
     MembershipFactory,
     PlanDayFactory,
     ResortFactory,
@@ -52,11 +48,9 @@ def test_for_user_returns_groups_they_belong_to() -> None:
 def test_deleting_the_owner_deletes_the_group() -> None:
     group = GroupFactory.create()
     MembershipFactory.create(group=group)
-    MeetUpFactory.create(group=group)
     group.owner.delete()
     assert not Group.objects.exists()
     assert not Membership.objects.exists()
-    assert not MeetUp.objects.exists()
 
 
 # --- Membership ------------------------------------------------------------
@@ -146,71 +140,3 @@ def test_a_planned_resort_cannot_be_deleted() -> None:
     assert plan.resort is not None
     with pytest.raises(ProtectedError):
         plan.resort.delete()
-
-
-# --- MeetUp ----------------------------------------------------------------
-
-
-def test_meetup_defaults() -> None:
-    meetup = MeetUpFactory.create(resort=ResortFactory.create(name="Grimentz"))
-    assert str(meetup) == "Grimentz · 2027-01-09"
-    assert meetup.organiser == meetup.group.owner
-    assert meetup.start_time is None
-    assert not meetup.has_meeting_pin
-    assert len(meetup.share_token) == 43
-
-
-def test_meetup_with_time_and_pin() -> None:
-    meetup = MeetUpFactory.create(
-        start_time=datetime.time(9, 30),
-        meeting_latitude=46.11,
-        meeting_longitude=7.25,
-    )
-    assert meetup.has_meeting_pin
-
-
-def test_meeting_pin_is_both_or_neither() -> None:
-    with pytest.raises(IntegrityError):
-        MeetUpFactory.create(meeting_latitude=46.11, meeting_longitude=None)
-
-
-def test_meetup_from_date() -> None:
-    upcoming = MeetUpFactory.create(date=SATURDAY)
-    MeetUpFactory.create(date=SATURDAY - datetime.timedelta(1))
-    assert list(MeetUp.objects.from_date(SATURDAY)) == [upcoming]
-
-
-# --- MeetUpParticipant -----------------------------------------------------
-
-
-def test_participant_to_string_and_roster() -> None:
-    meetup = MeetUpFactory.create(resort=ResortFactory.create(name="Zinal"))
-    going = MeetUpParticipantFactory.create(
-        meetup=meetup, user=UserFactory.create(display_name="Dev")
-    )
-    assert str(going) == "Dev → Zinal · 2027-01-09"
-    assert list(meetup.participants.all()) == [going]
-
-
-def test_one_participation_per_user() -> None:
-    going = MeetUpParticipantFactory.create()
-    with pytest.raises(IntegrityError):
-        MeetUpParticipantFactory.create(meetup=going.meetup, user=going.user)
-
-
-def test_migration_turns_resort_status_into_skiing() -> None:
-    migration = importlib.import_module(
-        "apps.groups.migrations.0003_planday_where_and_skiing"
-    )
-    resort = ResortFactory.create()
-    at = PlanDayFactory.create(date=SATURDAY, resort=resort)
-    home = PlanDayFactory.create(date=SATURDAY, resort=None, skiing=PlanDay.Skiing.NO)
-    PlanDay.objects.filter(pk=at.pk).update(skiing="resort")
-    migration.forwards(django_apps, None)
-    at.refresh_from_db()
-    assert at.skiing == PlanDay.Skiing.YES
-    # And back: a day at a resort folds into the old "resort" status.
-    migration.backwards(django_apps, None)
-    at.refresh_from_db()
-    home.refresh_from_db()
-    assert (at.skiing, home.skiing) == ("resort", PlanDay.Skiing.NO)

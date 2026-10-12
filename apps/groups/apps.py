@@ -1,4 +1,4 @@
-"""apps/groups/apps.py — App config for groups, plan days and meet-ups."""
+"""apps/groups/apps.py — App config for groups and plan days."""
 
 from django.apps import AppConfig
 

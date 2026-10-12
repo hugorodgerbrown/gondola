@@ -1,4 +1,4 @@
-"""Tests for the planning views: days, map, groups, board and meet-ups."""
+"""Tests for the planning views: days, map, groups and the board."""
 
 import datetime
 import json
@@ -8,10 +8,10 @@ from django.test import Client
 from django.urls import reverse
 from freezegun import freeze_time
 
-from apps.groups.models import Group, MeetUp, PlanDay
-from apps.groups.services import meetups, plans
+from apps.groups.models import Group, PlanDay
+from apps.groups.services import plans
 from apps.groups.services.people import is_member
-from tests.factories import MeetUpFactory, PassFactory
+from tests.factories import PassFactory
 from tests.groups.conftest import Crew
 
 pytestmark = pytest.mark.django_db
@@ -169,10 +169,9 @@ def test_saving_a_day_keeps_the_highlight(sam: Client, crew: Crew) -> None:
 
 
 def test_the_panel_shows_the_picked_day(sam: Client, crew: Crew) -> None:
-    """A tapped day fills the panel: Add plans, friends there, the meet-up."""
+    """A tapped day fills the panel: Add plans, and where friends are."""
     plans.set_plan(crew.anna, crew.day, S.YES, resort=crew.verbier)
     plans.set_plan(crew.ben, crew.day, S.NO, resort=crew.zermatt)
-    MeetUpFactory.create(group=crew.group, date=crew.day, resort=crew.verbier)
     url = reverse("planning:calendar")
     page = sam.get(url, {"day": crew.day.isoformat()})
     assert page.context["selected"].date == crew.day
@@ -184,7 +183,7 @@ def test_the_panel_shows_the_picked_day(sam: Client, crew: Crew) -> None:
     ]
     assert b"Friends out" in page.content
     assert b"Add plans" in page.content and b"Edit plans" not in page.content
-    assert b"Meet-up at Verbier" in page.content
+    assert b"Meet-up" not in page.content
     assert b"Ben (around)" in page.content
     # Nobody is with Sam, so no day carries a number.
     assert b'class="mday__friends"' not in page.content
@@ -310,26 +309,6 @@ def test_day_sheet_has_no_resort_option_for_none(sam: Client, crew: Crew) -> Non
     assert PlanDay.objects.get(user=crew.sam).resort == crew.verbier
     sam.post(url, {"resort": [""]}, headers=HTMX)
     assert PlanDay.objects.get(user=crew.sam).resort is None
-
-
-def test_day_sheet_shows_the_days_meetups(sam: Client, crew: Crew) -> None:
-    meetup = meetups.propose_meetup(
-        crew.group, crew.anna, crew.day, crew.verbier, start_time=datetime.time(9, 30)
-    )
-    meetups.join_meetup(meetup, crew.sam)
-    url = reverse("planning:day", kwargs={"day": crew.day})
-    content = sam.get(url, headers=HTMX).content.decode()
-    assert reverse("planning:meetup", args=[meetup.share_token]) in content
-    assert "09:30 at Verbier" in content
-    assert "Going: You and Anna" in content
-    # Not on another day, and not on the several-days sheet.
-    other = crew.day + datetime.timedelta(days=1)
-    assert (
-        "meet-up"
-        not in sam.get(
-            reverse("planning:day", kwargs={"day": other}), headers=HTMX
-        ).content.decode()
-    )
 
 
 def test_day_sheet_not_sure_and_clear(sam: Client, crew: Crew) -> None:
@@ -553,7 +532,7 @@ def test_resort_sheet_and_plan_here(sam: Client, crew: Crew) -> None:
     assert (
         b"Around" in sam.get(url, {"date": crew.day.isoformat()}, headers=HTMX).content
     )
-    assert b"Propose a meet-up here" in sheet.content
+    assert b"meet-up" not in sheet.content
     plan_url = reverse("planning:plan_here", kwargs={"resort_uuid": crew.verbier.uuid})
     response = sam.post(plan_url, {"date": crew.day.isoformat()})
     assert response["Location"] == f"/map/?date={crew.day.isoformat()}"
@@ -684,142 +663,9 @@ def test_reset_invite_kills_old_link(client: Client, crew: Crew) -> None:
 
 def test_board(sam: Client, crew: Crew) -> None:
     plans.set_plan(crew.anna, plans.today(), S.YES, resort=crew.verbier)
-    meetups.propose_meetup(crew.group, crew.anna, plans.today(), crew.zermatt)
+    plans.set_plan(crew.ben, plans.today(), S.YES, resort=crew.zermatt)
     url = reverse("planning:board", kwargs={"group_uuid": crew.group.uuid})
     page = sam.get(url)
     assert b"VERB" in page.content and b"ZERM" in page.content
     week = sam.get(url, {"start": "2027-01-04"})
     assert week.context["board"].start == datetime.date(2027, 1, 4)
-
-
-# --- meet-ups --------------------------------------------------------------------------
-
-
-def test_propose_meetup_prefills_top_suggestion(sam: Client, crew: Crew) -> None:
-    plans.set_plan(crew.anna, crew.day, S.YES, resort=crew.verbier)
-    url = reverse("planning:meetup_new", kwargs={"group_uuid": crew.group.uuid})
-    page = sam.get(url, {"date": crew.day.isoformat()})
-    assert page.context["selected"] == str(crew.verbier.uuid)
-    asked = sam.get(
-        url, {"date": crew.day.isoformat(), "resort": str(crew.zermatt.uuid)}
-    )
-    assert asked.context["extra"] == crew.zermatt
-    junk = sam.get(url, {"resort": "junk"})
-    assert junk.context["extra"] is None
-
-
-def test_propose_meetup_saves(sam: Client, crew: Crew) -> None:
-    url = reverse("planning:meetup_new", kwargs={"group_uuid": crew.group.uuid})
-    response = sam.post(
-        url,
-        {
-            "date": crew.day.isoformat(),
-            "resort": str(crew.verbier.uuid),
-            "start_time": "09:00",
-            "meeting_latitude": "46.1",
-            "meeting_longitude": "",
-        },
-    )
-    meetup = MeetUp.objects.get()
-    assert response["Location"] == reverse(
-        "planning:meetup", kwargs={"token": meetup.share_token}
-    )
-    assert meetup.start_time == datetime.time(9) and not meetup.has_meeting_pin
-
-
-def test_propose_meetup_goes_to_the_existing_one(sam: Client, crew: Crew) -> None:
-    meetup = meetups.propose_meetup(crew.group, crew.anna, crew.day, crew.verbier)
-    url = reverse("planning:meetup_new", kwargs={"group_uuid": crew.group.uuid})
-    response = sam.get(url, {"date": crew.day.isoformat()})
-    assert response["Location"] == reverse(
-        "planning:meetup", kwargs={"token": meetup.share_token}
-    )
-
-
-def test_propose_meetup_shows_a_lost_race(
-    sam: Client, crew: Crew, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    meetups.propose_meetup(crew.group, crew.anna, crew.day, crew.verbier)
-    monkeypatch.setattr("apps.groups.views.meetups.meetup_on", lambda *a: None)
-    url = reverse("planning:meetup_new", kwargs={"group_uuid": crew.group.uuid})
-    response = sam.post(
-        url, {"date": crew.day.isoformat(), "resort": str(crew.zermatt.uuid)}
-    )
-    assert b"already has a meet-up" in response.content
-    assert MeetUp.objects.count() == 1
-
-
-def test_propose_meetup_refuses_past_day(sam: Client, crew: Crew) -> None:
-    url = reverse("planning:meetup_new", kwargs={"group_uuid": crew.group.uuid})
-    past = plans.today() - datetime.timedelta(days=1)
-    response = sam.post(
-        url, {"date": past.isoformat(), "resort": str(crew.verbier.uuid)}
-    )
-    assert b"later day" in response.content
-    assert not MeetUp.objects.exists()
-
-
-def test_choose_group(client: Client, crew: Crew) -> None:
-    url = reverse("planning:meetup_choose_group")
-    client.force_login(crew.sam)
-    one = client.get(url, {"date": "2027-01-16"})
-    assert one["Location"].endswith(
-        f"/groups/{crew.group.uuid}/meetups/new/?date=2027-01-16"
-    )
-    Group.objects.create(owner=crew.sam, name="Second").memberships.create(
-        user=crew.sam, role="member"
-    )
-    assert b"Which group" in client.get(url).content
-
-
-def test_meetup_page_public_and_member_views(client: Client, crew: Crew) -> None:
-    meetup = meetups.propose_meetup(
-        crew.group, crew.sam, crew.day, crew.verbier, latitude=46.1, longitude=7.2
-    )
-    url = reverse("planning:meetup", kwargs={"token": meetup.share_token})
-    public = client.get(url)
-    assert b"Sign in to join" in public.content
-    assert b"og:title" in public.content
-    assert public.context["show_names"] is False
-    client.force_login(crew.anna)
-    member = client.get(url)
-    assert member.context["show_names"] is True
-    assert "I'm going" in member.content.decode()
-    client.force_login(crew.outsider)
-    assert b"adds you to Thursday crew" in client.get(url).content
-
-
-def test_meetup_join_leave_cancel(client: Client, crew: Crew) -> None:
-    meetup = meetups.propose_meetup(crew.group, crew.sam, crew.day, crew.verbier)
-    token = meetup.share_token
-    client.force_login(crew.outsider)
-    client.post(reverse("planning:meetup_join", kwargs={"token": token}))
-    assert meetups.is_going(meetup, crew.outsider) and is_member(
-        crew.group, crew.outsider
-    )
-    page = client.get(reverse("planning:meetup", kwargs={"token": token}))
-    assert b"Share the meet-up link" in page.content
-    client.post(reverse("planning:meetup_leave", kwargs={"token": token}))
-    assert not meetups.is_going(meetup, crew.outsider)
-    client.post(reverse("planning:meetup_cancel", kwargs={"token": token}))
-    assert MeetUp.objects.exists()  # not theirs to cancel
-    client.force_login(crew.sam)
-    client.post(reverse("planning:meetup_leave", kwargs={"token": token}))
-    assert meetups.is_going(meetup, crew.sam)  # organiser can't leave
-    response = client.post(reverse("planning:meetup_cancel", kwargs={"token": token}))
-    assert response["Location"] == reverse(
-        "planning:board", kwargs={"group_uuid": crew.group.uuid}
-    )
-    assert not MeetUp.objects.exists()
-
-
-def test_passed_meetup_cannot_be_joined(client: Client, crew: Crew) -> None:
-    meetup = meetups.propose_meetup(crew.group, crew.sam, crew.day, crew.verbier)
-    MeetUp.objects.filter(pk=meetup.pk).update(
-        date=plans.today() - datetime.timedelta(days=1)
-    )
-    client.force_login(crew.anna)
-    url = reverse("planning:meetup", kwargs={"token": meetup.share_token})
-    assert b"has passed" in client.get(url).content
-    client.post(reverse("planning:meetup_join", kwargs={"token": meetup.share_token}))
-    assert not meetups.is_going(meetup, crew.anna)

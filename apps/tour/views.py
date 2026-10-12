@@ -6,7 +6,7 @@ apps/tour/views.py — Starting, ending and finishing the tour.
   can take the tour again from their account page.
 * ``start`` makes the person's demo copy and opens the calendar (chapter 1).
 * ``end`` is the demo bar's End tour, from any chapter.
-* ``finish`` is the end of chapter 6: the copy goes and chapter 7, the
+* ``finish`` is the end of chapter 5: the copy goes and chapter 6, the
   hand-off, shows over the real calendar.
 
 The chapters themselves are played by ``static/js/tour.js`` over the

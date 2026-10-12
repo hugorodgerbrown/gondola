@@ -10,9 +10,8 @@ and the board have to draw:
 - days left unsaid, private days, days with a note (one long);
 - a ten-day run in one resort with mixed skiing, a run that crosses a
   month end, and a private run;
-- friends at your resort, friends elsewhere, a friend "around", a friend
-  whose days are all private, and meet-ups on days you've planned and on
-  one you haven't.
+- friends at your resort, friends elsewhere, a friend "around", and a
+  friend whose days are all private.
 
 A bare run prints the plan, day by day, without writing; ``--commit``
 writes it. Re-running rewrites the made-up people's days from today, so the
@@ -34,8 +33,7 @@ from django.core.management.base import BaseCommand, CommandError, CommandParser
 from django.db import transaction
 
 from apps.accounts.models import User
-from apps.groups.models import MeetUp, PlanDay
-from apps.groups.services.meetups import join_meetup, propose_meetup
+from apps.groups.models import PlanDay
 from apps.groups.services.memberships import create_group
 from apps.groups.services.plans import set_plan, today
 from apps.groups.services.testers import (
@@ -58,7 +56,7 @@ RESORTS = {
 }
 # One letter a day for skiing: Y skiing, ? not sure, N not skiing.
 SKIING = {"Y": PlanDay.Skiing.YES, "?": PlanDay.Skiing.NOT_SURE, "N": PlanDay.Skiing.NO}
-# The day the tester says nothing about, while friends and a meet-up do.
+# The day the tester says nothing about, while friends do.
 UNSAID = 6
 LONG_NOTE = (
     "Meeting the ski school at the Médran lift, then lunch at Chez Dany if "
@@ -110,10 +108,10 @@ def tester_runs(first: datetime.date) -> list[Run]:
         Run(3, "Y", label="No resort, skiing"),
         Run(4, "?", label="No resort, not sure"),
         Run(5, "N", label="No resort, not skiing"),
-        # Offset UNSAID is left out: friends and a meet-up, nothing from you.
+        # Offset UNSAID is left out: friends out, nothing from you.
         Run(7, "Y", "VERB", private=True, label="At a resort, private"),
         Run(8, "N", private=True, label="No resort, private"),
-        Run(9, "Y", "SAASF", note="First lift", label="Short note, meet-up"),
+        Run(9, "Y", "SAASF", note="First lift", label="Short note"),
         Run(10, "?", "GRIME", note=LONG_NOTE, label="Long note"),
         # Runs.
         Run(14, "YY?NYYY?YN", "VERB", label="Ten days in one resort, mixed skiing"),
@@ -160,14 +158,6 @@ def friend_runs() -> dict[str, list[Run]]:
             Run(26, "Y", "CRA"),
         ],
     }
-
-
-# (offset, resort code, organiser, others going)
-MEETUPS = [
-    (UNSAID, "SAASF", "Ben", ["Anna"]),
-    (9, "SAASF", "you", ["Anna", "Ben"]),
-    (17, "VERB", "Anna", ["you"]),
-]
 
 
 class Command(BaseCommand):
@@ -217,7 +207,7 @@ class Command(BaseCommand):
         if self.verbosity < 1:
             return
         unsaid = first + datetime.timedelta(days=UNSAID)
-        lines = [(unsaid, f"{unsaid:%a %d %b}", "Unsaid, friends and a meet-up")]
+        lines = [(unsaid, f"{unsaid:%a %d %b}", "Unsaid, friends out")]
         for run in runs:
             days = run.days(first)
             span = f"{days[0]:%a %d %b}"
@@ -243,7 +233,7 @@ class Command(BaseCommand):
         runs: list[Run],
         resorts: dict[str, Resort],
     ) -> int:
-        """Write the people, the group, the meet-ups and every plan.
+        """Write the people, the group and every plan.
 
         Returns how many real accounts in Testers are members.
         """
@@ -259,19 +249,6 @@ class Command(BaseCommand):
             sync_tester(user, group)
             real += user.pk not in made_up
         # Start clean from today, so a re-run leaves no stray days behind.
-        PlanDay.objects.filter(user__in=people.values(), date__gte=first).delete()
-        MeetUp.objects.filter(group=group, date__gte=first).delete()
-        # Meet-ups first: joining one plans the day, which the runs then set.
-        for offset, code, organiser, going in MEETUPS:
-            meetup = propose_meetup(
-                group,
-                people[organiser],
-                first + datetime.timedelta(days=offset),
-                resorts[code],
-                start_time=datetime.time(9, 0),
-            )
-            for name in going:
-                join_meetup(meetup, people[name])
         PlanDay.objects.filter(user__in=people.values(), date__gte=first).delete()
         everyone = {"you": runs, **friend_runs()}
         for key, person_runs in everyone.items():

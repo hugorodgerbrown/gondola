@@ -1,13 +1,12 @@
-"""Tests for apps/groups/services/ (people, plans, memberships, board, suggestions)."""
+"""Tests for apps/groups/services/ (people, plans, memberships, board)."""
 
 import datetime
 
 import pytest
 
 from apps.groups.models import Membership, PlanDay
-from apps.groups.services import board, memberships, people, plans, suggestions
+from apps.groups.services import board, memberships, people, plans
 from apps.groups.services.memberships import MembershipError
-from tests.factories import UserFactory
 from tests.groups.conftest import Crew
 
 pytestmark = pytest.mark.django_db
@@ -200,32 +199,7 @@ def test_board_weeks(crew: Crew) -> None:
     assert result.end == datetime.date(2027, 1, 10)
 
 
-# --- suggestions --------------------------------------------------------------
-
-
-def test_suggestions_rank_by_people_then_moves(crew: Crew) -> None:
-    dana = UserFactory.create(display_name="Dana")
-    memberships.join_group(crew.group, dana)
-    plans.set_plan(crew.anna, crew.day, S.YES, resort=crew.verbier)
-    plans.set_plan(crew.ben, crew.day, S.YES, resort=crew.verbier)
-    plans.set_plan(dana, crew.day, S.YES, resort=crew.zermatt, is_private=True)
-    plans.set_plan(crew.sam, crew.day, S.YES, resort=crew.zermatt, is_private=True)
-    plans.set_plan(crew.outsider, crew.day, S.YES, resort=crew.zermatt)
-    result = suggestions.suggest_resorts(crew.group, crew.day, crew.sam)
-    assert [(s.resort, len(s.here), s.moves) for s in result] == [
-        (crew.verbier, 2, 1),
-        (crew.zermatt, 1, 2),
-    ]
-    assert result[0].names == "Anna and Ben"
-    assert result[1].here == [crew.sam]
-
-
-def test_suggestions_skip_friends_who_are_only_around(crew: Crew) -> None:
-    plans.set_plan(crew.anna, crew.day, S.YES, resort=crew.zermatt)
-    plans.set_plan(crew.ben, crew.day, S.NO, resort=crew.verbier)
-    plans.set_plan(crew.sam, crew.day, S.NOT_SURE, resort=crew.verbier)
-    result = suggestions.suggest_resorts(crew.group, crew.day, crew.sam)
-    assert [(s.resort, len(s.here)) for s in result] == [(crew.zermatt, 1)]
+# --- plans -------------------------------------------------------------------------
 
 
 def test_upcoming_plans_and_marks(crew: Crew) -> None:

@@ -9,7 +9,7 @@ element at a time (Next moves on), and most end on a real tap: ``tap`` is
 the control the person taps, which leads to the next page.
 
 ``target`` lists CSS selectors to spotlight; with several, the spotlight
-covers them all. ``{start}``, ``{meetup_day}`` and ``{resort}`` are filled
+covers them all. ``{start}`` and ``{resort}`` are filled
 in from the demo week, so a frame points at the demo's own days.
 """
 
@@ -49,7 +49,7 @@ class Chapter:
 WELCOME_TITLE = "Welcome to Gondola!"
 WELCOME = (
     "Gondola helps you and your friends see who's skiing "
-    "where this winter, and pick a place to meet. Let's take a quick look "
+    "where this winter, so meeting up is easy. Let's take a quick look "
     "round a demo group: it's made up, so tap anything. Nothing is saved."
 )
 
@@ -79,27 +79,22 @@ CHAPTERS: tuple[Chapter, ...] = (
             ),
             Frame(
                 "1.1",
-                "An amber dot means a meet-up is planned that day.",
-                ('.mday[data-date="{meetup_day}"] .mday__meetup',),
-            ),
-            Frame(
-                "1.2",
                 "Tap a resort to light up the days your friends will be there.",
                 ("nav.month-resorts",),
             ),
             Frame(
-                "1.3",
+                "1.2",
                 "Tap and hold a day to start selecting, then tap more days. Plan "
                 "sets them all at once.",
                 (".month",),
             ),
             Frame(
-                "1.4",
+                "1.3",
                 "Tap a day to see it here: your plans, and where each friend will be.",
                 ("#day-panel",),
             ),
             Frame(
-                "1.5",
+                "1.4",
                 "Add plans tells your groups where you'll be.",
                 (PLAN_DAY,),
                 tap=PLAN_DAY,
@@ -199,81 +194,46 @@ CHAPTERS: tuple[Chapter, ...] = (
             ),
             Frame(
                 "4.2",
-                "A black box is a meet-up. Tap it for the time and meeting point.",
-                ("a.board__meetup--set",),
-            ),
-            Frame(
-                "4.3",
-                "Tap + to propose a meet-up that day.",
-                ("a.board__meetup--add",),
-                tap="a.board__meetup--add",
+                "Tap Map to see where your friends are on any day.",
+                ('.tabbar a[href$="/map/"]',),
+                tap='.tabbar a[href$="/map/"]',
             ),
         ),
     ),
     Chapter(
         5,
-        "A meet-up",
-        ("meetup_new",),
-        (
-            Frame(
-                "5.0",
-                "Proposing a meet-up. Gondola suggests where to meet, based on "
-                "where everyone already is. Add a time and a meeting point if "
-                "you like, then share it.",
-            ),
-            Frame(
-                "5.1",
-                "The best fit comes first: most friends already there, fewest moves.",
-                (".choices .choice:first-child",),
-            ),
-            Frame(
-                "5.2",
-                "Prefer somewhere else? Pick any resort.",
-                ("#resort-search",),
-            ),
-            Frame(
-                "5.3",
-                "Both optional. Tap the map to drop a meeting point.",
-                ("[data-tour=meetup-time]", "[data-tour=meetup-propose]"),
-                tap="[data-tour=meetup-propose]",
-                note=NOTHING_SAVED.format(action="Propose"),
-            ),
-        ),
-    ),
-    Chapter(
-        6,
         "The map",
         ("map",),
         (
             Frame(
-                "6.0",
+                "5.0",
                 "The map shows where your friends are skiing, on any day you "
                 "pick. It's where you'll land each time you open Gondola.",
             ),
             Frame(
-                "6.1",
+                "5.1",
                 "Change the day with the arrows, or tap the date for a calendar.",
                 (".map-bar nav.float",),
             ),
             Frame(
-                "6.2",
+                "5.2",
                 "The number on a resort is how many friends are there that day.",
                 ('.pin[data-resort="{resort}"] .pin__dot',),
             ),
             Frame(
-                "6.3",
+                "5.3",
                 "Show only the resorts on your pass.",
                 ("nav.chips",),
             ),
             Frame(
-                "6.4",
+                "5.4",
                 "Tap a resort to see who's there.",
                 ('.pin[data-resort="{resort}"]',),
                 tap='.pin[data-resort="{resort}"]',
             ),
             Frame(
-                "6.5",
-                "Say you'll be here, or propose a meet-up, without leaving the map.",
+                "5.5",
+                "Say you'll be here without leaving the map.",
                 ("#sheet [data-tour=resort-actions]",),
                 finish=True,
             ),
@@ -286,7 +246,6 @@ def _fill(text: str, week: DemoWeek) -> str:
     """Fill a selector's placeholders from the demo week."""
     return text.format(
         start=week.start.isoformat(),
-        meetup_day=week.meetup_day.isoformat(),
         resort=week.resort.uuid,
     )
 

@@ -21,9 +21,8 @@
   --accent-light: #bcd0fa;
   /* Magic Pass resorts on the map: a violet square instead of a round pin. */
   --pass-magic: #7c3aed;
-  /* A meet-up on My days: an amber dot, apart from your own (blue) days. */
-  --meetup: #d97706;
-  --meetup-soft: rgba(217, 119, 6, 0.16);
+  /* The demo bar's amber, apart from your own (blue) days. */
+  --amber: #d97706;
   --danger: #b42318;
   --ok: #067647;
   --map-ground: #e9e7e1;
@@ -817,33 +816,6 @@ fieldset.field {
   height: 9px;
 }
 
-.board__meetup {
-  display: inline-grid;
-  place-items: center;
-  width: 32px;
-  height: 32px;
-  margin: 6px 0;
-  border-radius: var(--radius-control);
-  text-decoration: none;
-}
-
-.board__meetup--set {
-  background: var(--text-1);
-  color: #ffffff !important;
-  font: 500 9px var(--font-mono);
-  letter-spacing: 0.04em;
-}
-
-.board__meetup--add {
-  border: 1px dashed var(--rule-strong);
-  color: var(--text-2);
-}
-
-.board__meetup--add svg {
-  width: 16px;
-  height: 16px;
-}
-
 .legend {
   margin: 0;
   display: grid;
@@ -1352,31 +1324,12 @@ fieldset.field {
   color: var(--text-1);
 }
 
-.pin--meetup .pin__dot {
-  border-color: var(--meetup);
-  box-shadow: 0 0 0 4px var(--meetup-soft);
-}
-
 .pin--selected .pin__dot {
   box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.3);
 }
 
 .pin--mine .pin__dot {
   background: var(--text-1);
-}
-
-.pin-picker {
-  position: relative;
-  height: 220px;
-  border-radius: var(--radius-card);
-  overflow: hidden;
-  background: var(--map-ground);
-  border: 1px solid var(--rule);
-}
-
-.meeting-pin {
-  width: 28px;
-  height: 36px;
 }
 
 .friend-line {
@@ -1499,9 +1452,8 @@ a.mday:focus-visible {
   opacity: 0.4;
 }
 
-/* Two rows: the date and the lock on top, the friends and the meet-up below.
-   The lock and the dot keep to the right even when the row has nothing on
-   its left. */
+/* Two rows: the date and the lock on top, the friends below. The lock keeps
+   to the right. */
 .mday__row {
   display: flex;
   align-items: center;
@@ -1514,8 +1466,7 @@ a.mday:focus-visible {
   height: 10px;
 }
 
-.mday__row > svg,
-.mday__row > .mday__meetup {
+.mday__row > svg {
   margin-left: auto;
 }
 
@@ -1562,15 +1513,6 @@ a.mday:focus-visible {
 
 .mday--skiing .mday__friends {
   color: #fff;
-}
-
-.mday__meetup {
-  display: inline-block;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--meetup);
-  box-shadow: 0 0 0 1.5px var(--card);
 }
 
 .month-key {
@@ -1754,14 +1696,6 @@ a.mday:focus-visible {
   font-weight: 500;
 }
 
-.day-panel__meetup {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  align-self: flex-start;
-  font-size: 14px;
-}
-
 /* Every day gets an empty tick circle; a picked day fills it. */
 .month--selecting a.mday::after {
   content: "";
@@ -1914,7 +1848,7 @@ a.mday.mday--skiing.mday--picked:hover {
   justify-content: center;
   gap: 12px;
   padding: 0 16px;
-  background: var(--meetup);
+  background: var(--amber);
   /* Dark on amber: white would miss AA contrast at this size. */
   color: var(--text-1);
   font-size: 13px;

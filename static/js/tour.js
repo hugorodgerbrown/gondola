@@ -15,7 +15,7 @@
  * chip tapped in chapter 1) resumes where it was.
  *
  * Saving is stopped on the server (apps/tour/middleware.py), not here.
- * After the tour, the hand-off card (chapter 7) only needs closing.
+ * After the tour, the hand-off card (chapter 6) only needs closing.
  */
 (function () {
   "use strict";

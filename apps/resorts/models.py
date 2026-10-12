@@ -2,8 +2,8 @@
 apps/resorts/models.py — Resorts and the season passes they're sold on.
 
 A ``Pass`` is reference data that groups resorts: it filters the map and
-the resort picker, and never gates a plan. Plans and meet-ups can point at
-any resort. Touring spots are deliberately not resorts here and are never
+the resort picker, and never gates a plan. A plan can point at any
+resort. Touring spots are deliberately not resorts here and are never
 imported.
 
 Rows come from ``apps/resorts/data/`` via the ``import_resorts`` command.
@@ -53,7 +53,7 @@ class ResortQuerySet(models.QuerySet["Resort"]):
 
 
 class Resort(BaseModel):
-    """A ski resort friends can plan a day at or meet up in."""
+    """A ski resort friends can plan a day at."""
 
     name = models.CharField(max_length=100)
     code = models.CharField(

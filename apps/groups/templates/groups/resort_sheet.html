@@ -2,10 +2,6 @@
   {% include "includes/sheet_header.html" with eyebrow=info.day|date:"D j M" title=resort.name %}
   <p class="small muted">{% if info.friend_count %}{{ info.friend_count }} friend{{ info.friend_count|pluralize }} here{% else %}No friends here yet{% endif %}{% if resort.canton %} · {{ resort.canton }}{% endif %}{% for pass in resort.passes.all %} · {{ pass.name }}{% endfor %}</p>
 
-  {% for card in info.meetups %}
-    {% include "groups/partials/meetup_card.html" %}
-  {% endfor %}
-
   {% for entry in info.groups %}
     <section>
       <span class="eyebrow">{{ entry.group.name }}</span>
@@ -32,9 +28,6 @@
           <input type="hidden" name="date" value="{{ info.day|date:'Y-m-d' }}">
           <button type="submit" class="button button--block">I'll be here</button>
         </form>
-      {% endif %}
-      {% if groups %}
-        <a class="button button--secondary button--block" href="{% url 'planning:meetup_choose_group' %}?date={{ info.day|date:'Y-m-d' }}&resort={{ resort.uuid }}&from=map">Propose a meet-up here</a>
       {% endif %}
     </div>
   {% endif %}

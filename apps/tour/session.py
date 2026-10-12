@@ -5,7 +5,7 @@ The session names the person's demo group and where they were headed
 before the tour (``next``). ``apps.tour.middleware`` reads it on every
 request. Two more keys carry the tour's edges: ``OFFER_KEY`` holds back
 the offer for someone who signed up through an invite link until they've
-joined, and ``HANDOFF_KEY`` carries chapter 7's hand-off to the real
+joined, and ``HANDOFF_KEY`` carries chapter 6's hand-off to the real
 calendar, shown once.
 """
 
@@ -87,7 +87,7 @@ def finish(request: HttpRequest, user: User) -> GroupState:
 
 
 def take_handoff(request: HttpRequest) -> dict[str, str] | None:
-    """Return chapter 7's hand-off and forget it: it shows once."""
+    """Return chapter 6's hand-off and forget it: it shows once."""
     handoff = request.session.pop(HANDOFF_KEY, None)
     return handoff if isinstance(handoff, dict) else None
 

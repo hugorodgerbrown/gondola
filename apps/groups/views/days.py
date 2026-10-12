@@ -4,16 +4,16 @@ apps/groups/views/days.py — the calendar, and the sheet for one day.
 The calendar is about you: a month, this month by default; arrows step a
 month (``?from=``, any day in it) as far as plans can be made. A day shows
 whether you're skiing, how many friends will be where you are, a lock if
-you keep it private and a dot for a meet-up. Chips above it highlight one
+you keep it private. Chips above it highlight one
 resort (``?highlight=``): the days anyone is there stand out, and the
 count is the friends there instead.
 
 Tapping a day selects it (``?day=``) and fills the panel below the month:
 where you are, the friends with you (the day's number, so the highlighted
-resort's while one is picked), where the others are, any meet-up, and Add
-plans or Edit plans, which opens a sheet with two separate answers: where you'll
-be (the resorts friends picked first, then a search over every resort, or
-no resort) and whether you're skiing (yes, not sure yet, no); then an
+resort's while one is picked), where the others are, and Add plans or
+Edit plans, which opens a sheet with two separate answers: where you'll be
+(the resorts friends picked first, then a search over every resort, or no
+resort) and whether you're skiing (yes, not sure yet, no); then an
 optional note, and a switch to keep the day private.
 
 Pressing and holding a day starts selecting: tap more days (or drag
@@ -43,7 +43,6 @@ from apps.resorts.search import search_resorts
 from ..forms import KEEP_RESORT, DayForm
 from ..models import Group, PlanDay
 from ..services.highlight import resorts_in_play
-from ..services.meetups import meetups_for
 from ..services.month import (
     Month,
     MonthDay,
@@ -293,8 +292,6 @@ def _sheet(
             "selected": selected,
             "keep_resort": KEEP_RESORT,
             "groups_count": Group.objects.for_user(user).count(),
-            # One day's sheet lists that day's meet-ups in your groups.
-            "meetups": meetups_for(user, days[0]) if len(days) == 1 else [],
             "back": _request_back(request),
         },
     )

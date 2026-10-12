@@ -19,8 +19,8 @@ from apps.tour.script import (
 DOC = (settings.BASE_DIR / "docs" / "onboarding-tour.md").read_text()
 
 
-def test_the_tour_has_thirty_three_frames() -> None:
-    assert frame_count() == 33
+def test_the_tour_has_twenty_seven_frames() -> None:
+    assert frame_count() == 27
 
 
 @pytest.mark.parametrize(
@@ -45,7 +45,7 @@ def test_every_chapter_opens_with_an_intro_and_numbers_its_frames() -> None:
 
 def test_only_the_last_frame_finishes() -> None:
     finishing = [f.id for c in CHAPTERS for f in c.frames if f.finish]
-    assert finishing == ["6.5"]
+    assert finishing == ["5.5"]
 
 
 @pytest.mark.django_db

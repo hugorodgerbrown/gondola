@@ -1,7 +1,4 @@
 {% include "includes/sheet_header.html" with eyebrow=eyebrow title=title %}
-{% for card in meetups %}
-  {% include "groups/partials/meetup_card.html" %}
-{% endfor %}
 <form method="post" action="{{ form_url }}" hx-post="{{ form_url }}" hx-target="#sheet-body" class="stack" data-day-form>
   {% for name, value in back.items %}<input type="hidden" name="{{ name }}" value="{{ value }}">{% endfor %}
   {% csrf_token %}

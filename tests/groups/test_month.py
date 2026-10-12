@@ -6,7 +6,7 @@ import pytest
 from freezegun import freeze_time
 
 from apps.groups.models import PlanDay
-from apps.groups.services import meetups, month, plans
+from apps.groups.services import month, plans
 from apps.groups.services.memberships import join_group
 from tests.factories import UserFactory
 from tests.groups.conftest import Crew
@@ -55,17 +55,14 @@ def test_month_day_shows_plan_and_group_activity(crew: Crew) -> None:
     join_group(crew.group, dana)
     plans.set_plan(dana, day, S.YES, resort=crew.verbier, is_private=True)
     plans.set_plan(crew.outsider, day, S.YES, resort=crew.verbier)
-    meetups.propose_meetup(crew.group, crew.anna, day, crew.verbier)
 
     entry = days_of(month.build_month(crew.sam, day))[day]
     assert entry.plan is not None and entry.plan.resort == crew.verbier
     assert entry.friends == ["Anna", "Ben"]
     assert entry.friends_out == 2
     assert entry.with_me == 1
-    assert entry.meetup is not None and entry.meetup.resort == crew.verbier
     assert entry.summary == (
-        "Sunday 20 December, Verbier, friends at resorts: Anna and Ben, 1 with you, "
-        "meet-up at Verbier"
+        "Sunday 20 December, Verbier, friends at resorts: Anna and Ben, 1 with you"
     )
 
 

@@ -4,8 +4,7 @@ apps/groups/services/board.py — The who's-where board for one group.
 People down the side, seven days across, a short resort code in each cell,
 quieter when that person is around but not skiing.
 The viewer's own row comes first and shows their private days with a lock;
-everyone else's private days look unplanned. The last row holds the
-group's meet-up for each day, if there is one.
+everyone else's private days look unplanned.
 """
 
 from __future__ import annotations
@@ -15,7 +14,7 @@ from dataclasses import dataclass
 
 from apps.accounts.models import User
 
-from ..models import Group, MeetUp, PlanDay
+from ..models import Group, PlanDay
 from .people import members_of
 from .plans import date_range, today
 
@@ -43,11 +42,10 @@ class BoardRow:
 
 @dataclass(frozen=True)
 class BoardDay:
-    """One column: a date and the group's meet-up that day, if any."""
+    """One column: a date, and whether it is today."""
 
     date: datetime.date
     is_today: bool
-    meetup: MeetUp | None
 
 
 @dataclass(frozen=True)
@@ -113,13 +111,6 @@ def build_board(
             "resort"
         )
     }
-    meetups: dict[datetime.date, MeetUp] = {}
-    for meetup in (
-        MeetUp.objects.filter(group=group, date__in=days)
-        .select_related("resort")
-        .order_by("created_at")
-    ):
-        meetups.setdefault(meetup.date, meetup)
     ordered = sorted(people, key=lambda u: u.pk != viewer.pk)
     rows = [
         BoardRow(
@@ -136,6 +127,6 @@ def build_board(
     return Board(
         group=group,
         start=start,
-        days=[BoardDay(date=d, is_today=d == now, meetup=meetups.get(d)) for d in days],
+        days=[BoardDay(date=d, is_today=d == now) for d in days],
         rows=rows,
     )

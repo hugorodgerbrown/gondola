@@ -1,14 +1,13 @@
 """
-apps/groups/forms.py — Forms for days, groups and meet-ups.
+apps/groups/forms.py — Forms for days and groups.
 
 Resorts arrive as their public uuid (never the database id), from radio
-buttons in the day sheet and the meet-up form. The day sheet's resort can
-also be empty (not at a resort) or "keep".
+buttons in the day sheet. The resort can also be empty (not at a resort)
+or "keep".
 """
 
 from __future__ import annotations
 
-import datetime
 import uuid
 from typing import Any
 
@@ -17,7 +16,7 @@ from django import forms
 from apps.resorts.models import Resort
 
 from .models import Group, PlanDay
-from .services.plans import KEEP, Keep, today
+from .services.plans import KEEP, Keep
 
 
 class ResortField(forms.UUIDField):
@@ -98,37 +97,3 @@ class GroupForm(forms.ModelForm):
                 attrs={"class": "input", "placeholder": "e.g. Thursday crew"}
             )
         }
-
-
-class MeetUpForm(forms.Form):
-    """Propose a meet-up: a day and a resort, with an optional time and pin."""
-
-    date = forms.DateField(
-        widget=forms.DateInput(attrs={"type": "date", "class": "input"})
-    )
-    resort = ResortField()
-    start_time = forms.TimeField(
-        required=False,
-        widget=forms.TimeInput(attrs={"type": "time", "class": "input"}),
-    )
-    meeting_latitude = forms.FloatField(
-        required=False, min_value=-90, max_value=90, widget=forms.HiddenInput
-    )
-    meeting_longitude = forms.FloatField(
-        required=False, min_value=-180, max_value=180, widget=forms.HiddenInput
-    )
-
-    def clean_date(self) -> datetime.date:
-        """Refuse a day in the past."""
-        day: datetime.date = self.cleaned_data["date"]
-        if day < today():
-            raise forms.ValidationError("Pick today or a later day.")
-        return day
-
-    def clean(self) -> dict[str, Any]:
-        """Keep the meeting pin whole: both coordinates or neither."""
-        data = super().clean() or {}
-        lat, lng = data.get("meeting_latitude"), data.get("meeting_longitude")
-        if (lat is None) != (lng is None):
-            data["meeting_latitude"] = data["meeting_longitude"] = None
-        return data

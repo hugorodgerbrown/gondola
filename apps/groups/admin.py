@@ -1,8 +1,8 @@
-"""apps/groups/admin.py — Admin for groups, plan days and meet-ups."""
+"""apps/groups/admin.py — Admin for groups and plan days."""
 
 from django.contrib import admin
 
-from .models import Group, MeetUp, MeetUpParticipant, Membership, PlanDay
+from .models import Group, Membership, PlanDay
 
 
 class MembershipInline(admin.TabularInline):
@@ -51,34 +51,4 @@ class PlanDayAdmin(admin.ModelAdmin):
     search_fields = ["user__email", "resort__name"]
     date_hierarchy = "date"
     autocomplete_fields = ["user", "resort"]
-    readonly_fields = ["uuid", "created_at", "updated_at"]
-
-
-class MeetUpParticipantInline(admin.TabularInline):
-    """Participants shown on their meet-up's page."""
-
-    model = MeetUpParticipant
-    extra = 0
-    autocomplete_fields = ["user"]
-
-
-@admin.register(MeetUp)
-class MeetUpAdmin(admin.ModelAdmin):
-    """Admin for ``MeetUp``."""
-
-    list_display = ["resort", "date", "group", "organiser", "start_time"]
-    search_fields = ["group__name", "resort__name", "organiser__email"]
-    date_hierarchy = "date"
-    autocomplete_fields = ["group", "organiser", "resort"]
-    readonly_fields = ["uuid", "share_token", "created_at", "updated_at"]
-    inlines = [MeetUpParticipantInline]
-
-
-@admin.register(MeetUpParticipant)
-class MeetUpParticipantAdmin(admin.ModelAdmin):
-    """Admin for ``MeetUpParticipant``."""
-
-    list_display = ["user", "meetup", "created_at"]
-    search_fields = ["user__email"]
-    autocomplete_fields = ["user", "meetup"]
     readonly_fields = ["uuid", "created_at", "updated_at"]

@@ -11,7 +11,7 @@ from django.urls import reverse
 from django.utils import timezone
 
 from apps.accounts.models import User
-from apps.groups.models import Group, MeetUp, PlanDay
+from apps.groups.models import Group, PlanDay
 from apps.groups.services.memberships import create_group, join_group
 from apps.groups.services.plans import today
 from apps.resorts.models import Resort
@@ -160,18 +160,6 @@ def test_saving_a_day_moves_on_to_the_group(touring: Client, tourist: User) -> N
     plain = touring.post(url, {"skiing": "skiing", "resort": ""})
     assert plain["Location"] == group_url
     assert not PlanDay.objects.filter(user=tourist).exists()
-
-
-def test_proposing_moves_on_to_the_map(
-    touring: Client, tourist: User, resorts: dict[str, Resort]
-) -> None:
-    group = _demo(tourist)
-    url = reverse("planning:meetup_new", kwargs={"group_uuid": group.uuid})
-    response = touring.post(
-        url, {"date": today().isoformat(), "resort": resorts["VERB"].uuid}
-    )
-    assert response["Location"] == f"{reverse('planning:map')}?date={today()}"
-    assert MeetUp.objects.filter(group=group).count() == 1  # only the demo's own
 
 
 def test_any_other_post_stays_put_and_says_so(
@@ -360,9 +348,9 @@ def test_tour_events_are_counted(
 
 
 @pytest.mark.usefixtures("fivebar")
-def test_real_days_and_meetups_are_counted(client: Client, tourist: User) -> None:
+def test_real_days_are_counted(client: Client, tourist: User) -> None:
     resort = ResortFactory.create()
-    group = create_group(tourist, "Crew")
+    create_group(tourist, "Crew")
     client.force_login(tourist)
     day = today() + datetime.timedelta(days=1)
     client.post(
@@ -373,12 +361,9 @@ def test_real_days_and_meetups_are_counted(client: Client, tourist: User) -> Non
         reverse("planning:plan_here", kwargs={"resort_uuid": resort.uuid}),
         {"date": day.isoformat()},
     )
-    url = reverse("planning:meetup_new", kwargs={"group_uuid": group.uuid})
-    client.post(f"{url}?from=board", {"date": day.isoformat(), "resort": resort.uuid})
     assert _events(client) == [
         ["Day planned", {"first": True, "after_tour": False}],
         ["Day planned", {"first": False, "after_tour": False}],
-        ["Meet-up proposed", {"from": "board"}],
     ]
 
 

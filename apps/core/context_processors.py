@@ -19,8 +19,6 @@ TABS: dict[str, str] = {
     "group_list": "groups",
     "group_detail": "groups",
     "board": "groups",
-    "meetup_new": "groups",
-    "meetup": "groups",
 }
 
 

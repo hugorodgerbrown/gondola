@@ -3,7 +3,7 @@
 from django.urls import path, register_converter
 
 from .converters import DateConverter
-from .views import board, days, groups, meetups, resort_map
+from .views import board, days, groups, resort_map
 
 register_converter(DateConverter, "date")
 
@@ -42,15 +42,4 @@ urlpatterns = [
     ),
     path("i/<str:token>/", groups.invite, name="invite"),
     path("i/<str:token>/join/", groups.join, name="join"),
-    # C · meet-ups
-    path("meetups/new/", meetups.meetup_choose_group, name="meetup_choose_group"),
-    path(
-        "groups/<uuid:group_uuid>/meetups/new/",
-        meetups.meetup_new,
-        name="meetup_new",
-    ),
-    path("m/<str:token>/", meetups.meetup, name="meetup"),
-    path("m/<str:token>/join/", meetups.meetup_join, name="meetup_join"),
-    path("m/<str:token>/leave/", meetups.meetup_leave, name="meetup_leave"),
-    path("m/<str:token>/cancel/", meetups.meetup_cancel, name="meetup_cancel"),
 ]

@@ -11,7 +11,7 @@ from freezegun import freeze_time
 
 from apps.groups.management.commands.seed_demo import demo_start
 from apps.groups.management.commands.seed_ui_test import UNSAID
-from apps.groups.models import Group, MeetUp, PlanDay
+from apps.groups.models import Group, PlanDay
 from apps.groups.services import plans
 from apps.groups.services.people import is_member
 from apps.groups.services.testers import get_testers_group
@@ -99,7 +99,6 @@ def test_seed_demo_dry_run_then_commit_twice() -> None:
     group = Group.objects.get()
     assert group.owner.email == "me@example.com"
     assert group.memberships.count() == 6
-    assert MeetUp.objects.get().participants.count() == 3
     assert PlanDay.objects.filter(skiing=S.NOT_SURE).exists()
     assert PlanDay.objects.filter(is_private=True).count() == 1
 
@@ -112,7 +111,6 @@ def test_seed_demo_lands_in_january() -> None:
     days = sorted({plan.date for plan in PlanDay.objects.all()})
     assert days[0] == datetime.date(2027, 1, 9)  # a Saturday
     assert days[-1] <= datetime.date(2027, 1, 15)
-    assert MeetUp.objects.get().date == datetime.date(2027, 1, 14)
     assert "Sat 09 Jan 2027" in out.getvalue()
     assert "?start=2027-01-09" in out.getvalue()
 
@@ -147,7 +145,7 @@ def test_seed_ui_test_dry_run_prints_the_cases() -> None:
     call_command("seed_ui_test", stdout=out)
     assert "Dry run" in out.getvalue()
     assert "No resort, not sure" in out.getvalue()
-    assert "Unsaid, friends and a meet-up" in out.getvalue()
+    assert "Unsaid, friends out" in out.getvalue()
     assert not Group.objects.exists()
     quiet = StringIO()
     call_command("seed_ui_test", "-v", "0", stdout=quiet)
@@ -169,7 +167,6 @@ def test_seed_ui_test_covers_every_case_and_reruns() -> None:
     assert group.memberships.count() == 6
     assert is_member(group, me)
     assert get_testers_group().user_set.count() == 6
-    assert MeetUp.objects.filter(group=group).count() == 3
     mine = PlanDay.objects.filter(user=tester)
     pairs = {(plan.resort_id is not None, plan.skiing) for plan in mine}
     assert pairs == {(at, s) for at in (True, False) for s in S.values}
@@ -178,11 +175,10 @@ def test_seed_ui_test_covers_every_case_and_reruns() -> None:
     assert mine.filter(is_private=True, resort__isnull=True).exists()
     assert mine.filter(is_private=True, resort__isnull=False).exists()
     assert mine.exclude(note="").count() == 2
-    # Nothing from the tester on the unsaid day, but friends and a meet-up.
+    # Nothing from the tester on the unsaid day, but friends out.
     unsaid = plans.today() + datetime.timedelta(days=UNSAID)
     assert not mine.filter(date=unsaid).exists()
     assert PlanDay.objects.filter(date=unsaid).exists()
-    assert MeetUp.objects.filter(group=group, date=unsaid).exists()
     # Some run crosses a month end.
     months = {
         (plan.date.year, plan.date.month)

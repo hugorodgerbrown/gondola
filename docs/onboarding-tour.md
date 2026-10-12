@@ -10,7 +10,7 @@ with every frame drawn on the real screens, is the
 | Question | Decision |
 |---|---|
 | What kind of tour | Spotlights on the real screens, inside a demo group |
-| Can the demo save anything | No. Look and tap only: Save and Propose move the tour on and write nothing |
+| Can the demo save anything | No. Look and tap only: Save moves the tour on and writes nothing |
 | Who sees it | New accounts only, offered once after the name and passkey screens |
 | Organisers | The same demo; the hand-off sends them to Groups to start one |
 | Take it again | Yes, from the account page |
@@ -22,8 +22,8 @@ with every frame drawn on the real screens, is the
   for that person alone, with the made-up friends and their days set around
   today. Nobody touring sees anyone else.
 - **Nothing is saved.** Plan days belong to a person, not a group, so a
-  day saved in the demo would show in their real groups too. Save and
-  Propose are intercepted.
+  day saved in the demo would show in their real groups too. Save is
+  intercepted.
 - **Always clearly a demo.** An amber "Demo · nothing is saved · End tour"
   bar sits just above the tab bar on every tour screen. While someone
   tours, their demo copy is the only group every screen shows, the map and
@@ -34,7 +34,7 @@ with every frame drawn on the real screens, is the
   closes the tab has theirs deleted on their next page load, since the app
   runs no scheduled jobs.
 - **One script for everyone.** The demo is always busy, so only the
-  hand-off in chapter 7 depends on the person's real groups, read across
+  hand-off in chapter 6 depends on the person's real groups, read across
   all of them: **busy** when anyone else in any of them has said something
   about a day from today on, **quiet** when they're in a group but nobody
   else has yet, and **none** when they're in no group. A quiet group adds a
@@ -49,13 +49,13 @@ on the control that leads to the next page.
 
 ## Chapter 0: Welcome
 
-**Page intro:** Welcome to Gondola! Gondola helps you and your friends see who's skiing where this winter, and pick a place to meet. Let's take a quick look round a demo group.
+**Page intro:** Welcome to Gondola! Gondola helps you and your friends see who's skiing where this winter, so meeting up is easy. Let's take a quick look round a demo group.
 
 *Why:* Warm, short, and clear that this is a demo. The person has just signed in for the first time, so the first words are a greeting, not an instruction.
 
 | Frame | Element | Advances on | Coach mark |
 |---|---|---|---|
-| 0 | Welcome | Show me round | Welcome to Gondola! Gondola helps you and your friends see who's skiing where this winter, and pick a place to meet. Let's take a quick look round a demo group: it's made up, so tap anything. Nothing is saved. |
+| 0 | Welcome | Show me round | Welcome to Gondola! Gondola helps you and your friends see who's skiing where this winter, so meeting up is easy. Let's take a quick look round a demo group: it's made up, so tap anything. Nothing is saved. |
 
 ## Chapter 1: Your calendar
 
@@ -66,11 +66,10 @@ on the control that leads to the next page.
 | Frame | Element | Advances on | Coach mark |
 |---|---|---|---|
 | 1.0 | Page intro | Next | This is your calendar. Blue days are the days you're skiing, and the number on a day is how many friends will be in the same place. |
-| 1.1 | Meet-up dot | Next | An amber dot means a meet-up is planned that day. |
-| 1.2 | Resort chips | Next | Tap a resort to light up the days your friends will be there. |
-| 1.3 | Several days | Next | Tap and hold a day to start selecting, then tap more days. Plan sets them all at once. |
-| 1.4 | Day panel | Next | Tap a day to see it here: your plans, and where each friend will be. |
-| 1.5 | Add plans | Tap Add plans | Add plans tells your groups where you'll be. |
+| 1.1 | Resort chips | Next | Tap a resort to light up the days your friends will be there. |
+| 1.2 | Several days | Next | Tap and hold a day to start selecting, then tap more days. Plan sets them all at once. |
+| 1.3 | Day panel | Next | Tap a day to see it here: your plans, and where each friend will be. |
+| 1.4 | Add plans | Tap Add plans | Add plans tells your groups where you'll be. |
 
 ## Chapter 2: A single day
 
@@ -111,23 +110,9 @@ on the control that leads to the next page.
 |---|---|---|---|
 | 4.0 | Page intro | Next | The group's week at a glance. Everyone side by side, so you can see who overlaps where. |
 | 4.1 | Resort codes | Next | Each code is a resort: VERB is Verbier. ? is not sure, – is not skiing, blank hasn't said. |
-| 4.2 | Meet-up | Next | A black box is a meet-up. Tap it for the time and meeting point. |
-| 4.3 | Propose | Tap + | Tap + to propose a meet-up that day. |
+| 4.2 | Map tab | Tap Map | Tap Map to see where your friends are on any day. |
 
-## Chapter 5: A meet-up
-
-**Page intro:** Proposing a meet-up. Gondola suggests where to meet, based on where everyone already is. Add a time and a meeting point if you like, then share it.
-
-*Why:* The ranked suggestion is the part nobody would guess, and the optional time and pin match the product rule that only the resort is required.
-
-| Frame | Element | Advances on | Coach mark |
-|---|---|---|---|
-| 5.0 | Page intro | Next | Proposing a meet-up. Gondola suggests where to meet, based on where everyone already is. Add a time and a meeting point if you like, then share it. |
-| 5.1 | Suggestion | Next | The best fit comes first: most friends already there, fewest moves. |
-| 5.2 | Another resort | Next | Prefer somewhere else? Pick any resort. |
-| 5.3 | Time and pin | Tap Propose | Both optional. Tap the map to drop a meeting point. |
-
-## Chapter 6: The map
+## Chapter 5: The map
 
 **Page intro:** The map shows where your friends are skiing, on any day you pick. It's where you'll land each time you open Gondola.
 
@@ -135,14 +120,14 @@ on the control that leads to the next page.
 
 | Frame | Element | Advances on | Coach mark |
 |---|---|---|---|
-| 6.0 | Page intro | Next | The map shows where your friends are skiing. On any day you pick. It's where you'll land each time you open Gondola. |
-| 6.1 | Day | Next | Change the day with the arrows, or tap the date for a calendar. |
-| 6.2 | Friends | Next | The number on a resort is how many friends are there that day. |
-| 6.3 | Pass | Next | Show only the resorts on your pass. |
-| 6.4 | Open a resort | Tap Verbier | Tap a resort to see who's there. |
-| 6.5 | Resort sheet | Next | Say you'll be here, or propose a meet-up, without leaving the map. |
+| 5.0 | Page intro | Next | The map shows where your friends are skiing. On any day you pick. It's where you'll land each time you open Gondola. |
+| 5.1 | Day | Next | Change the day with the arrows, or tap the date for a calendar. |
+| 5.2 | Friends | Next | The number on a resort is how many friends are there that day. |
+| 5.3 | Pass | Next | Show only the resorts on your pass. |
+| 5.4 | Open a resort | Tap Verbier | Tap a resort to see who's there. |
+| 5.5 | Resort sheet | Next | Say you'll be here without leaving the map. |
 
-## Chapter 7: Over to you
+## Chapter 6: Over to you
 
 **Page intro:** That's the tour. The demo group is gone. This is your real calendar: tap a day you might ski, then Add plans, and your group will see it.
 
@@ -150,7 +135,7 @@ on the control that leads to the next page.
 
 | Frame | Element | Advances on | Coach mark |
 |---|---|---|---|
-| 7.0 | Hand-off | Let's go | That's the tour. The demo group is gone. This is your real calendar: tap a day you might ski, then Add plans, and your group will see it. The evening before you ski, we'll email you who's where. |
+| 6.0 | Hand-off | Let's go | That's the tour. The demo group is gone. This is your real calendar: tap a day you might ski, then Add plans, and your group will see it. The evening before you ski, we'll email you who's where. |
 
 ## Measuring it: fivebar goals
 
@@ -164,11 +149,10 @@ it. Add that site in fivebar for the counts to show.
 | `Tour offered` | The welcome (chapter 0) is shown | none |
 | `Tour skipped` | Not now is tapped | none |
 | `Tour started` | Show me round is tapped | `replay`: true / false |
-| `Tour ended` | End tour is tapped | `chapter`: 1 to 6 |
-| `Tour finished` | Chapter 7 is reached | `group`: busy / quiet / none |
+| `Tour ended` | End tour is tapped | `chapter`: 1 to 5 |
+| `Tour finished` | Chapter 6 is reached | `group`: busy / quiet / none |
 | `Day planned` | A real day is saved | `first`, `after_tour`: true / false |
 | `Invite shared` | The invite link is shared | `from`: tour / group |
-| `Meet-up proposed` | A real meet-up is saved | `from`: board / map |
 
 The number to watch is first days planned after the tour against those
 planned without it. `Tour offered` counts everyone who saw the welcome,
@@ -181,7 +165,7 @@ their first day before it, so they don't count in either.
 ## Left out on purpose
 
 Passkeys (asked just before the tour), notes beyond one line, reset link,
-leave and delete, and the shared meet-up page, which explains itself.
+leave and delete.
 
 ## How it's built
 
@@ -198,7 +182,7 @@ leave and delete, and the shared meet-up page, which explains itself.
   change of its own. Outside the tour it never returns a demo group, which
   keeps them off the evening email too. Any form posted to the planning
   screens is answered by the middleware, not its view: Save goes to the
-  group, Propose to the map, anything else stays put and says nothing was
+  group, anything else stays put and says nothing was
   saved. A copy older than an hour, or one left by a closed tab, is deleted
   on the next page load.
 - **`static/js/tour.js`** plays the frames over the real page: four shades
@@ -207,5 +191,4 @@ leave and delete, and the shared meet-up page, which explains itself.
 - **Offered** after the passkey screen for a new account, or after joining
   for someone who signed up through an invite link; again from the account
   page. Chapter 0 is `/tour/`.
-- A frame whose target isn't on screen (the meet-up dot when the demo week
-  runs into next month) is skipped.
+- A frame whose target isn't on screen is skipped.

@@ -1,13 +1,13 @@
 """
 apps/groups/management/commands/seed_demo.py — A populated group to try.
 
-Makes six friends in "Thursday crew" with a week of plans and a meet-up,
-so a tester (or a screenshot) finds a busy board, map and calendar. The
-week starts on a Saturday in mid-January, in the thick of the season, so
-screenshots don't look like an autumn ski app (in season it starts
-today); ``--start`` picks another day. Needs the resorts imported first.
-A bare run says what it would do; ``--commit`` writes it. Re-running
-rewrites that week.
+Makes six friends in "Thursday crew" with a week of plans, so a tester
+(or a screenshot) finds a busy board, map and calendar. The week starts
+on a Saturday in mid-January, in the thick of the season, so screenshots
+don't look like an autumn ski app (in season it starts today);
+``--start`` picks another day. Needs the resorts imported first. A bare
+run says what it would do; ``--commit`` writes it. Re-running rewrites
+that week.
 
 ``--email`` makes that address the group's owner, so you can sign in as
 yourself and see it. The other five are ``*@demo.invalid`` accounts that
@@ -23,8 +23,7 @@ from django.core.management.base import BaseCommand, CommandError, CommandParser
 from django.db import transaction
 
 from apps.accounts.models import User, normalise_email
-from apps.groups.models import Group, MeetUp, PlanDay
-from apps.groups.services.meetups import join_meetup, propose_meetup
+from apps.groups.models import Group, PlanDay
 from apps.groups.services.memberships import create_group, join_group
 from apps.groups.services.plans import is_plannable, set_plan, today
 from apps.resorts.models import Resort
@@ -51,7 +50,6 @@ WEEK = {
     "Felix": ["?", "", "", "", "", "CRA", "CRA"],
 }
 NOTES = {("Anna", 0): "First lift, then Mont Fort", ("you", 5): "With the kids"}
-MEETUP_DAY = 5
 # Out of season, the demo week starts on the first Saturday on or after
 # this January day.
 JANUARY_DAY = 9
@@ -119,8 +117,8 @@ class Command(BaseCommand):
         if not options["commit"]:
             self.stdout.write(
                 f"Would create {GROUP_NAME} owned by {email} with "
-                f"{len(FRIENDS)} friends, 7 days of plans from {start:%a %d %b %Y} "
-                "and one meet-up. Dry run. Re-run with --commit to save."
+                f"{len(FRIENDS)} friends, 7 days of plans from {start:%a %d %b %Y}. "
+                "Dry run. Re-run with --commit to save."
             )
             return
         with transaction.atomic():
@@ -146,7 +144,7 @@ class Command(BaseCommand):
     def _seed(
         self, email: str, days: list[datetime.date], resorts: dict[str, Resort]
     ) -> None:
-        """Write the people, the group, the week and the meet-up."""
+        """Write the people, the group and the week."""
         owner = self._person(email, "Sam")
         people = {"you": owner}
         for name in FRIENDS:
@@ -158,23 +156,11 @@ class Command(BaseCommand):
         for person in people.values():
             join_group(group, person)
         PlanDay.objects.filter(user__in=people.values(), date__in=days).delete()
-        MeetUp.objects.filter(group=group, date__in=days).delete()
         for key, cells in WEEK.items():
             for index, cell in enumerate(cells):
                 self._plan(
                     people[key], days[index], cell, resorts, NOTES.get((key, index), "")
                 )
-        meetup = propose_meetup(
-            group,
-            owner,
-            days[MEETUP_DAY],
-            resorts["CRA"],
-            start_time=datetime.time(9, 0),
-            latitude=46.3125,
-            longitude=7.4795,
-        )
-        for name in ("Chloé", "Felix"):
-            join_meetup(meetup, people[name])
 
     def _plan(
         self,

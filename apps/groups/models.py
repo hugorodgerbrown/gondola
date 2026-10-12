@@ -1,5 +1,5 @@
 """
-apps/groups/models.py — Groups of friends, their plans and their meet-ups.
+apps/groups/models.py — Groups of friends and their plans.
 
 * ``Group`` — friends who share plans. Joined through one invite link
   that joins at once; the owner can reset the link to kill the old one.
@@ -9,12 +9,7 @@ apps/groups/models.py — Groups of friends, their plans and their meet-ups.
   members see each other's names and days; joining is the consent.
 * ``PlanDay`` — where one person is skiing on one date. It belongs to the
   person, not a group: say it once and every group they're in sees it.
-* ``MeetUp`` — a group's agreed resort on a day, with an optional time and
-  meeting pin, and its own share link.
-* ``MeetUpParticipant`` — a person going to a meet-up.
-
-``date`` and ``start_time`` are Swiss wall-clock, because every resort is
-Swiss.
+``date`` is Swiss wall-clock, because every resort is Swiss.
 """
 
 from __future__ import annotations
@@ -250,106 +245,3 @@ class PlanDay(BaseModel):
         if self.skiing == self.Skiing.NOT_SURE:
             return f"{self.resort.name}, maybe skiing"
         return self.resort.name
-
-
-# ---------------------------------------------------------------------------
-# MeetUp
-# ---------------------------------------------------------------------------
-
-
-class MeetUpQuerySet(models.QuerySet["MeetUp"]):
-    """Custom queryset for MeetUp."""
-
-    def from_date(self, day: datetime.date) -> MeetUpQuerySet:
-        """Return meet-ups on or after ``day``."""
-        return self.filter(date__gte=day)
-
-
-class MeetUp(BaseModel):
-    """A group's agreed resort on one day, with an optional time and pin."""
-
-    group = models.ForeignKey(Group, on_delete=models.CASCADE, related_name="meetups")
-    organiser = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
-        related_name="organised_meetups",
-    )
-    date = models.DateField()
-    resort = models.ForeignKey(Resort, on_delete=models.PROTECT, related_name="meetups")
-    start_time = models.TimeField(null=True, blank=True)
-    meeting_latitude = models.FloatField(null=True, blank=True)
-    meeting_longitude = models.FloatField(null=True, blank=True)
-    share_token = models.CharField(
-        max_length=64, unique=True, default=make_token, editable=False
-    )
-
-    objects = MeetUpQuerySet.as_manager()
-
-    class Meta(BaseModel.Meta):
-        """Model metadata."""
-
-        ordering = ["-created_at"]
-        constraints = [
-            models.CheckConstraint(
-                condition=(
-                    models.Q(
-                        meeting_latitude__isnull=True, meeting_longitude__isnull=True
-                    )
-                    | models.Q(
-                        meeting_latitude__isnull=False,
-                        meeting_longitude__isnull=False,
-                    )
-                ),
-                name="meetup_meeting_pin_pair",
-            ),
-            models.UniqueConstraint(
-                fields=["group", "date"], name="meetup_one_per_group_day"
-            ),
-        ]
-
-    def to_string(self) -> str:
-        """Return the resort and day."""
-        return f"{self.resort} · {self.date:%Y-%m-%d}"
-
-    @property
-    def has_meeting_pin(self) -> bool:
-        """Return whether a meeting pin was dropped."""
-        return self.meeting_latitude is not None
-
-
-# ---------------------------------------------------------------------------
-# MeetUpParticipant
-# ---------------------------------------------------------------------------
-
-
-class MeetUpParticipantQuerySet(models.QuerySet["MeetUpParticipant"]):
-    """Custom queryset for MeetUpParticipant."""
-
-
-class MeetUpParticipant(BaseModel):
-    """One person going to one meet-up; ``created_at`` is when they joined."""
-
-    meetup = models.ForeignKey(
-        MeetUp, on_delete=models.CASCADE, related_name="participants"
-    )
-    user = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
-        related_name="meetup_participations",
-    )
-
-    objects = MeetUpParticipantQuerySet.as_manager()
-
-    class Meta(BaseModel.Meta):
-        """Model metadata."""
-
-        ordering = ["created_at"]
-        constraints = [
-            models.UniqueConstraint(
-                fields=["meetup", "user"], name="meetupparticipant_one_per_user"
-            ),
-        ]
-
-    def to_string(self) -> str:
-        """Return who is going to which meet-up."""
-        return f"{self.user} → {self.meetup}"

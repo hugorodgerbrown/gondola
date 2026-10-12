@@ -3,7 +3,7 @@ apps/tour/demo.py — The onboarding tour's demo group, and its lifetime.
 
 Starting the tour makes a "Thursday crew" for that person alone: they own
 it, and six made-up friends (Sam, Anna, Ben, Chloé, Ella, Felix) fill a
-week of days from today, with a meet-up. The friends are shared by every
+week of days from today. The friends are shared by every
 copy; they are inactive ``@tour.invalid`` accounts that can't sign in or
 receive email, and are only ever in demo groups. Nobody touring sees
 anyone else, because each copy holds only its owner and the friends.
@@ -24,7 +24,6 @@ from django.utils import timezone
 
 from apps.accounts.models import User
 from apps.groups.models import Group, Membership, PlanDay
-from apps.groups.services.meetups import join_meetup, propose_meetup
 from apps.groups.services.memberships import join_group
 from apps.groups.services.plans import set_plan, today
 from apps.resorts.models import Resort
@@ -52,9 +51,6 @@ WEEK = {
     "Felix": ["?", "", "", "", "", "CRA", "CRA"],
 }
 NOTES = {("Anna", 0): "First lift, then Mont Fort"}
-# The meet-up: Sam proposes Crans-Montana, Chloé and Felix are going.
-MEETUP_DAY = 5
-MEETUP_GOING = ["Chloé", "Felix"]
 # The tour's own resort: the one opened on the map.
 TOUR_RESORT = "VERB"
 # Longer than anyone takes; past it, the copy is stale and deleted.
@@ -67,10 +63,9 @@ class DemoUnavailable(Exception):
 
 @dataclass(frozen=True)
 class DemoWeek:
-    """What the tour points at: the week's first day, the meet-up's, Verbier."""
+    """What the tour points at: the week's first day, and Verbier."""
 
     start: datetime.date
-    meetup_day: datetime.date
     resort: Resort
 
 
@@ -88,7 +83,6 @@ def demo_week() -> DemoWeek:
     start = today()
     return DemoWeek(
         start=start,
-        meetup_day=start + datetime.timedelta(days=MEETUP_DAY),
         resort=demo_resorts()[TOUR_RESORT],
     )
 
@@ -150,17 +144,6 @@ def create_demo(owner: User) -> Group:
     Membership.objects.create(group=group, user=owner, role=Membership.Role.OWNER)
     for friend in friends.values():
         join_group(group, friend)
-    meetup = propose_meetup(
-        group,
-        friends["Sam"],
-        days[MEETUP_DAY],
-        resorts["CRA"],
-        start_time=datetime.time(9, 0),
-        latitude=46.3125,
-        longitude=7.4795,
-    )
-    for name in MEETUP_GOING:
-        join_meetup(meetup, friends[name])
     return group
 
 

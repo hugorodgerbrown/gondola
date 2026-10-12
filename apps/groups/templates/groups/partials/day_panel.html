@@ -1,4 +1,4 @@
-{# The selected day under the month: where you are, who is with you (the day's number), where the others are, any meet-up, and Add or Edit plans. Needs selected, here_resort, here, elsewhere, highlight and back_query. #}
+{# The selected day under the month: where you are, who is with you (the day's number), where the others are, and Add or Edit plans. Needs selected, here_resort, here, elsewhere, highlight and back_query. #}
 {% with day=selected plan=selected.plan %}
   <section id="day-panel" class="day-panel" aria-labelledby="day-panel-heading" aria-live="polite">
     <div class="day-panel__head">
@@ -37,9 +37,6 @@
       </div>
     {% elif not day.count %}
       <p class="small muted">No friends out this day.</p>
-    {% endif %}
-    {% if day.meetup %}
-      <a class="day-panel__meetup" href="{% url 'planning:meetup' day.meetup.share_token %}"><span class="mday__meetup" aria-hidden="true"></span>Meet-up at {{ day.meetup.resort.name }}{% if day.meetup.start_time %}, {{ day.meetup.start_time|time:"H:i" }}{% endif %}</a>
     {% endif %}
   </section>
 {% endwith %}

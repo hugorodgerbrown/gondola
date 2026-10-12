@@ -4,14 +4,6 @@
     <div style="max-width:480px;margin:0 auto;">
       <p style="margin:0 0 4px;font:12px ui-monospace,Menlo,monospace;letter-spacing:0.1em;text-transform:uppercase;color:#6e6b65;">{{ digest.day|date:"l j F" }}</p>
       <h1 style="margin:0 0 16px;font-size:24px;line-height:32px;">Who's where tomorrow</h1>
-      {% for line in digest.meetups %}
-        <div style="background:#1a1916;color:#ffffff;border-radius:12px;padding:18px;margin:0 0 12px;">
-          <p style="margin:0 0 4px;font:12px ui-monospace,Menlo,monospace;letter-spacing:0.1em;text-transform:uppercase;color:#d6d3cc;">{{ line.meetup.organiser }}'s meet-up · {{ line.meetup.group.name }}</p>
-          <p style="margin:0 0 4px;font-size:22px;font-weight:600;">{{ line.meetup.resort.name }}</p>
-          <p style="margin:0 0 14px;font-size:14px;color:#d6d3cc;">{% if line.meetup.start_time %}{{ line.meetup.start_time|time:"H:i" }} · {% endif %}{{ line.going }} going{% if line.is_going %}, you included{% endif %}</p>
-          <a href="{{ line.url }}" style="display:inline-block;padding:12px 16px;border-radius:8px;background:#ffffff;color:#1a1916;text-decoration:none;font-weight:600;">Open the meet-up</a>
-        </div>
-      {% endfor %}
       {% for section in digest.groups %}{% if section.lines %}
         <div style="background:#ffffff;border-radius:12px;padding:18px;margin:0 0 12px;">
           <p style="margin:0 0 8px;font:12px ui-monospace,Menlo,monospace;letter-spacing:0.1em;text-transform:uppercase;color:#6e6b65;">{{ section.group.name }}</p>
