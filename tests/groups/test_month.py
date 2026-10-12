@@ -73,9 +73,9 @@ def test_month_day_summary_for_quiet_days(crew: Crew) -> None:
 @pytest.mark.parametrize(
     ("skiing", "at_resort", "words"),
     [
-        (S.YES, True, "Skiing at Verbier"),
-        (S.YES, False, "Skiing, not sure where"),
-        (S.NO, True, "At Verbier, not skiing"),
+        (S.YES, True, "In Verbier"),
+        (S.YES, False, "Skiing"),
+        (S.NO, True, "In Verbier, not skiing"),
         (S.NO, False, "Not skiing"),
     ],
 )

@@ -59,14 +59,18 @@ class MonthDay:
 
     @property
     def plan_words(self) -> str:
-        """Return your answer for the day panel: "Skiing at Verbier"."""
+        """Return your answer for the day panel: "In Verbier".
+
+        The swatch beside it says whether you're skiing, so only a day off
+        the slopes says so in words.
+        """
         plan = self.plan
         if plan is None:
             return ""
         resort = plan.resort.name if plan.resort is not None else ""
         if plan.skiing == PlanDay.Skiing.YES:
-            return f"Skiing at {resort}" if resort else "Skiing, not sure where"
-        return f"At {resort}, not skiing" if resort else "Not skiing"
+            return f"In {resort}" if resort else "Skiing"
+        return f"In {resort}, not skiing" if resort else "Not skiing"
 
     @property
     def summary(self) -> str:

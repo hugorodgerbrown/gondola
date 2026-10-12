@@ -1496,7 +1496,44 @@ a.mday:focus-visible {
   color: #fff;
 }
 
+/* The key sits behind a small (?) under the month, closed by default. */
+.month-help {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.month-help summary {
+  width: 24px;
+  height: 24px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 1.5px var(--rule-strong);
+  color: var(--text-2);
+  font: 600 13px var(--font-sans);
+  list-style: none;
+  cursor: pointer;
+}
+
+.month-help summary::-webkit-details-marker {
+  display: none;
+}
+
+.month-help[open] summary {
+  background: var(--text-1);
+  box-shadow: none;
+  color: var(--card);
+}
+
+.month-help summary:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
 .month-key {
+  align-self: stretch;
   display: flex;
   flex-wrap: wrap;
   gap: 8px 18px;
@@ -1626,14 +1663,8 @@ a.mday:focus-visible {
   box-shadow: inset 0 0 0 1px var(--rule-strong);
 }
 
-/* The friends the day's number counts: the number first, then the names. */
+/* The friends with you, by name: the same ones the cell marks. */
 .day-panel__here {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.day-panel__count {
   display: flex;
   align-items: center;
   gap: 6px;
@@ -1641,7 +1672,8 @@ a.mday:focus-visible {
   color: var(--accent);
 }
 
-.day-panel__count svg {
+.day-panel__here svg {
+  flex-shrink: 0;
   width: 16px;
   height: 16px;
 }

@@ -113,6 +113,7 @@ def test_friends_around_count_but_are_marked(crew: Crew) -> None:
     )
     (entry,) = plans.friends_by_resort(crew.sam, crew.day)
     assert entry.names == "Anna and Ben (around)"
+    assert entry.plain_names == "Anna and Ben"
     assert plans.friend_counts(crew.sam, crew.day) == {crew.verbier.pk: 2}
     # Over two days Ben skis one of them, so he counts as skiing.
     (both,) = plans.friends_by_resort(

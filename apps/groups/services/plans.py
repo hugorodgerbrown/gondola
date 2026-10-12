@@ -149,6 +149,11 @@ class ResortFriends:
             ]
         )
 
+    @property
+    def plain_names(self) -> str:
+        """Return the friends' names as one phrase, skiing or not."""
+        return join_names([f.to_string() for f in self.friends])
+
 
 def friends_by_resort(
     viewer: User, days: datetime.date | Iterable[datetime.date]

@@ -1,4 +1,4 @@
-{# The selected day under the month: where you are, who is with you (the day's number), where the others are, and Add or Edit plans. Needs selected, here_resort, here, elsewhere, highlight and back_query. #}
+{# The selected day under the month: where you are, who is with you (by name, the same friends the cell's mark counts), where the others are (names only), and Add or Edit plans. Needs selected, here_resort, here, elsewhere, highlight and back_query. #}
 {% with day=selected plan=selected.plan %}
   <section id="day-panel" class="day-panel" aria-labelledby="day-panel-heading" aria-live="polite">
     <div class="day-panel__head">
@@ -19,18 +19,15 @@
         <span class="muted">No plans</span>
       {% endif %}
     </p>
-    {% if day.count %}
-      <div class="day-panel__here">
-        <p class="day-panel__count">{% include "includes/icons/people.html" %}{{ day.count }} {% if highlight %}at {{ here_resort.name }}{% else %}with you{% endif %}</p>
-        {% if here %}<p class="small">{{ here.names }}</p>{% endif %}
-      </div>
+    {% if day.count and here %}
+      <p class="day-panel__here">{% if day.count == 1 %}{% include "includes/icons/user.html" %}{% else %}{% include "includes/icons/people.html" %}{% endif %}<span>{{ here.names }}{% if highlight %} at {{ here_resort.name }}{% endif %}</span></p>
     {% endif %}
     {% if elsewhere %}
       <div class="day-panel__others">
         <span class="eyebrow">{% if here_resort %}Elsewhere{% else %}Friends out{% endif %}</span>
         <ul class="day-panel__friends" aria-label="Friends elsewhere that day">
           {% for entry in elsewhere %}
-            <li><span class="day-panel__resort">{{ entry.resort.name }}</span> <span class="muted">{{ entry.names }}</span></li>
+            <li><span class="day-panel__resort">{{ entry.resort.name }}</span> <span class="muted">{{ entry.plain_names }}</span></li>
           {% endfor %}
         </ul>
       </div>
