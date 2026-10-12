@@ -684,3 +684,19 @@ def test_board(sam: Client, crew: Crew) -> None:
     assert b"VERB" in page.content and b"ZERM" in page.content
     week = sam.get(url, {"start": "2027-01-04"})
     assert week.context["board"].start == datetime.date(2027, 1, 4)
+
+
+@freeze_time("2026-10-11 09:00:00+02:00")
+def test_day_sheet_skiing_toggle(sam: Client, crew: Crew) -> None:
+    url = reverse("planning:day", kwargs={"day": datetime.date(2026, 12, 14)})
+    sheet = sam.get(url, headers=HTMX)
+    assert b'id="day-skiing" type="checkbox" name="skiing" value="skiing" checked' in (
+        sheet.content
+    )
+    # Switched on, the page sends the hidden "off" value and then the box's.
+    where = str(crew.verbier.uuid)
+    sam.post(url, {"skiing": ["not_skiing", "skiing"], "resort": where}, headers=HTMX)
+    assert PlanDay.objects.get(user=crew.sam).skiing == S.YES
+    # Switched off, only the hidden value is sent.
+    sam.post(url, {"skiing": "not_skiing", "resort": where}, headers=HTMX)
+    assert PlanDay.objects.get(user=crew.sam).skiing == S.NO

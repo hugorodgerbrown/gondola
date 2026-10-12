@@ -82,7 +82,7 @@ on the control that leads to the next page.
 | 2.0 | Page intro | Next | Planning a day. Here you tell your groups where you'll be and whether you're skiing. We show you where your friends are going first. |
 | 2.1 | Friends' resorts | Next | We show you where friends will be that day. Tap one to join them. |
 | 2.2 | Search | Next | Somewhere else? Look up any resort. |
-| 2.3 | Skiing? | Next | Tell everyone whether you're on the slopes. Not skiing means you'll be around, off the slopes. |
+| 2.3 | Skiing toggle | Next | Skiing is on when you're up for the slopes. Switch it off if you'll be around but not skiing. |
 | 2.4 | Note | Next | Add a note for your groups, like "first lift". |
 | 2.5 | Private | Next | Keep a day to yourself: friends see nothing for it. |
 | 2.6 | Save | Tap Save | Save shares the day with your groups. |

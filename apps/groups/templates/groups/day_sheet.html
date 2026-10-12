@@ -43,16 +43,12 @@
     <div id="resort-results" class="choices" role="radiogroup" aria-label="Search results" hidden></div>
   </div>
 
-  <fieldset class="field">
-    <legend class="eyebrow">Skiing?</legend>
-    <div class="segmented">
-      {% for value, label in form.fields.skiing.choices %}
-        <input type="radio" name="skiing" id="skiing-{{ value }}" value="{{ value }}"{% if form.skiing.value == value %} checked{% endif %}>
-        <label for="skiing-{{ value }}">{{ label }}</label>
-      {% endfor %}
-    </div>
-    {% if "skiing" in mixed %}<p class="help">Differs across these days: pick one to set them all.</p>{% endif %}
-  </fieldset>
+  <label class="check" for="day-skiing">
+    <span class="row__main"><span>Skiing</span><span class="small muted">{% if "skiing" in mixed %}Differs across these days: switch it to set them all.{% else %}Off means you're around but not on the slopes.{% endif %}</span></span>
+    {# Unticked sends the hidden value; ticked sends both and the last wins. #}
+    <input type="hidden" name="skiing" {% if "skiing" in mixed %}value="" data-keep-for="skiing" data-off="not_skiing"{% else %}value="not_skiing"{% endif %}>
+    <input id="day-skiing" type="checkbox" name="skiing" value="skiing"{% if form.skiing.value == "skiing" %} checked{% endif %}>
+  </label>
 
   <div class="field">
     <label for="{{ form.note.id_for_label }}">Note for your groups</label>

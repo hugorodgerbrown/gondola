@@ -124,9 +124,9 @@ CHAPTERS: tuple[Chapter, ...] = (
             ),
             Frame(
                 "2.3",
-                "Tell everyone whether you're on the slopes. "
-                "Not skiing means you'll be around, off the slopes.",
-                ("[data-day-form] fieldset.field",),
+                "Skiing is on when you're up for the slopes. "
+                "Switch it off if you'll be around but not skiing.",
+                ("[data-day-form] label[for=day-skiing]",),
             ),
             Frame(
                 "2.4",

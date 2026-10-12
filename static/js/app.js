@@ -49,15 +49,20 @@
     }
   });
 
-  // Day sheet over several days: a note or privacy that differs across
-  // them is kept unless changed. Changing it drops the "keep" flag.
+  // Day sheet over several days: a note, privacy or skiing that differs
+  // across them is kept unless changed. Changing it drops the "keep" flag;
+  // skiing's flag turns into the toggle's "off" value instead, so switching
+  // it off still says so.
   function dropKeep(event) {
     const form = event.target.closest("[data-day-form]");
     if (!form || !event.target.name) {
       return;
     }
     const keep = form.querySelector('[data-keep-for="' + event.target.name + '"]');
-    if (keep) {
+    if (keep && keep.dataset.off) {
+      keep.value = keep.dataset.off;
+      delete keep.dataset.keepFor;
+    } else if (keep) {
       keep.remove();
     }
   }
