@@ -78,8 +78,7 @@ def build_digest(user: User, day: datetime.date) -> Digest:
     """Return what ``user``'s email for ``day`` would say."""
     groups = list(Group.objects.for_user(user).order_by("name"))
     shared = list(
-        PlanDay.objects.shared()
-        .filter(
+        PlanDay.objects.filter(
             date=day,
             resort__isnull=False,
             user__group_memberships__group__in=groups,
@@ -87,7 +86,6 @@ def build_digest(user: User, day: datetime.date) -> Digest:
         .select_related("user", "resort")
         .distinct()
     )
-    own = PlanDay.objects.filter(user=user, date=day).select_related("resort").first()
     sections = []
     for group in groups:
         member_ids = set(group.memberships.values_list("user_id", flat=True))
@@ -98,8 +96,6 @@ def build_digest(user: User, day: datetime.date) -> Digest:
                 if not plan.is_skiing and name != "you":
                     name += " (around)"
                 by_resort.setdefault(plan.resort.name, []).append(name)
-        if own and own.is_private and own.resort is not None:
-            by_resort.setdefault(own.resort.name, []).append("you")
         lines = [
             ResortLine(
                 resort_name=resort, names=sorted(names, key=lambda n: n == "you")

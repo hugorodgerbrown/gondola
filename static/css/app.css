@@ -798,18 +798,6 @@ fieldset.field {
   text-decoration: none;
 }
 
-.board__lock {
-  display: inline-flex;
-  align-items: center;
-  gap: 2px;
-  color: var(--text-3);
-}
-
-.board__lock svg {
-  width: 9px;
-  height: 9px;
-}
-
 .legend {
   margin: 0;
   display: grid;
@@ -1453,12 +1441,6 @@ a.mday:focus-visible {
   min-height: 16px;
 }
 
-.mday__row > svg {
-  width: 10px;
-  height: 10px;
-}
-
-.mday__row > svg,
 .mday__row > .mday__friends {
   margin-left: auto;
 }
@@ -1631,17 +1613,6 @@ a.mday:focus-visible {
   font-size: 20px;
   line-height: 28px;
   font-weight: 600;
-}
-
-/* A private day: the same lock as the cell, beside the date. */
-.day-panel__lock {
-  display: inline-flex;
-  color: var(--text-2);
-}
-
-.day-panel__lock svg {
-  width: 14px;
-  height: 14px;
 }
 
 /* Where you are, with the cell's own colour as its swatch. */

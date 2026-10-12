@@ -7,11 +7,11 @@ and the board have to draw:
 
 - skiing and not skiing ("around"), as single days and as runs of days,
   with friends at your resort and elsewhere;
-- days left unsaid, private days, days with a note (one long);
-- a ten-day run in one resort with mixed skiing, a run that crosses a
-  month end, and a private run;
+- days left unsaid, days with a note (one long);
+- a ten-day run in one resort with mixed skiing, and a run that crosses a
+  month end;
 - friends at your resort, friends elsewhere, a friend "around", and a
-  friend whose days are all private.
+  friend who has said little.
 
 A bare run prints the plan, day by day, without writing; ``--commit``
 writes it. Re-running rewrites the made-up people's days from today, so the
@@ -75,7 +75,6 @@ class Run:
     start: int
     skiing: str
     where: str
-    private: bool = False
     note: str = ""
     label: str = ""
 
@@ -107,15 +106,12 @@ def tester_runs(first: datetime.date) -> list[Run]:
         Run(3, "Y", "CHAM", label="Skiing, friends elsewhere"),
         Run(5, "N", "CHAM", label="Around, friends elsewhere"),
         # Offset UNSAID is left out: friends out, nothing from you.
-        Run(7, "Y", "VERB", private=True, label="At a resort, private"),
-        Run(8, "N", "VERB", private=True, label="Around, private"),
         Run(9, "Y", "SAASF", note="First lift", label="Short note"),
         Run(10, "N", "GRIME", note=LONG_NOTE, label="Long note"),
         # Runs.
         Run(14, "YYNNYYYNYN", "VERB", label="Ten days in one resort, mixed skiing"),
         Run(26, "YYYYY", "CRA", label="Five days alike"),
         Run(33, "NNNN", "CRA", label="Around, four days"),
-        Run(42, "YYY", "GRIME", private=True, label="Private run"),
         Run(45, "YYY", "SAASF", label="Skiing alone, three days"),
         Run(edge, "YYYY", "CHAM", label="Run across a month end"),
     ]
@@ -148,10 +144,8 @@ def friend_runs() -> dict[str, list[Run]]:
             Run(5, "YY", "SAASF"),
             Run(16, "NNNN", "VERB"),
         ],
-        # Everything private but one day: only that day should ever show.
+        # Says almost nothing: one day, far out.
         "Dan": [
-            Run(0, "YYYYYYY", "VERB", private=True),
-            Run(14, "YYYYY", "VERB", private=True),
             Run(26, "Y", "CRA"),
         ],
     }
@@ -268,5 +262,4 @@ class Command(BaseCommand):
                 SKIING[letter],
                 resort=resorts[run.where],
                 note=run.note,
-                is_private=run.private,
             )

@@ -3,18 +3,16 @@ apps/groups/views/days.py — the calendar, and the sheet for one day.
 
 The calendar is about you: a month, this month by default; arrows step a
 month (``?from=``, any day in it) as far as plans can be made. A day shows
-whether you're skiing, how many friends will be where you are, a lock if
-you keep it private. Chips above it highlight one
-resort (``?highlight=``): the days anyone is there stand out, and the
-count is the friends there instead.
+whether you're skiing and whether friends will be where you are. Chips
+above it highlight one resort (``?highlight=``): the days anyone is there
+stand out, and the friends shown are the ones there instead.
 
 Tapping a day selects it (``?day=``) and fills the panel below the month:
 where you are, the friends with you (the day's number, so the highlighted
 resort's while one is picked), where the others are, and Add plans or
 Edit plans, which opens a sheet with two separate answers: where you'll be
-(the resorts friends picked first, then a search over every resort, or no
-resort) and whether you're skiing (yes or no); then an
-optional note, and a switch to keep the day private.
+(the resorts friends picked first, then a search over every resort) and
+whether you're skiing (an on/off switch); then an optional note.
 
 Pressing and holding a day starts selecting: tap more days (or drag
 across a run), then one sheet plans them all (``?days=``). An answer that
@@ -205,7 +203,7 @@ def _calendar_url(back: dict[str, str], days: list[datetime.date] | None = None)
 
 
 # What a day with no plan yet starts from in the sheet.
-FRESH = {"skiing": PlanDay.Skiing.YES, "resort": "", "note": "", "is_private": False}
+FRESH = {"skiing": PlanDay.Skiing.YES, "resort": "", "note": ""}
 
 
 def _answers(plan: PlanDay | None) -> dict[str, object]:
@@ -216,7 +214,6 @@ def _answers(plan: PlanDay | None) -> dict[str, object]:
         "skiing": plan.skiing,
         "resort": str(plan.resort.uuid) if plan.resort else "",
         "note": plan.note,
-        "is_private": plan.is_private,
     }
 
 

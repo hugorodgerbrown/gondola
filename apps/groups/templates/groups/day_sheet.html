@@ -60,11 +60,6 @@
     {% endif %}
   </div>
 
-  <label class="check" for="day-private">
-    <span class="row__main"><span>Keep {% if span > 1 %}these days{% else %}this day{% endif %} private</span><span class="small muted">{% if "is_private" in mixed %}Some of these days are private now.{% else %}Friends see nothing for {% if span > 1 %}these days{% else %}this day{% endif %}.{% endif %}</span></span>
-    {% if "is_private" in mixed %}<input type="hidden" name="private_keep" value="on" data-keep-for="is_private">{% endif %}
-    <input id="day-private" type="checkbox" name="is_private"{% if form.is_private.value %} checked{% endif %}>
-  </label>
 
   <div class="field">
     <button type="submit" class="button button--block">{{ save_label }}</button>

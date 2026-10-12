@@ -7,8 +7,6 @@ from freezegun import freeze_time
 
 from apps.groups.models import PlanDay
 from apps.groups.services import month, plans
-from apps.groups.services.memberships import join_group
-from tests.factories import UserFactory
 from tests.groups.conftest import Crew
 
 pytestmark = pytest.mark.django_db
@@ -50,10 +48,7 @@ def test_month_day_shows_plan_and_group_activity(crew: Crew) -> None:
     plans.set_plan(crew.sam, day, S.YES, resort=crew.verbier)
     plans.set_plan(crew.anna, day, S.YES, resort=crew.verbier)
     plans.set_plan(crew.ben, day, S.YES, resort=crew.zermatt)
-    # Private days and people outside the group don't count.
-    dana = UserFactory.create(display_name="Dana")
-    join_group(crew.group, dana)
-    plans.set_plan(dana, day, S.YES, resort=crew.verbier, is_private=True)
+    # People outside the group don't count.
     plans.set_plan(crew.outsider, day, S.YES, resort=crew.verbier)
 
     entry = days_of(month.build_month(crew.sam, day))[day]
@@ -69,9 +64,9 @@ def test_month_day_shows_plan_and_group_activity(crew: Crew) -> None:
 @freeze_time("2026-10-11 09:00:00+02:00")
 def test_month_day_summary_for_quiet_days(crew: Crew) -> None:
     today = datetime.date(2026, 10, 11)
-    plans.set_plan(crew.sam, today, S.NO, is_private=True)
+    plans.set_plan(crew.sam, today, S.NO)
     days = days_of(month.build_month(crew.sam, today))
-    assert days[today].summary == "Sunday 11 October, today, Not skiing, private"
+    assert days[today].summary == "Sunday 11 October, today, Not skiing"
     assert days[datetime.date(2026, 10, 12)].summary == "Monday 12 October, no plan"
 
 

@@ -162,10 +162,6 @@ class PlanDayQuerySet(models.QuerySet["PlanDay"]):
         """Return plans for one date."""
         return self.filter(date=day)
 
-    def shared(self) -> PlanDayQuerySet:
-        """Return plans group-mates may see (not marked private)."""
-        return self.filter(is_private=False)
-
     def from_date(self, day: datetime.date) -> PlanDayQuerySet:
         """Return plans on or after ``day``."""
         return self.filter(date__gte=day)
@@ -208,9 +204,6 @@ class PlanDay(BaseModel):
         help_text="Where they'll be, skiing or not. Empty: not at a resort.",
     )
     note = models.CharField(max_length=140, blank=True)
-    is_private = models.BooleanField(
-        default=False, help_text="Hidden from group-mates; looks unplanned."
-    )
 
     objects = PlanDayQuerySet.as_manager()
 

@@ -2,9 +2,9 @@
 apps/groups/services/highlight.py — One resort picked out on the calendar.
 
 Answers "who's in Verbier in January" from the calendar: the chips list
-the resorts anyone (you, or a friend on a day they haven't kept private)
-is at in the month, whether or not they're skiing. The month itself
-(``build_month``) then picks out the days someone is at the chosen one.
+the resorts anyone (you, or a friend) is at in the month, whether or not
+they're skiing. The month itself (``build_month``) then picks out the
+days someone is at the chosen one.
 """
 
 from __future__ import annotations

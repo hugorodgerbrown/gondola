@@ -11,7 +11,7 @@ group chat. An email the evening before sums up tomorrow.
 | Front page | `/` | Explains the app; signed-in people go to the map |
 | Sign in | `/sign-in/` | Emails a one-time link; no passwords. First sign-in asks for a name |
 | Map | `/map/?date=&pass=` | Every resort as a pin, friend counts for the day, pass filter. Tap a pin for the resort sheet: who's there, plan your day here |
-| Calendar | `/days/` | A month at a time. Tap a day for who's with you and who's elsewhere; Add plans picks a resort (friends' first, then search) and skiing or not, a note, private |
+| Calendar | `/days/` | A month at a time. Tap a day for who's with you and who's elsewhere; Add plans picks a resort (friends' first, then search) a skiing on/off switch and a note |
 | Groups | `/groups/` | Your groups; start one |
 | Group | `/groups/<uuid>/` | Members, the invite link (share, reset), leave or delete |
 | Who's where | `/groups/<uuid>/board/` | People down the side, 7 days across, resort codes |

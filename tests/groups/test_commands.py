@@ -101,7 +101,6 @@ def test_seed_demo_dry_run_then_commit_twice() -> None:
     assert group.memberships.count() == 6
     assert PlanDay.objects.filter(skiing=S.NO).exists()
     assert not PlanDay.objects.filter(resort__isnull=True).exists()
-    assert PlanDay.objects.filter(is_private=True).count() == 1
 
 
 @freeze_time("2026-10-12 09:00:00+02:00")
@@ -169,11 +168,9 @@ def test_seed_ui_test_covers_every_case_and_reruns() -> None:
     assert is_member(group, me)
     assert get_testers_group().user_set.count() == 6
     mine = PlanDay.objects.filter(user=tester)
-    # Every day has a resort; both skiing answers, private and not.
+    # Every day has a resort; both skiing answers.
     assert not mine.filter(resort__isnull=True).exists()
     assert {plan.skiing for plan in mine} == set(S.values)
-    assert mine.filter(is_private=True, skiing=S.YES).exists()
-    assert mine.filter(is_private=True, skiing=S.NO).exists()
     assert mine.exclude(note="").count() == 2
     # Nothing from the tester on the unsaid day, but friends out.
     unsaid = plans.today() + datetime.timedelta(days=UNSAID)

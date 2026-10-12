@@ -41,14 +41,14 @@ def test_screens_need_sign_in(client: Client, name: str) -> None:
 
 def test_calendar_is_this_month(sam: Client, crew: Crew) -> None:
     today = plans.today()
-    plans.set_plan(crew.sam, today, S.YES, resort=crew.verbier, is_private=True)
+    plans.set_plan(crew.sam, today, S.YES, resort=crew.verbier)
     plans.set_plan(crew.anna, today, S.YES, resort=crew.verbier)
     response = sam.get(reverse("planning:calendar"))
     cal = response.context["month"]
     assert cal.first == today.replace(day=1)
     assert cal.previous is None
-    # The month is the title; today is selected, blue, locked, and counts
-    # the one friend with you.
+    # The month is the title; today is selected, blue, and counts the one
+    # friend with you.
     assert f'<h1 class="title title--large">{today:%B %Y}</h1>'.encode() in (
         response.content
     )
@@ -56,16 +56,16 @@ def test_calendar_is_this_month(sam: Client, crew: Crew) -> None:
     assert b"mday--skiing mday--selected" in response.content
     assert response.context["selected"].count == 1
     assert b'class="mday__friends"' in response.content
-    # The panel: where you are, the lock by the date, the one friend with
-    # you (the cell's number), and Edit plans.
+    # The panel: where you are, the one friend with you (the cell's
+    # number), and Edit plans.
     assert b"Skiing at Verbier" in response.content
-    assert b'aria-label="Only you see this day"' in response.content
     assert b"1 with you</p>" in response.content
     assert response.context["here"].resort == crew.verbier
     assert response.context["elsewhere"] == []
     assert b"Edit plans" in response.content
-    assert f"{today:%A} {today.day} {today:%B}, today, Verbier, private".encode() in (
-        response.content
+    assert (
+        f"{today:%A} {today.day} {today:%B}, today, Verbier, friends at resorts: Anna, 1 with you".encode()
+        in (response.content)
     )
 
 
@@ -271,17 +271,12 @@ def test_day_sheet_saves(sam: Client, crew: Crew) -> None:
             "skiing": "skiing",
             "resort": str(crew.verbier.uuid),
             "note": "first lift",
-            "is_private": "on",
         },
         headers=HTMX,
     )
     assert response.status_code == 204 and response["HX-Refresh"] == "true"
     plan = PlanDay.objects.get(user=crew.sam, date=crew.day)
-    assert (plan.resort, plan.note, plan.is_private) == (
-        crew.verbier,
-        "first lift",
-        True,
-    )
+    assert (plan.resort, plan.note) == (crew.verbier, "first lift")
 
 
 def test_day_sheet_where_and_skiing_apart(sam: Client, crew: Crew) -> None:
@@ -403,12 +398,12 @@ def test_several_days_titles(
 def test_several_days_change_only_what_is_touched(sam: Client, crew: Crew) -> None:
     days = [datetime.date(2026, 12, d) for d in (19, 20)]
     plans.set_plan(crew.sam, days[0], S.NO, resort=crew.verbier, note="spa")
-    plans.set_plan(crew.sam, days[1], S.YES, resort=crew.zermatt, is_private=True)
+    plans.set_plan(crew.sam, days[1], S.YES, resort=crew.zermatt)
     url = several(*(d.isoformat() for d in days))
     sheet = sam.get(url, headers=HTMX)
-    assert sheet.context["mixed"] == {"skiing", "resort", "note", "is_private"}
+    assert sheet.context["mixed"] == {"skiing", "resort", "note"}
     assert b'name="note_keep"' in sheet.content
-    assert b'name="private_keep"' in sheet.content
+    assert b'data-keep-for="skiing"' in sheet.content
     # Only skiing is picked; everything else keeps each day's own answer.
     sam.post(
         url,
@@ -416,7 +411,6 @@ def test_several_days_change_only_what_is_touched(sam: Client, crew: Crew) -> No
             "skiing": "not_skiing",
             "resort": "keep",
             "note_keep": "on",
-            "private_keep": "on",
         },
         headers=HTMX,
     )
@@ -425,10 +419,7 @@ def test_several_days_change_only_what_is_touched(sam: Client, crew: Crew) -> No
         (S.NO, crew.verbier),
         (S.NO, crew.zermatt),
     ]
-    assert [(saved[d].note, saved[d].is_private) for d in days] == [
-        ("spa", False),
-        ("", True),
-    ]
+    assert [saved[d].note for d in days] == ["spa", ""]
     # A day with no resort yet can't keep one.
     unplanned = several("2026-12-19", "2026-12-21")
     refused = sam.post(unplanned, {"resort": "keep"}, headers=HTMX)

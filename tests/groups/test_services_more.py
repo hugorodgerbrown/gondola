@@ -50,7 +50,7 @@ def test_resort_day(crew: Crew) -> None:
 
 
 def test_digest_and_send(crew: Crew) -> None:
-    plans.set_plan(crew.sam, crew.day, S.YES, resort=crew.verbier, is_private=True)
+    plans.set_plan(crew.sam, crew.day, S.YES, resort=crew.verbier)
     plans.set_plan(crew.anna, crew.day, S.YES, resort=crew.verbier)
     plans.set_plan(crew.ben, crew.day, S.NO, resort=crew.zermatt)
     assert crew.sam in evening.recipients(crew.day)

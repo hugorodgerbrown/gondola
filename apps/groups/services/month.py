@@ -4,8 +4,7 @@ apps/groups/services/month.py — the calendar, one month at a time.
 One month at a time, weeks starting Monday. Each day carries what the
 viewer said about it and what their groups are up to: how many friends
 are at a resort (skiing or just around), how many of them at the viewer's
-resort (the number the calendar shows). Friends' private days count for
-nothing, as everywhere else.
+resort (the number the calendar shows).
 
 With one resort highlighted, each day also says which friends are there,
 and whether the viewer is, so the calendar can pick those days out.
@@ -78,8 +77,6 @@ class MonthDay:
             parts.append("today")
         plan = self.plan
         parts.append("no plan" if plan is None else plan.describe())
-        if plan is not None and plan.is_private:
-            parts.append("private")
         if self.friends:
             parts.append(f"friends at resorts: {join_names(self.friends)}")
         if self.with_me:

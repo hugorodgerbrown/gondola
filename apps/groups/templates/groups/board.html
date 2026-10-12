@@ -24,7 +24,7 @@
           <tr{% if row.is_me %} class="board__me"{% endif %}>
             <th scope="row" class="board__name">{% if row.is_me %}You{% else %}{{ row.person }}{% endif %}</th>
             {% for cell in row.cells %}
-              <td{% if cell.quiet %} class="is-quiet"{% endif %} title="{{ cell.title }}">{% if cell.private %}<span class="board__lock">{{ cell.text }}{% include "includes/icons/lock.html" %}<span class="visually-hidden">private</span></span>{% else %}{{ cell.text }}{% endif %}</td>
+              <td{% if cell.quiet %} class="is-quiet"{% endif %} title="{{ cell.title }}">{{ cell.text }}</td>
             {% endfor %}
           </tr>
         {% endfor %}

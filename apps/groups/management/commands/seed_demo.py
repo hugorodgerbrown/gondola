@@ -38,10 +38,9 @@ RESORTS = {
     "CHAM": "Champéry",
 }
 # One row per person, one cell per day from today: a resort code (skiing
-# there) or "" for unsaid. A code can take "-" (there, not skiing), and
-# any cell a trailing "*" for private.
+# there) or "" for unsaid. A code can take "-" (there, not skiing).
 WEEK = {
-    "you": ["VERB", "VERB", "VERB-", "", "", "CRA", "SAASF*"],
+    "you": ["VERB", "VERB", "VERB-", "", "", "CRA", "SAASF"],
     "Anna": ["VERB", "GRIME", "", "", "SAASF", "CRA", ""],
     "Ben": ["SAASF", "VERB", "VERB", "", "VERB", "", "SAASF-"],
     "Chloé": ["VERB", "VERB", "VERB-", "", "VERB", "CRA", ""],
@@ -170,8 +169,7 @@ class Command(BaseCommand):
         note: str,
     ) -> None:
         """Write one cell of the demo week."""
-        private = cell.endswith("*")
-        code = cell.rstrip("*")
+        code = cell
         if not code:
             return
         skiing = PlanDay.Skiing.YES
@@ -184,5 +182,4 @@ class Command(BaseCommand):
             skiing,
             resort=resorts[code] if code else None,
             note=note,
-            is_private=private,
         )

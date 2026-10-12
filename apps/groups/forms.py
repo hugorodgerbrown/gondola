@@ -27,9 +27,9 @@ class DayForm(forms.Form):
 
     Every answer can be left out to keep what each day already says, which
     is how a sheet for several days changes only what was touched: no
-    skiing choice, the "keep" resort, or the ``*_keep`` flag the page
-    renders beside a note or privacy that differs across the days (and
-    drops once that answer is changed).
+    skiing choice, the "keep" resort, or the ``note_keep`` flag the page
+    renders beside a note that differs across the days (and drops once
+    the note is changed).
     """
 
     skiing = forms.ChoiceField(choices=PlanDay.Skiing.choices, required=False)
@@ -42,8 +42,6 @@ class DayForm(forms.Form):
         ),
     )
     note_keep = forms.BooleanField(required=False)
-    is_private = forms.BooleanField(required=False)
-    private_keep = forms.BooleanField(required=False)
 
     def clean_resort(self) -> Resort | Keep:
         """Return the resort picked, or KEEP; a day can't be at no resort."""
@@ -64,7 +62,6 @@ class DayForm(forms.Form):
             "skiing": data["skiing"] or KEEP,
             "resort": data["resort"],
             "note": KEEP if data["note_keep"] else data["note"],
-            "is_private": KEEP if data["private_keep"] else data["is_private"],
         }
 
 

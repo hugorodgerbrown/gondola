@@ -71,11 +71,10 @@ def update_plans(
     skiing: str | Keep = KEEP,
     resort: Resort | None | Keep = KEEP,
     note: str | Keep = KEEP,
-    is_private: bool | Keep = KEEP,
 ) -> list[PlanDay]:
     """Set the answers given on each of ``days``, keeping the ones left out.
 
-    A day with no plan yet starts from skiing, at no resort, shared.
+    A day with no plan yet starts from skiing, at no resort.
     """
     dates = sorted(set(days))
     existing = {
@@ -90,8 +89,6 @@ def update_plans(
             plan.resort = resort
         if not isinstance(note, Keep):
             plan.note = note.strip()
-        if not isinstance(is_private, Keep):
-            plan.is_private = is_private
         plan.save()
         saved.append(plan)
     return saved
@@ -104,12 +101,9 @@ def set_plan(
     *,
     resort: Resort | None = None,
     note: str = "",
-    is_private: bool = False,
 ) -> PlanDay:
     """Create or replace ``user``'s whole plan for ``day``."""
-    (plan,) = update_plans(
-        user, [day], skiing=skiing, resort=resort, note=note, is_private=is_private
-    )
+    (plan,) = update_plans(user, [day], skiing=skiing, resort=resort, note=note)
     return plan
 
 

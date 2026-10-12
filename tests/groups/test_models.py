@@ -124,13 +124,12 @@ def test_where_and_skiing_are_separate(skiing: str, named: bool, words: str) -> 
 
 
 def test_planday_querysets() -> None:
-    shared = PlanDayFactory.create(date=SATURDAY)
-    private = PlanDayFactory.create(date=SATURDAY, is_private=True)
+    first = PlanDayFactory.create(date=SATURDAY)
+    second = PlanDayFactory.create(date=SATURDAY)
     earlier = PlanDayFactory.create(date=SATURDAY - datetime.timedelta(3))
-    assert set(PlanDay.objects.on(SATURDAY)) == {shared, private}
-    assert private not in PlanDay.objects.shared()
+    assert set(PlanDay.objects.on(SATURDAY)) == {first, second}
     assert earlier not in PlanDay.objects.from_date(SATURDAY)
-    assert list(PlanDay.objects.from_date(earlier.date)) == [earlier, shared, private]
+    assert list(PlanDay.objects.from_date(earlier.date)) == [earlier, first, second]
 
 
 def test_a_planned_resort_cannot_be_deleted() -> None:

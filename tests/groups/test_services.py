@@ -21,12 +21,12 @@ def test_friends_are_group_mates_only(crew: Crew) -> None:
     assert people.friend_ids(crew.outsider) == set()
 
 
-def test_private_days_are_hidden_from_friends(crew: Crew) -> None:
+def test_friends_see_every_day_said(crew: Crew) -> None:
     plans.set_plan(crew.anna, crew.day, S.YES, resort=crew.verbier)
-    plans.set_plan(crew.ben, crew.day, S.YES, resort=crew.verbier, is_private=True)
+    plans.set_plan(crew.ben, crew.day, S.NO, resort=crew.verbier)
     plans.set_plan(crew.outsider, crew.day, S.YES, resort=crew.verbier)
     seen = list(people.visible_friend_plans(crew.sam, [crew.day]))
-    assert [p.user for p in seen] == [crew.anna]
+    assert {p.user for p in seen} == {crew.anna, crew.ben}
 
 
 def test_members_owner_first(crew: Crew) -> None:
@@ -88,7 +88,7 @@ def test_friends_by_resort_over_several_days(crew: Crew) -> None:
 
 def test_update_plans_changes_only_what_is_given(crew: Crew) -> None:
     days = [crew.day + datetime.timedelta(days=n) for n in range(4)]
-    plans.set_plan(crew.sam, days[0], S.NO, note="spa", is_private=True)
+    plans.set_plan(crew.sam, days[0], S.NO, note="spa")
     # Ten days in Verbier, then skiing on some of them.
     plans.update_plans(crew.sam, days, resort=crew.verbier, skiing=S.NO)
     made = plans.update_plans(crew.sam, days[:2], skiing=S.YES, note=" a ")
@@ -96,13 +96,11 @@ def test_update_plans_changes_only_what_is_given(crew: Crew) -> None:
         (days[0], crew.verbier, S.YES, "a"),
         (days[1], crew.verbier, S.YES, "a"),
     ]
-    first = PlanDay.objects.get(user=crew.sam, date=days[0])
-    assert first.is_private  # untouched
     rest = PlanDay.objects.filter(user=crew.sam, date__in=days[2:])
     assert {(p.resort, p.skiing, p.note) for p in rest} == {(crew.verbier, S.NO, "")}
     # A new day starts out skiing, at no resort.
     (fresh,) = plans.update_plans(crew.sam, [days[0] + datetime.timedelta(9)])
-    assert (fresh.skiing, fresh.resort, fresh.is_private) == (S.YES, None, False)
+    assert (fresh.skiing, fresh.resort) == (S.YES, None)
     plans.clear_plans(crew.sam, days)
     assert PlanDay.objects.filter(user=crew.sam).count() == 1
 
@@ -163,7 +161,7 @@ def test_remove_member_rules(crew: Crew) -> None:
 
 def test_board_cells(crew: Crew) -> None:
     start = plans.today()
-    plans.set_plan(crew.sam, start, S.YES, resort=crew.verbier, is_private=True)
+    plans.set_plan(crew.sam, start, S.YES, resort=crew.verbier)
     plans.set_plan(crew.anna, start, S.YES, resort=crew.verbier, note="first lift")
     plans.set_plan(
         crew.ben, start, S.YES
@@ -173,13 +171,12 @@ def test_board_cells(crew: Crew) -> None:
     assert len(result.days) == 7 and result.days[0].is_today
     rows = {row.person: row for row in result.rows}
     assert result.rows[0].person == crew.anna and result.rows[0].is_me
-    assert rows[crew.sam].cells[0] == board.EMPTY  # private, seen by Anna
+    assert rows[crew.sam].cells[0].text == "VERB"
+    assert rows[crew.anna].cells[2] == board.EMPTY
     assert rows[crew.anna].cells[0].text == "VERB"
     assert rows[crew.anna].cells[0].title == "Verbier · first lift"
     assert rows[crew.anna].cells[1].text == "–"
     assert rows[crew.ben].cells[0].text == "?"
-    own = board.build_board(crew.group, crew.sam).rows[0].cells[0]
-    assert own.text == "VERB" and own.private
 
 
 def test_board_cell_around_a_resort(crew: Crew) -> None:

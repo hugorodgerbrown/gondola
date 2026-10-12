@@ -4,7 +4,6 @@
     <div class="day-panel__head">
       <h2 class="day-panel__title" id="day-panel-heading">
         {{ day.date|date:"j F" }}
-        {% if plan.is_private %}<span class="day-panel__lock" role="img" aria-label="Only you see this day">{% include "includes/icons/lock.html" %}</span>{% endif %}
       </h2>
       {% if day.plannable %}
         <a class="button button--small{% if plan %} button--secondary{% endif %}" data-day-plan

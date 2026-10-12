@@ -3,8 +3,7 @@ apps/groups/services/board.py — The who's-where board for one group.
 
 People down the side, seven days across, a short resort code in each cell,
 quieter when that person is around but not skiing.
-The viewer's own row comes first and shows their private days with a lock;
-everyone else's private days look unplanned.
+The viewer's own row comes first.
 """
 
 from __future__ import annotations
@@ -28,7 +27,6 @@ class Cell:
     text: str
     title: str
     quiet: bool = False
-    private: bool = False
 
 
 @dataclass(frozen=True)
@@ -83,7 +81,7 @@ EMPTY = Cell(text="", title="Hasn't said")
 
 def cell_for(plan: PlanDay | None, *, mine: bool) -> Cell:
     """Return the cell for one plan, as the viewer may see it."""
-    if plan is None or (plan.is_private and not mine):
+    if plan is None:
         return EMPTY
     if plan.resort is not None:
         text = plan.resort.display_code
@@ -94,7 +92,6 @@ def cell_for(plan: PlanDay | None, *, mine: bool) -> Cell:
         title=plan.describe() + (f" · {plan.note}" if plan.note else ""),
         # Only a day out skiing is drawn at full strength.
         quiet=not plan.is_skiing,
-        private=plan.is_private,
     )
 
 

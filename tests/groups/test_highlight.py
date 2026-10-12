@@ -30,10 +30,9 @@ def test_resorts_in_play_are_busiest_first(crew: Crew) -> None:
     plans.set_plan(crew.sam, dec(5), S.YES, resort=crew.zermatt)
     for day in (5, 6):
         plans.set_plan(crew.anna, dec(day), S.YES, resort=crew.verbier)
-    # Private, outsider and no-resort days put nothing in play.
+    # Outsider and no-resort days put nothing in play.
     lone = UserFactory.create(display_name="Lone")
     hidden = ResortFactory.create(name="Hidden", code="HIDE")
-    plans.set_plan(crew.ben, dec(7), S.YES, resort=hidden, is_private=True)
     plans.set_plan(lone, dec(7), S.YES, resort=hidden)
     plans.set_plan(crew.ben, dec(8), S.YES)
     assert highlight.resorts_in_play(crew.sam, DEC) == [crew.verbier, crew.zermatt]
