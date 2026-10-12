@@ -35,7 +35,7 @@
               {% if day.meetup %}
                 <a class="board__meetup board__meetup--set" href="{% url 'planning:meetup' day.meetup.share_token %}" aria-label="Meet-up at {{ day.meetup.resort.name }} on {{ day.date|date:'D j' }}">{{ day.meetup.resort.display_code }}</a>
               {% else %}
-                <a class="board__meetup board__meetup--add" href="{% url 'planning:meetup_new' board.group.uuid %}?date={{ day.date|date:'Y-m-d' }}" aria-label="Propose a meet-up on {{ day.date|date:'D j' }}">{% include "includes/icons/plus.html" %}</a>
+                <a class="board__meetup board__meetup--add" href="{% url 'planning:meetup_new' board.group.uuid %}?date={{ day.date|date:'Y-m-d' }}&amp;from=board" aria-label="Propose a meet-up on {{ day.date|date:'D j' }}">{% include "includes/icons/plus.html" %}</a>
               {% endif %}
             </td>
           {% endfor %}

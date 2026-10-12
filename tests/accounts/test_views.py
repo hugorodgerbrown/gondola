@@ -1,6 +1,7 @@
 """Tests for apps/accounts/views.py."""
 
 import re
+from urllib.parse import urlencode
 
 import pytest
 from django.core import mail
@@ -40,11 +41,16 @@ def test_full_sign_up_flow(client: Client) -> None:
     done = client.post(
         reverse("accounts:welcome"), {"display_name": " Hugo ", "next": "/days/"}
     )
-    # A passkey is suggested once, on the way to where they were going.
-    assert done["Location"] == f"{reverse('accounts:passkey_welcome')}?next=%2Fdays%2F"
+    # A passkey is suggested once, then the tour is offered, on the way to
+    # where they were going.
+    offer = f"{reverse('tour:offer')}?next=%2Fdays%2F"
+    assert done["Location"] == (
+        f"{reverse('accounts:passkey_welcome')}?{urlencode({'next': offer})}"
+    )
     nudge = client.get(done["Location"])
     assert b"Add a passkey?" in nudge.content
-    assert nudge.context["next_url"] == "/days/"
+    assert nudge.context["next_url"] == offer
+    assert client.get(offer).context["next_url"] == "/days/"
     assert User.objects.get(email="hugo@example.com").display_name == "Hugo"
 
 
@@ -60,7 +66,8 @@ def test_new_account_keeps_every_query_parameter_of_next(client: Client) -> None
         reverse("accounts:welcome"),
         {"display_name": "New", "next": page.context["next_url"]},
     )
-    assert client.get(done["Location"]).context["next_url"] == next_url
+    offer = client.get(done["Location"]).context["next_url"]
+    assert client.get(offer).context["next_url"] == next_url
 
 
 def test_welcome_requires_a_name(client: Client) -> None:

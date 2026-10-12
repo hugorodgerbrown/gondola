@@ -49,6 +49,15 @@
     </div>
     <p class="small muted" data-passkey-unsupported>This browser can't make passkeys.</p>
   </section>
+  <section class="heading" aria-labelledby="tour-heading">
+    <span class="eyebrow" id="tour-heading">Tour</span>
+    <p class="small muted">A quick look round a made-up group, to see what everything does. Nothing is saved.</p>
+    <form method="post" action="{% url 'tour:start' %}">
+      {% csrf_token %}
+      <input type="hidden" name="next" value="{% url 'accounts:settings' %}">
+      <button type="submit" class="button button--secondary button--block">Take the tour</button>
+    </form>
+  </section>
   <form method="post" action="{% url 'accounts:sign_out' %}" data-sign-out>
     {% csrf_token %}
     <button type="submit" class="button button--secondary button--block">Sign out</button>

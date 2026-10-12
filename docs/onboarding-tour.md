@@ -1,7 +1,7 @@
 # Onboarding tour
 
-The script for the first-run tour, locked on 12 October 2026. Nothing here
-is built yet; this is the spec the build follows. The illustrated version,
+The script for the first-run tour, locked on 12 October 2026, and built
+in `apps/tour` (see "How it's built" at the end). The illustrated version,
 with every frame drawn on the real screens, is the
 [Gondola first-run tour](https://claude.ai/artifact/1941AZS9N4GK6gGXjbGiaF).
 
@@ -145,11 +145,13 @@ on the control that leads to the next page.
 | Frame | Element | Advances on | Coach mark |
 |---|---|---|---|
 | 7.0 | Hand-off | Let's go | That's the tour. The demo group is gone. This is your real calendar: tap a day you might ski, and your group will see it. The evening before you ski, we'll email you who's where. |
+
 ## Measuring it: fivebar goals
 
 Every event is a goal in fivebar with no setup. None carries anything about
-the person. Gondola isn't a fivebar site yet: add gondola.ultraniche.ai in
-fivebar, then the tag goes into `base.html` with the build.
+the person. The tag is on every page while `FIVEBAR_DOMAIN` is set
+(`apps/core/analytics.py`); set it to gondola.ultraniche.ai once that site
+is added in fivebar.
 
 | Event | Sent when | Data |
 |---|---|---|
@@ -167,3 +169,30 @@ The number to watch is `Day planned` (first, after tour) over
 
 Passkeys (asked just before the tour), notes beyond one line, reset link,
 leave and delete, and the shared meet-up page, which explains itself.
+
+## How it's built
+
+- **`apps/tour/script.py`** is this script as data: every coach mark, what
+  it spotlights and what it waits for. `tests/tour/test_script.py` fails if
+  it drifts from the tables above.
+- **`apps/tour/demo.py`** makes the copy: "Thursday crew", owned by the
+  person, with six made-up friends (inactive `@tour.invalid` accounts that
+  can't sign in or get email) and their week from today. The friends are
+  shared by every copy; each copy is the person and them, nobody else.
+- **`apps/tour/middleware.py`** reads the tour from the session. While
+  touring, `Group.objects.for_user` returns the demo copy and nothing else,
+  so every screen (map, My days, board, sheets) shows the demo with no
+  change of its own. Outside the tour it never returns a demo group, which
+  keeps them off the evening email too. Any form posted to the planning
+  screens is answered by the middleware, not its view: Save goes to the
+  group, Propose to the map, anything else stays put and says nothing was
+  saved. A copy older than an hour, or one left by a closed tab, is deleted
+  on the next page load.
+- **`static/js/tour.js`** plays the frames over the real page: four shades
+  round a hole, so only the spotlit control can be tapped. Inside a sheet
+  the layer moves into the dialog, which sits above the page.
+- **Offered** after the passkey screen for a new account, or after joining
+  for someone who signed up through an invite link; again from the account
+  page. Chapter 0 is `/tour/`.
+- A frame whose target isn't on screen (the meet-up dot when the demo week
+  runs into next month) is skipped.

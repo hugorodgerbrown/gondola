@@ -17,10 +17,17 @@ class MembershipInline(admin.TabularInline):
 class GroupAdmin(admin.ModelAdmin):
     """Admin for ``Group``."""
 
-    list_display = ["name", "owner", "created_at"]
+    list_display = ["name", "owner", "is_demo", "created_at"]
+    list_filter = ["is_demo"]
     search_fields = ["name", "owner__email"]
     autocomplete_fields = ["owner"]
-    readonly_fields = ["uuid", "invite_token", "created_at", "updated_at"]
+    readonly_fields = [
+        "uuid",
+        "invite_token",
+        "is_demo",
+        "created_at",
+        "updated_at",
+    ]
     inlines = [MembershipInline]
 
 

@@ -18,6 +18,7 @@ from django.urls import reverse
 from django.views.decorators.http import require_POST
 
 from apps.accounts.models import User
+from apps.tour.session import after_join
 
 from ..forms import GroupForm
 from ..models import Group
@@ -132,7 +133,9 @@ def remove(request: HttpRequest, group_uuid: str, user_uuid: str) -> HttpRespons
 
 def invite(request: HttpRequest, token: str) -> HttpResponse:
     """Show an invite: what the group is, and a Join button."""
-    group = Group.objects.select_related("owner").filter(invite_token=token).first()
+    group = (
+        Group.objects.real().select_related("owner").filter(invite_token=token).first()
+    )
     if group is None:
         return render(request, "groups/invite_invalid.html", status=404)
     user = request.user
@@ -149,10 +152,12 @@ def invite(request: HttpRequest, token: str) -> HttpResponse:
 @require_POST
 def join(request: HttpRequest, token: str) -> HttpResponse:
     """Join the group an invite link names."""
-    group = Group.objects.filter(invite_token=token).first()
+    group = Group.objects.real().filter(invite_token=token).first()
     if group is None:
         return render(request, "groups/invite_invalid.html", status=404)
     _, created = join_group(group, current_user(request))
     if created:
         messages.success(request, f"You're in {group.name}. Add your days next.")
-    return redirect("planning:group_detail", group_uuid=group.uuid)
+    group_url = reverse("planning:group_detail", kwargs={"group_uuid": group.uuid})
+    # A new account that signed up through this link is offered the tour now.
+    return redirect(after_join(request, group_url))

@@ -30,6 +30,8 @@ from django.shortcuts import render
 from django.urls import reverse
 from django.views.decorators.http import require_GET, require_POST
 
+from apps.accounts.models import User
+from apps.core.analytics import record
 from apps.core.http import refresh, render_sheet
 from apps.resorts.models import Resort
 from apps.resorts.search import search_resorts
@@ -49,6 +51,17 @@ from ..services.plans import (
     update_plans,
 )
 from .helpers import current_user, parse_day
+
+
+def record_day_planned(request: HttpRequest, user: User) -> None:
+    """Count a day planned in fivebar: the first ever, and whether after the tour."""
+    record(
+        request,
+        "Day planned",
+        first=not PlanDay.objects.filter(user=user).exists(),
+        after_tour=user.toured_at is not None,
+    )
+
 
 # The most days one selection can plan.
 MAX_SELECTED_DAYS = 62
@@ -188,6 +201,7 @@ def _sheet(
     initial, mixed = _initial(days, plans)
     form = DayForm(request.POST or None, initial=initial)
     if request.method == "POST" and form.is_valid():
+        record_day_planned(request, user)
         update_plans(user, days, **form.changes())
         return refresh(request, _my_days_url(_request_back(request)))
     friends = friends_by_resort(user, days)

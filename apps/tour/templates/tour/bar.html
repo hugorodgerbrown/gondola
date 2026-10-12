@@ -1,0 +1,8 @@
+{# The demo bar, just above the tab bar on every tour screen, and the end of the tour. #}
+<form class="tour-bar" method="post" action="{% url 'tour:end' %}" data-tour-bar>
+  {% csrf_token %}
+  <input type="hidden" name="chapter" value="" data-tour-chapter>
+  <span class="tour-bar__label"><strong>Demo</strong> · nothing is saved</span>
+  <button type="submit" class="tour-bar__end">End tour</button>
+</form>
+<form method="post" action="{% url 'tour:finish' %}" data-tour-finish hidden>{% csrf_token %}</form>

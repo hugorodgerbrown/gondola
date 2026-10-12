@@ -48,7 +48,7 @@
       <div id="resort-results" class="choices" role="radiogroup" aria-label="Search results" hidden></div>
     </div>
 
-    <div class="field">
+    <div class="field" data-tour="meetup-time">
       <label for="{{ form.start_time.id_for_label }}">Time</label>
       {{ form.start_time }}
     </div>
@@ -64,7 +64,7 @@
       <div class="pager"><span class="help">Tap the map to drop a pin. Time and pin are both optional.</span><button type="button" class="link-button" data-clear-pin hidden>Remove pin</button></div>
     </div>
 
-    <button type="submit" class="button button--block">Propose meet-up</button>
+    <button type="submit" class="button button--block" data-tour="meetup-propose">Propose meet-up</button>
     <p class="help" style="text-align:center">You get a link to send to the group chat.</p>
   </form>
 {% endblock %}

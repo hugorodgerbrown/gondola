@@ -25,6 +25,9 @@ Python 3.14 / Django 6.0, pinned in `pyproject.toml`.
 - A sheet for several days changes only the answers you touch.
 - A meet-up needs a resort; the time and meeting pin are optional.
 - Touring spots are not resorts and are never imported.
+- New accounts are offered a look-and-tap tour of a private demo group
+  (docs/onboarding-tour.md). Nothing is saved in the demo, and demo groups
+  never show outside it.
 - Every resort is Swiss, so dates and times are Swiss wall-clock
   (`TIME_ZONE = "Europe/Zurich"`).
 
@@ -40,6 +43,11 @@ Python 3.14 / Django 6.0, pinned in `pyproject.toml`.
   point (`apps.accounts.models.normalise_email`).
 - No Django signals for side effects: call them inline from the service.
 - Share and invite tokens come from `apps.core.tokens.make_token`.
+- Find a person's groups (and so their friends) through
+  `Group.objects.for_user`: it is what shows the demo copy while they tour
+  and hides demo groups otherwise. Querying memberships directly leaks one.
+- Product analytics are fivebar goals: queue one with
+  `apps.core.analytics.record`, or `data-tally` on a clicked element.
 
 ### Models
 

@@ -150,7 +150,9 @@ def build_digest(user: User, day: datetime.date) -> Digest:
 def recipients(day: datetime.date) -> list[User]:
     """Return who to consider: a plan for ``day``, or a group meet-up then."""
     planned = PlanDay.objects.filter(date=day).values("user_id")
-    meetup_groups = MeetUp.objects.filter(date=day).values("group_id")
+    meetup_groups = MeetUp.objects.filter(date=day, group__is_demo=False).values(
+        "group_id"
+    )
     return list(
         User.objects.wants_evening_email()
         .filter(Q(pk__in=planned) | Q(group_memberships__group_id__in=meetup_groups))

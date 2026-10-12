@@ -142,9 +142,10 @@
     event.preventDefault();
     const url = button.dataset.shareUrl;
     const title = button.dataset.shareTitle || document.title;
+    const text = button.dataset.shareText;
     if (navigator.share) {
       try {
-        await navigator.share({ title: title, url: url });
+        await navigator.share(text ? { title: title, text: text, url: url } : { title: title, url: url });
         return;
       } catch (error) {
         if (error && error.name === "AbortError") {

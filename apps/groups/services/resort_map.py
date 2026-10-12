@@ -24,8 +24,9 @@ from .plans import friend_counts
 
 def _meetup_resort_ids(viewer: User, day: datetime.date) -> set[int]:
     """Return resort ids with a meet-up that day in the viewer's groups."""
+    groups = Group.objects.for_user(viewer)
     return set(
-        MeetUp.objects.filter(group__memberships__user=viewer, date=day).values_list(
+        MeetUp.objects.filter(group__in=groups, date=day).values_list(
             "resort_id", flat=True
         )
     )

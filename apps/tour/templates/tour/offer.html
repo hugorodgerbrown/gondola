@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}Welcome · {{ SITE_NAME }}{% endblock %}
+{% block content %}
+  {# Chapter 0 of the tour (docs/onboarding-tour.md). #}
+  <section class="tour-welcome card card--padded stack" aria-labelledby="tour-welcome-heading">
+    <span class="eyebrow">Welcome</span>
+    <h1 class="title" id="tour-welcome-heading">{{ title }}</h1>
+    <p class="lede">{{ welcome }}</p>
+    <form method="post" action="{% url 'tour:start' %}">
+      {% csrf_token %}
+      <input type="hidden" name="next" value="{{ next_url }}">
+      <button type="submit" class="button button--block">Show me round</button>
+    </form>
+    <a class="button button--secondary button--block" href="{{ next_url }}">Not now</a>
+  </section>
+{% endblock %}

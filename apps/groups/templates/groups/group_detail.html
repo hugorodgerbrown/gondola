@@ -7,7 +7,7 @@
   </div>
 
   <nav class="tiles" aria-label="This group">
-    <a class="card tile" href="{% url 'planning:board' group.uuid %}"><strong>Who's where</strong><span class="small muted">This week, by day</span></a>
+    <a class="card tile" href="{% url 'planning:board' group.uuid %}" data-tour="board-tile"><strong>Who's where</strong><span class="small muted">This week, by day</span></a>
     <a class="card tile" href="{% url 'planning:my_days' %}"><strong>My days</strong><span class="small muted">Where you're skiing</span></a>
   </nav>
 
@@ -16,7 +16,7 @@
     <p class="small muted">Anyone with this link can join and will see everyone's names and planned days.</p>
     <code class="mono small" style="display:block;padding:10px 12px;background:var(--sunk);border-radius:var(--radius-control);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ invite_link }}</code>
     <div class="actions">
-      <button type="button" class="button button--small" data-share-url="{{ invite_link }}" data-share-title="Join {{ group.name }}">Share invite link</button>
+      <button type="button" class="button button--small" data-share-url="{{ invite_link }}" data-share-title="Join {{ group.name }}"{% if not group.is_demo %} data-tally="Invite shared" data-tally-from="group"{% endif %}>Share invite link</button>
       {% if is_owner %}
         <form method="post" action="{% url 'planning:reset_invite' group.uuid %}" style="flex:0 0 auto">
           {% csrf_token %}
