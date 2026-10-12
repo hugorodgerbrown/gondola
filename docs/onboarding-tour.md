@@ -149,9 +149,9 @@ on the control that leads to the next page.
 ## Measuring it: fivebar goals
 
 Every event is a goal in fivebar with no setup. None carries anything about
-the person. The tag is on every page while `FIVEBAR_DOMAIN` is set
-(`apps/core/analytics.py`); set it to gondola.ultraniche.ai once that site
-is added in fivebar.
+the person. The tag is on every page under SITE_URL's domain,
+gondola.ultraniche.ai (`apps/core/analytics.py`); `FIVEBAR_DOMAIN` overrides
+it. Add that site in fivebar for the counts to show.
 
 | Event | Sent when | Data |
 |---|---|---|

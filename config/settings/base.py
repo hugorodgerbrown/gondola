@@ -122,9 +122,14 @@ _site_host = urlsplit(config("SITE_URL", default="")).hostname
 if _site_host and _site_host not in ALLOWED_HOSTS:
     ALLOWED_HOSTS.append(_site_host)
 
-# Visitor counts and goals by fivebar: off unless set, to the domain the
-# site was added to fivebar under. See apps/core/analytics.py.
-FIVEBAR_DOMAIN: str = config("FIVEBAR_DOMAIN", default="")
+# Visitor counts and goals by fivebar, under the site's own domain: the
+# host SITE_URL names, so production needs nothing extra. Off when SITE_URL
+# is unset or local, or when FIVEBAR_DOMAIN is set to something else (empty
+# turns it off). See apps/core/analytics.py.
+_fivebar_default = (
+    _site_host if _site_host not in {None, "localhost", "127.0.0.1"} else ""
+)
+FIVEBAR_DOMAIN: str = config("FIVEBAR_DOMAIN", default=_fivebar_default or "")
 
 # Signing in is an emailed link; there are no passwords for people.
 LOGIN_URL = "accounts:sign_in"

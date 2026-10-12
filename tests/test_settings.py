@@ -19,6 +19,7 @@ NAMES = (
     "SITE_URL",
     "CSRF_TRUSTED_ORIGINS",
     "DJANGO_CSRF_TRUSTED_ORIGINS",
+    "FIVEBAR_DOMAIN",
 )
 
 
@@ -89,3 +90,26 @@ def test_production_trusts_both_origin_lists_and_the_service(
         "https://*.ultraniche.ai",
         "https://gondola-f915.onrender.com",
     ]
+
+
+def test_fivebar_counts_under_the_site_url_domain(
+    load: Callable[..., ModuleType],
+) -> None:
+    settings = load(SECRET_KEY="x", SITE_URL="https://gondola.ultraniche.ai")
+    assert settings.FIVEBAR_DOMAIN == "gondola.ultraniche.ai"
+
+
+def test_fivebar_is_off_locally_and_without_a_site_url(
+    load: Callable[..., ModuleType],
+) -> None:
+    assert load(SECRET_KEY="x").FIVEBAR_DOMAIN == ""
+    assert load(SECRET_KEY="x", SITE_URL="http://localhost:8000").FIVEBAR_DOMAIN == ""
+
+
+def test_fivebar_domain_can_be_overridden_or_turned_off(
+    load: Callable[..., ModuleType],
+) -> None:
+    site = "https://gondola.ultraniche.ai"
+    other = load(SECRET_KEY="x", SITE_URL=site, FIVEBAR_DOMAIN="other.example")
+    assert other.FIVEBAR_DOMAIN == "other.example"
+    assert load(SECRET_KEY="x", SITE_URL=site, FIVEBAR_DOMAIN="").FIVEBAR_DOMAIN == ""
