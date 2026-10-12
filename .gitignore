@@ -12,3 +12,6 @@ htmlcov/
 .pytest_cache/
 staticfiles/
 logs/*.log
+
+# Screenshot scripts once wrote here when an output path was unset.
+/undefined/
