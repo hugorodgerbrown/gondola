@@ -135,11 +135,6 @@ CHAPTERS: tuple[Chapter, ...] = (
             ),
             Frame(
                 "2.5",
-                "Keep a day to yourself: friends see nothing for it.",
-                ("[data-day-form] label.check",),
-            ),
-            Frame(
-                "2.6",
                 "Save shares the day with your groups.",
                 ("[data-day-form] button[type=submit]",),
                 tap="[data-day-form] button[type=submit]",

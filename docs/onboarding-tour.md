@@ -84,8 +84,7 @@ on the control that leads to the next page.
 | 2.2 | Search | Next | Somewhere else? Look up any resort. |
 | 2.3 | Skiing toggle | Next | Skiing is on when you're up for the slopes. Switch it off if you'll be around but not skiing. |
 | 2.4 | Note | Next | Add a note for your groups, like "first lift". |
-| 2.5 | Private | Next | Keep a day to yourself: friends see nothing for it. |
-| 2.6 | Save | Tap Save | Save shares the day with your groups. |
+| 2.5 | Save | Tap Save | Save shares the day with your groups. |
 
 ## Chapter 3: Your group
 
