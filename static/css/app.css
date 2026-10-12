@@ -1419,7 +1419,9 @@ fieldset.field {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  min-height: 64px;
+  /* Square at any width: the grid sets the width, the ratio the height. */
+  aspect-ratio: 1;
+  min-width: 0;
   padding: 4px 4px 5px;
   border-radius: var(--radius-control);
   background: var(--sunk);
