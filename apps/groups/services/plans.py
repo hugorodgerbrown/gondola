@@ -5,7 +5,7 @@ A plan day belongs to a person, not a group, and answers two separate
 questions: where they'll be (a resort, or none) and whether they're
 skiing (yes, not sure, no). Someone at a resort who isn't skiing is still
 "around" for friends. ``update_plans`` is the one place plans are written,
-whether from My days, the map or by joining a meet-up: over several days it
+whether from the calendar, the map or by joining a meet-up: over several days it
 changes only the answers given and keeps the rest, so ten days in Verbier
 stay in Verbier when three of them are then marked as skiing. Saying
 nothing is different from "Not sure yet" or "Not skiing": clearing a day

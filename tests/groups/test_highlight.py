@@ -1,4 +1,4 @@
-"""Tests for one resort highlighted on My days (services/highlight.py, month.py)."""
+"""Tests for one resort highlighted on the calendar (services/highlight.py, month.py)."""
 
 import datetime
 

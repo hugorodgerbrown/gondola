@@ -1,5 +1,5 @@
 """
-apps/groups/services/month.py — My days as a month calendar.
+apps/groups/services/month.py — the calendar, one month at a time.
 
 One month at a time, weeks starting Monday. Each day carries what the
 viewer said about it and what their groups are up to: how many friends

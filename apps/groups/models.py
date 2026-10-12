@@ -46,7 +46,7 @@ class GroupQuerySet(models.QuerySet["Group"]):
         While someone tours, ``apps.tour.middleware`` sets
         ``user.tour_group_id`` and their only group is the demo copy, so
         every screen shows the made-up friends and nothing real. Otherwise
-        a demo group never shows: not on the map, the board, My days or in
+        a demo group never shows: not on the map, the board, the calendar or in
         the evening email, which runs with no request at all.
         """
         mine = self.filter(memberships__user=user)

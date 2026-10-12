@@ -1,5 +1,5 @@
 <nav class="tabbar" aria-label="Main">
   <a href="{% url 'planning:map' %}"{% if tab == 'map' %} aria-current="page"{% endif %}>{% include "includes/icons/map.html" %}Map</a>
-  <a href="{% url 'planning:my_days' %}"{% if tab == 'days' %} aria-current="page"{% endif %}>{% include "includes/icons/calendar.html" %}My days</a>
+  <a href="{% url 'planning:calendar' %}"{% if tab == 'calendar' %} aria-current="page"{% endif %}>{% include "includes/icons/calendar.html" %}Calendar</a>
   <a href="{% url 'planning:group_list' %}"{% if tab == 'groups' %} aria-current="page"{% endif %}>{% include "includes/icons/people.html" %}Groups</a>
 </nav>

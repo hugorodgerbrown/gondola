@@ -53,12 +53,12 @@ def test_offer_needs_sign_in(client: Client) -> None:
     assert reverse("accounts:sign_in") in response["Location"]
 
 
-def test_start_makes_the_copy_and_opens_my_days(
+def test_start_makes_the_copy_and_opens_the_calendar(
     client: Client, tourist: User, resorts: dict[str, Resort]
 ) -> None:
     client.force_login(tourist)
     response = client.post(reverse("tour:start"), {"next": "/map/"})
-    assert response["Location"] == reverse("planning:my_days")
+    assert response["Location"] == reverse("planning:calendar")
     group = _demo(tourist)
     assert client.session[TOUR_KEY] == {"group": str(group.uuid), "next": "/map/"}
 
@@ -82,11 +82,11 @@ def test_account_page_offers_the_tour(client: Client, tourist: User) -> None:
 def test_touring_pages_show_the_demo_and_the_bar(
     touring: Client, tourist: User
 ) -> None:
-    response = touring.get(reverse("planning:my_days"))
+    response = touring.get(reverse("planning:calendar"))
     assert b"Demo</strong> \xc2\xb7 nothing is saved" in response.content
     assert b'id="tour-script"' in response.content
     script = _script(response)
-    assert script["page"] == "my_days"
+    assert script["page"] == "calendar"
     assert [c["number"] for c in script["chapters"]] == [1, 2]  # type: ignore[attr-defined]
     assert [g.name for g in response.context["groups"]] == ["Thursday crew"]
 
@@ -118,7 +118,7 @@ def test_outside_the_tour_demo_groups_never_show(
     assert not Group.objects.for_user(tourist).exists()
     client.force_login(tourist)
     # A page load with no tour in the session deletes the leftover copy.
-    response = client.get(reverse("planning:my_days"))
+    response = client.get(reverse("planning:calendar"))
     assert response.context["tour"]["script"] is None
     assert not Group.objects.demos().exists()
 
@@ -127,7 +127,7 @@ def test_a_stale_tour_ends_on_the_next_request(touring: Client, tourist: User) -
     Group.objects.filter(pk=_demo(tourist).pk).update(
         created_at=timezone.now() - DEMO_LIFETIME * 2
     )
-    response = touring.get(reverse("planning:my_days"))
+    response = touring.get(reverse("planning:calendar"))
     assert response.context["tour"]["script"] is None
     assert TOUR_KEY not in touring.session
     assert not Group.objects.demos().exists()
@@ -189,8 +189,8 @@ def test_any_other_post_stays_put_and_says_so(
     elsewhere = touring.post(
         reverse("planning:group_list"), {"name": "New"}, HTTP_REFERER="https://evil/"
     )
-    assert elsewhere["Location"] == reverse("planning:my_days")
-    page = touring.get(reverse("planning:my_days"))
+    assert elsewhere["Location"] == reverse("planning:calendar")
+    page = touring.get(reverse("planning:calendar"))
     assert b"nothing was saved" in page.content
     assert not PlanDay.objects.filter(user=tourist).exists()
     assert not Group.objects.filter(name="New").exists()
@@ -201,7 +201,7 @@ def test_any_other_post_stays_put_and_says_so(
 
 def test_end_tour_deletes_the_copy(touring: Client, tourist: User) -> None:
     response = touring.post(reverse("tour:end"), {"chapter": "3"})
-    assert response["Location"] == reverse("planning:my_days")
+    assert response["Location"] == reverse("planning:calendar")
     assert not Group.objects.demos().exists()
     assert TOUR_KEY not in touring.session
     page = touring.get(response["Location"])
@@ -211,34 +211,34 @@ def test_end_tour_deletes_the_copy(touring: Client, tourist: User) -> None:
 
 def test_finish_hands_over_once(touring: Client, tourist: User) -> None:
     response = touring.post(reverse("tour:finish"))
-    assert response["Location"] == reverse("planning:my_days")
+    assert response["Location"] == reverse("planning:calendar")
     tourist.refresh_from_db()
     assert tourist.toured_at is not None
     assert not Group.objects.demos().exists()
-    page = touring.get(reverse("planning:my_days"))
+    page = touring.get(reverse("planning:calendar"))
     assert b"This is your real calendar" in page.content
     # No group yet: Let's go starts one.
     assert reverse("planning:group_list").encode() in page.content
     assert b"Tell the group" not in page.content
     assert (
         b"This is your real calendar"
-        not in touring.get(reverse("planning:my_days")).content
+        not in touring.get(reverse("planning:calendar")).content
     )
 
 
-def test_the_handoff_waits_for_my_days(touring: Client) -> None:
+def test_the_handoff_waits_for_the_calendar(touring: Client) -> None:
     touring.post(reverse("tour:finish"))
     touring.get(reverse("planning:group_list"))
     assert (
         b"This is your real calendar"
-        in touring.get(reverse("planning:my_days")).content
+        in touring.get(reverse("planning:calendar")).content
     )
 
 
 def test_a_quiet_group_gets_tell_the_group(touring: Client, tourist: User) -> None:
     real = create_group(tourist, "Real friends")
     touring.post(reverse("tour:finish"))
-    page = touring.get(reverse("planning:my_days"))
+    page = touring.get(reverse("planning:calendar"))
     assert b"Tell the group" in page.content
     assert real.invite_token.encode() in page.content
     assert b"My ski days are on Gondola, add yours" in page.content
@@ -256,7 +256,7 @@ def test_a_busy_group_just_closes(
     )
     touring.post(reverse("tour:finish"))
     assert touring.session[HANDOFF_KEY]["group"] == "busy"
-    page = touring.get(reverse("planning:my_days"))
+    page = touring.get(reverse("planning:calendar"))
     assert b"Tell the group" not in page.content
     assert page.context["handoff"]["go_url"] == ""
 
@@ -268,7 +268,7 @@ def test_from_an_invite_lets_go_back_to_it(
     client.force_login(tourist)
     client.post(reverse("tour:start"), {"next": invite})
     client.post(reverse("tour:finish"))
-    page = client.get(reverse("planning:my_days"))
+    page = client.get(reverse("planning:calendar"))
     assert page.context["handoff"]["go_url"] == invite
 
 

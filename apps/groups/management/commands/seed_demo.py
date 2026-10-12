@@ -129,7 +129,7 @@ class Command(BaseCommand):
             )
         self.stdout.write(
             f"Seeded {GROUP_NAME} from {start:%a %d %b %Y}. Sign in as {email} "
-            f"and open My days at {start:%B}, the board at ?start={start}, or "
+            f"and open the calendar at {start:%B}, the board at ?start={start}, or "
             f"the map at ?date={start}."
         )
 

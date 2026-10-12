@@ -217,7 +217,7 @@
     element.addEventListener("dragstart", function (event) { event.preventDefault(); });
     element.addEventListener("pointerup", function (event) {
       if (!start || !event.isPrimary) return;
-      // My days: a drag that is picking a run of days isn't a swipe.
+      // Calendar: a drag that is picking a run of days isn't a swipe.
       if (element.isPicking && element.isPicking()) {
         start = null;
         return;
@@ -241,7 +241,7 @@
   }
   window.onSwipe = onSwipe;
 
-  // My days: swipe between months, as the arrows do.
+  // Calendar: swipe between months, as the arrows do.
   document.querySelectorAll("[data-swipe-previous], [data-swipe-next]").forEach(function (element) {
     function go(url) {
       if (url) location.href = url;

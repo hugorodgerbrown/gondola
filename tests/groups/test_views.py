@@ -29,21 +29,21 @@ def sam(client: Client, crew: Crew) -> Client:
 
 
 @pytest.mark.parametrize(
-    "name", ["planning:map", "planning:my_days", "planning:group_list"]
+    "name", ["planning:map", "planning:calendar", "planning:group_list"]
 )
 def test_screens_need_sign_in(client: Client, name: str) -> None:
     response = client.get(reverse(name))
     assert response["Location"].startswith(reverse("accounts:sign_in"))
 
 
-# --- my days ------------------------------------------------------------------------
+# --- calendar ------------------------------------------------------------------------
 
 
-def test_my_days_is_this_month(sam: Client, crew: Crew) -> None:
+def test_calendar_is_this_month(sam: Client, crew: Crew) -> None:
     today = plans.today()
     plans.set_plan(crew.sam, today, S.YES, resort=crew.verbier, is_private=True)
     plans.set_plan(crew.anna, today, S.YES, resort=crew.verbier)
-    response = sam.get(reverse("planning:my_days"))
+    response = sam.get(reverse("planning:calendar"))
     cal = response.context["month"]
     assert cal.first == today.replace(day=1)
     assert cal.previous is None
@@ -56,17 +56,17 @@ def test_my_days_is_this_month(sam: Client, crew: Crew) -> None:
     )
 
 
-def test_my_days_steps_a_month(sam: Client, crew: Crew) -> None:
+def test_calendar_steps_a_month(sam: Client, crew: Crew) -> None:
     today = plans.today()
     later = (today.replace(day=1) + datetime.timedelta(days=62)).replace(day=1)
-    response = sam.get(reverse("planning:my_days"), {"from": later.isoformat()})
+    response = sam.get(reverse("planning:calendar"), {"from": later.isoformat()})
     cal = response.context["month"]
     assert cal.first == later
     assert cal.previous is not None and cal.previous < later
     assert f'href="?from={cal.previous.isoformat()}"'.encode() in response.content
     assert response.context["window_from"] == later
     # Far past the horizon, the last plannable month, with no way on.
-    end = sam.get(reverse("planning:my_days"), {"from": "2099-01-01"})
+    end = sam.get(reverse("planning:calendar"), {"from": "2099-01-01"})
     assert end.context["month"].first == plans.last_plannable_day().replace(day=1)
     assert end.context["month"].next is None
 
@@ -75,12 +75,12 @@ def test_plain_forms_keep_the_month(sam: Client, crew: Crew) -> None:
     """Without JavaScript, saving or clearing a day returns to its month."""
     far = plans.today() + datetime.timedelta(days=60)
     first = far.replace(day=1)
-    page = sam.get(reverse("planning:my_days"), {"from": far.isoformat()})
+    page = sam.get(reverse("planning:calendar"), {"from": far.isoformat()})
     day_url = reverse("planning:day", kwargs={"day": far})
     assert f'href="{day_url}?from={first.isoformat()}"'.encode() in page.content
     sheet = sam.get(day_url, {"from": first.isoformat()})
     assert f'name="from" value="{first.isoformat()}"'.encode() in sheet.content
-    back = f"{reverse('planning:my_days')}?from={first.isoformat()}"
+    back = f"{reverse('planning:calendar')}?from={first.isoformat()}"
     saved = sam.post(day_url, {"skiing": S.NOT_SURE, "from": first.isoformat()})
     assert saved["Location"] == back
     cleared = sam.post(
@@ -88,16 +88,16 @@ def test_plain_forms_keep_the_month(sam: Client, crew: Crew) -> None:
     )
     assert cleared["Location"] == back
     # This month needs nothing carried.
-    assert sam.get(reverse("planning:my_days")).context["window_from"] is None
+    assert sam.get(reverse("planning:calendar")).context["window_from"] is None
 
 
-def test_my_days_highlights_a_resort(sam: Client, crew: Crew) -> None:
+def test_calendar_highlights_a_resort(sam: Client, crew: Crew) -> None:
     """Chips list the month's resorts; one picked lights the days someone is there."""
     far = plans.today() + datetime.timedelta(days=60)
     first = far.replace(day=1).isoformat()
     plans.set_plan(crew.anna, far, S.YES, resort=crew.verbier)
     plans.set_plan(crew.ben, far, S.NO, resort=crew.zermatt)
-    url = reverse("planning:my_days")
+    url = reverse("planning:calendar")
     page = sam.get(url, {"from": first})
     assert page.context["resorts"] == [crew.verbier, crew.zermatt]
     assert page.context["highlight"] is None
@@ -119,7 +119,7 @@ def test_my_days_highlights_a_resort(sam: Client, crew: Crew) -> None:
 
 
 def test_a_highlight_nobody_is_at_still_shows(sam: Client, crew: Crew) -> None:
-    page = sam.get(reverse("planning:my_days"), {"highlight": str(crew.zermatt.uuid)})
+    page = sam.get(reverse("planning:calendar"), {"highlight": str(crew.zermatt.uuid)})
     assert page.context["resorts"] == [crew.zermatt]
     assert b"month--highlight" in page.content
     assert b"mday--lit" not in page.content
@@ -127,7 +127,7 @@ def test_a_highlight_nobody_is_at_still_shows(sam: Client, crew: Crew) -> None:
 
 @pytest.mark.parametrize("value", ["nope", "00000000-0000-0000-0000-000000000000"])
 def test_a_bad_highlight_is_ignored(sam: Client, value: str) -> None:
-    page = sam.get(reverse("planning:my_days"), {"highlight": value})
+    page = sam.get(reverse("planning:calendar"), {"highlight": value})
     assert page.status_code == 200
     assert page.context["highlight"] is None
 
@@ -144,15 +144,15 @@ def test_saving_a_day_keeps_the_highlight(sam: Client, crew: Crew) -> None:
         {"skiing": S.YES, "resort": str(crew.zermatt.uuid), "highlight": highlighted},
     )
     assert saved["Location"] == (
-        f"{reverse('planning:my_days')}?highlight={highlighted}"
+        f"{reverse('planning:calendar')}?highlight={highlighted}"
     )
     plan = PlanDay.objects.get(user=crew.sam, date=crew.day)
     assert plan.resort == crew.zermatt
 
 
-def test_my_days_without_groups(client: Client, crew: Crew) -> None:
+def test_calendar_without_groups(client: Client, crew: Crew) -> None:
     client.force_login(crew.outsider)
-    assert b"Nobody sees these yet" in client.get(reverse("planning:my_days")).content
+    assert b"Nobody sees these yet" in client.get(reverse("planning:calendar")).content
 
 
 def test_day_sheet_shows_friends_first(sam: Client, crew: Crew) -> None:
@@ -241,7 +241,7 @@ def test_day_sheet_shows_the_days_meetups(sam: Client, crew: Crew) -> None:
 def test_day_sheet_not_sure_and_clear(sam: Client, crew: Crew) -> None:
     url = reverse("planning:day", kwargs={"day": crew.day})
     response = sam.post(url, {"skiing": "not_sure"})
-    assert response["Location"] == reverse("planning:my_days")
+    assert response["Location"] == reverse("planning:calendar")
     assert PlanDay.objects.get(user=crew.sam).skiing == S.NOT_SURE
     assert b"Clear this day" in sam.get(url).content
     sam.post(reverse("planning:day_clear", kwargs={"day": crew.day}), headers=HTMX)
@@ -272,7 +272,7 @@ def test_several_days_sheet(sam: Client, crew: Crew) -> None:
     assert fragment.status_code == 200
     context = fragment.context
     assert context["title"] == "Mon 14 – Sun 20 December"
-    assert context["eyebrow"] == "My days · 7 days"
+    assert context["eyebrow"] == "Calendar · 7 days"
     assert context["save_label"] == "Save 7 days"
     assert [e.names for e in context["friends"]] == ["Anna"]  # once, not twice
     # Sam is unsure about one day, and the rest start out skiing.
@@ -358,7 +358,7 @@ def test_several_days_save_and_clear(sam: Client, crew: Crew) -> None:
         url,
         {"skiing": "skiing", "resort": str(crew.verbier.uuid), "from": "2026-12-01"},
     )
-    assert response["Location"] == reverse("planning:my_days") + "?from=2026-12-01"
+    assert response["Location"] == reverse("planning:calendar") + "?from=2026-12-01"
     saved = PlanDay.objects.filter(user=crew.sam).order_by("date")
     assert [p.date.isoformat() for p in saved] == days
     assert {p.resort for p in saved} == {crew.verbier}
@@ -393,8 +393,8 @@ def test_several_days_refuses_bad_selections(
     assert sam.get(reverse("planning:several_days") + query).status_code == 404
 
 
-def test_my_days_can_select(sam: Client, crew: Crew) -> None:
-    page = sam.get(reverse("planning:my_days"))
+def test_calendar_can_select(sam: Client, crew: Crew) -> None:
+    page = sam.get(reverse("planning:calendar"))
     assert b"data-select-bar" in page.content
     assert b'data-select-days="/days/several/"' in page.content
     assert b"js/day_select.js" in page.content

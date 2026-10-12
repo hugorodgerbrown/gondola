@@ -1,5 +1,5 @@
 /*
- * static/js/day_select.js — Select several days on My days and plan them at once.
+ * static/js/day_select.js — Select several days on the calendar and plan them at once.
  *
  * A tap opens one day, as before. Pressing and holding a day (or, with a
  * mouse, dragging from one day onto another) starts selecting, as in the
@@ -20,7 +20,7 @@
     return;
   }
 
-  const KEY = "my-days-selection";
+  const KEY = "calendar-selection";
   const HOLD_MS = 400;
   const MOVE_PX = 10;
   const MAX = Number(grid.dataset.selectMax) || 62;

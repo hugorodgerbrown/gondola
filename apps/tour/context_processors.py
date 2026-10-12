@@ -4,7 +4,7 @@ apps/tour/context_processors.py — What a page needs to play the tour.
 While someone tours, every page gets ``tour.script``: the chapters played
 on that page, as data for ``static/js/tour.js``, and the URLs it posts to.
 The base template then shows the demo bar and loads the script. After the
-tour, the real My days gets ``tour.handoff`` (chapter 7) once.
+tour, the real calendar gets ``tour.handoff`` (chapter 7) once.
 """
 
 from __future__ import annotations
@@ -45,7 +45,7 @@ def _script(request: HttpRequest, page: str) -> dict[str, object] | None:
 
 
 def _handoff(request: HttpRequest) -> dict[str, object] | None:
-    """Return chapter 7 for the real My days, once, after the tour."""
+    """Return chapter 7 for the real calendar, once, after the tour."""
     handoff = take_handoff(request)
     if handoff is None:
         return None
@@ -73,12 +73,12 @@ def tour(request: HttpRequest) -> dict[str, dict[str, object]]:
     """Expose the tour to every template as ``tour``.
 
     ``handoff`` is a function, so it is only taken (and forgotten) by the
-    page that shows it: the real My days.
+    page that shows it: the real calendar.
     """
     page = _page(request)
 
     def handoff() -> dict[str, object] | None:
-        """Return the hand-off, when My days asks for it."""
-        return _handoff(request) if page == "my_days" else None
+        """Return the hand-off, when the calendar asks for it."""
+        return _handoff(request) if page == "calendar" else None
 
     return {"tour": {"script": _script(request, page), "handoff": handoff}}

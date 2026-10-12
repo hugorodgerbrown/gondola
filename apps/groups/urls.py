@@ -17,8 +17,8 @@ urlpatterns = [
         "map/resort/<uuid:resort_uuid>/", resort_map.resort_sheet, name="resort_sheet"
     ),
     path("map/resort/<uuid:resort_uuid>/plan/", resort_map.plan_here, name="plan_here"),
-    # B · my days
-    path("days/", days.my_days, name="my_days"),
+    # B · the calendar
+    path("days/", days.calendar, name="calendar"),
     path("days/<date:day>/", days.day, name="day"),
     path("days/<date:day>/clear/", days.day_clear, name="day_clear"),
     path("days/several/", days.several_days, name="several_days"),

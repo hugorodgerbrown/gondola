@@ -53,7 +53,7 @@ def test_chapters_for_a_page_fill_in_the_demo_week(
     resorts: dict[str, Resort],
 ) -> None:
     week = demo_week()
-    played = chapters_for("my_days", week)
+    played = chapters_for("calendar", week)
     assert [c["number"] for c in played] == [1, 2]
     tap = played[0]["frames"][-1]["tap"]  # type: ignore[index]
     assert tap == f'.mday[data-date="{week.start.isoformat()}"]'

@@ -1,13 +1,13 @@
 {% extends "base.html" %}
 {% load static %}
-{% block title %}My days · {{ SITE_NAME }}{% endblock %}
+{% block title %}Calendar · {{ SITE_NAME }}{% endblock %}
 {% block scripts %}
   <script src="{% static 'js/day_select.js' %}"></script>
 {% endblock %}
 {% block content %}
   <div class="heading">
     <span class="eyebrow">{{ month.first|date:"F Y" }}</span>
-    <h1 class="title">My days</h1>
+    <h1 class="title">Your calendar</h1>
     {% if groups %}
       <p class="lede">Everyone in {% for group in groups %}{% if not forloop.first %}{% if forloop.last %} and {% else %}, {% endif %}{% endif %}{{ group.name }}{% endfor %} sees these, except days you keep private.</p>
     {% else %}

@@ -1,5 +1,5 @@
 """
-apps/groups/services/highlight.py — One resort picked out on My days.
+apps/groups/services/highlight.py — One resort picked out on the calendar.
 
 Answers "who's in Verbier in January" from the calendar: the chips list
 the resorts anyone (you, or a friend on a day they haven't kept private)

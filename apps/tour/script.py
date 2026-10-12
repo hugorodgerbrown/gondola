@@ -68,7 +68,7 @@ CHAPTERS: tuple[Chapter, ...] = (
     Chapter(
         1,
         "Your calendar",
-        ("my_days",),
+        ("calendar",),
         (
             Frame(
                 "1.0",
@@ -108,7 +108,7 @@ CHAPTERS: tuple[Chapter, ...] = (
     Chapter(
         2,
         "A single day",
-        ("my_days", "day"),
+        ("calendar", "day"),
         (
             Frame(
                 "2.0",

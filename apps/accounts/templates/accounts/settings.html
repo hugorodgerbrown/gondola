@@ -62,7 +62,7 @@
     {% csrf_token %}
     <button type="submit" class="button button--secondary button--block">Sign out</button>
   </form>
-  <a class="small muted" href="{% url 'accounts:delete' %}">Delete my account</a>
+  <a class="small muted" href="{% url 'accounts:delete' %}">Delete your account</a>
 {% endblock %}
 {% block scripts %}
   <script src="{% static 'js/webauthn_json.js' %}"></script>

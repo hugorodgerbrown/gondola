@@ -48,13 +48,13 @@ def go(request: HttpRequest, url: str) -> HttpResponse:
 
 
 def _back(request: HttpRequest) -> str:
-    """Return the page the post came from, if it's ours, else My days."""
+    """Return the page the post came from, if it's ours, else the calendar."""
     referer = request.headers.get("Referer", "")
     if referer and url_has_allowed_host_and_scheme(
         referer, allowed_hosts={request.get_host()}, require_https=request.is_secure()
     ):
         return referer
-    return reverse("planning:my_days")
+    return reverse("planning:calendar")
 
 
 def guard(request: HttpRequest, tour: Tour, url_name: str) -> HttpResponse:

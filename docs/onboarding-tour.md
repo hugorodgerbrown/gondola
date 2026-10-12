@@ -28,7 +28,7 @@ with every frame drawn on the real screens, is the
   bar sits just above the tab bar on every tour screen. While someone
   tours, their demo copy is the only group every screen shows, the map and
   the board included, so the tour is full. Outside the tour, demo groups
-  never show anywhere: not on the map, the board, My days or in the
+  never show anywhere: not on the map, the board, the calendar or in the
   evening email.
 - **Cleaned up.** Finishing or ending the tour deletes the copy. Someone who
   closes the tab has theirs deleted on their next page load, since the app
@@ -61,7 +61,7 @@ on the control that leads to the next page.
 
 **Page intro:** This is your calendar. It shows the days you're skiing, and how many of your friends are skiing each day.
 
-*Why:* My days is where people spend most of their time, and every mark on it carries meaning. The intro names the page; each zoom explains one mark.
+*Why:* The calendar is where people spend most of their time, and every mark on it carries meaning. The intro names the page; each zoom explains one mark.
 
 | Frame | Element | Advances on | Coach mark |
 |---|---|---|---|
@@ -195,7 +195,7 @@ leave and delete, and the shared meet-up page, which explains itself.
   shared by every copy; each copy is the person and them, nobody else.
 - **`apps/tour/middleware.py`** reads the tour from the session. While
   touring, `Group.objects.for_user` returns the demo copy and nothing else,
-  so every screen (map, My days, board, sheets) shows the demo with no
+  so every screen (map, calendar, board, sheets) shows the demo with no
   change of its own. Outside the tour it never returns a demo group, which
   keeps them off the evening email too. Any form posted to the planning
   screens is answered by the middleware, not its view: Save goes to the

@@ -1,4 +1,4 @@
-"""Tests for My days' month calendar: apps/groups/services/month.py."""
+"""Tests for the calendar's month view: apps/groups/services/month.py."""
 
 import datetime
 
