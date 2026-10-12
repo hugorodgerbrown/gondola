@@ -10,7 +10,6 @@ from apps.groups.services.memberships import MembershipError
 from tests.groups.conftest import Crew
 
 pytestmark = pytest.mark.django_db
-S = PlanDay.Skiing
 
 
 # --- people ---------------------------------------------------------------
@@ -22,9 +21,9 @@ def test_friends_are_group_mates_only(crew: Crew) -> None:
 
 
 def test_friends_see_every_day_said(crew: Crew) -> None:
-    plans.set_plan(crew.anna, crew.day, S.YES, resort=crew.verbier)
-    plans.set_plan(crew.ben, crew.day, S.NO, resort=crew.verbier)
-    plans.set_plan(crew.outsider, crew.day, S.YES, resort=crew.verbier)
+    plans.set_plan(crew.anna, crew.day, crew.verbier)
+    plans.set_plan(crew.ben, crew.day, crew.verbier)
+    plans.set_plan(crew.outsider, crew.day, crew.verbier)
     seen = list(people.visible_friend_plans(crew.sam, [crew.day]))
     assert {p.user for p in seen} == {crew.anna, crew.ben}
 
@@ -39,18 +38,12 @@ def test_members_owner_first(crew: Crew) -> None:
 
 
 def test_set_plan_upserts_and_clears(crew: Crew) -> None:
-    plans.set_plan(crew.sam, crew.day, S.YES, resort=crew.zermatt)
-    plan = plans.set_plan(crew.sam, crew.day, S.NO, resort=crew.verbier)
-    # Where and skiing are separate: in Verbier, not skiing.
-    assert (plan.resort, plan.skiing) == (crew.verbier, S.NO)
+    plans.set_plan(crew.sam, crew.day, crew.zermatt)
+    plan = plans.set_plan(crew.sam, crew.day, crew.verbier)
+    assert plan.resort == crew.verbier
     assert PlanDay.objects.filter(user=crew.sam).count() == 1
     plans.clear_plan(crew.sam, crew.day)
     assert not PlanDay.objects.filter(user=crew.sam).exists()
-
-
-def test_skiing_needs_no_resort(crew: Crew) -> None:
-    plan = plans.set_plan(crew.sam, crew.day, S.YES)
-    assert plan.describe() == "Skiing, not sure where"
 
 
 def test_is_plannable() -> None:
@@ -61,9 +54,9 @@ def test_is_plannable() -> None:
 
 
 def test_friends_by_resort_and_counts(crew: Crew) -> None:
-    plans.set_plan(crew.anna, crew.day, S.YES, resort=crew.verbier)
-    plans.set_plan(crew.ben, crew.day, S.YES, resort=crew.verbier)
-    plans.set_plan(crew.sam, crew.day, S.YES, resort=crew.zermatt)
+    plans.set_plan(crew.anna, crew.day, crew.verbier)
+    plans.set_plan(crew.ben, crew.day, crew.verbier)
+    plans.set_plan(crew.sam, crew.day, crew.zermatt)
     entries = plans.friends_by_resort(crew.sam, crew.day)
     assert [(e.resort, e.names) for e in entries] == [(crew.verbier, "Anna and Ben")]
     assert plans.friend_counts(crew.sam, crew.day) == {crew.verbier.pk: 2}
@@ -75,9 +68,9 @@ def test_friends_by_resort_and_counts(crew: Crew) -> None:
 
 def test_friends_by_resort_over_several_days(crew: Crew) -> None:
     later = crew.day + datetime.timedelta(days=1)
-    plans.set_plan(crew.anna, crew.day, S.YES, resort=crew.verbier)
-    plans.set_plan(crew.anna, later, S.YES, resort=crew.verbier)
-    plans.set_plan(crew.ben, later, S.YES, resort=crew.zermatt)
+    plans.set_plan(crew.anna, crew.day, crew.verbier)
+    plans.set_plan(crew.anna, later, crew.verbier)
+    plans.set_plan(crew.ben, later, crew.zermatt)
     entries = plans.friends_by_resort(crew.sam, [crew.day, later])
     # Anna on both days at Verbier counts once.
     assert [(e.resort, e.names) for e in entries] == [
@@ -86,36 +79,24 @@ def test_friends_by_resort_over_several_days(crew: Crew) -> None:
     ]
 
 
-def test_update_plans_changes_only_what_is_given(crew: Crew) -> None:
+def test_update_plans_puts_every_day_in_one_resort(crew: Crew) -> None:
     days = [crew.day + datetime.timedelta(days=n) for n in range(4)]
-    plans.set_plan(crew.sam, days[0], S.NO)
-    # Ten days in Verbier, then skiing on some of them.
-    plans.update_plans(crew.sam, days, resort=crew.verbier, skiing=S.NO)
-    made = plans.update_plans(crew.sam, days[:2], skiing=S.YES)
-    assert [(p.date, p.resort, p.skiing) for p in made] == [
-        (days[0], crew.verbier, S.YES),
-        (days[1], crew.verbier, S.YES),
-    ]
-    rest = PlanDay.objects.filter(user=crew.sam, date__in=days[2:])
-    assert {(p.resort, p.skiing) for p in rest} == {(crew.verbier, S.NO)}
-    # A new day starts out skiing, at no resort.
-    (fresh,) = plans.update_plans(crew.sam, [days[0] + datetime.timedelta(9)])
-    assert (fresh.skiing, fresh.resort) == (S.YES, None)
-    plans.clear_plans(crew.sam, days)
+    plans.set_plan(crew.sam, days[0], crew.zermatt)
+    made = plans.update_plans(crew.sam, days, crew.verbier)
+    assert [(p.date, p.resort) for p in made] == [(d, crew.verbier) for d in days]
+    assert PlanDay.objects.filter(user=crew.sam).count() == 4
+    plans.clear_plans(crew.sam, days[1:])
     assert PlanDay.objects.filter(user=crew.sam).count() == 1
 
 
-def test_friends_around_count_but_are_marked(crew: Crew) -> None:
-    plans.set_plan(crew.anna, crew.day, S.YES, resort=crew.verbier)
-    plans.set_plan(crew.ben, crew.day, S.NO, resort=crew.verbier)
-    plans.set_plan(
-        crew.ben, crew.day + datetime.timedelta(1), S.YES, resort=crew.verbier
-    )
+def test_friends_by_resort_count_each_friend_once(crew: Crew) -> None:
+    plans.set_plan(crew.anna, crew.day, crew.verbier)
+    plans.set_plan(crew.ben, crew.day, crew.verbier)
+    plans.set_plan(crew.ben, crew.day + datetime.timedelta(1), crew.verbier)
     (entry,) = plans.friends_by_resort(crew.sam, crew.day)
-    assert entry.names == "Anna and Ben (around)"
-    assert entry.plain_names == "Anna and Ben"
+    assert entry.names == "Anna and Ben"
     assert plans.friend_counts(crew.sam, crew.day) == {crew.verbier.pk: 2}
-    # Over two days Ben skis one of them, so he counts as skiing.
+    # Over two days Ben is there on both, and still counts once.
     (both,) = plans.friends_by_resort(
         crew.sam, [crew.day, crew.day + datetime.timedelta(1)]
     )
@@ -162,12 +143,9 @@ def test_remove_member_rules(crew: Crew) -> None:
 
 def test_board_cells(crew: Crew) -> None:
     start = plans.today()
-    plans.set_plan(crew.sam, start, S.YES, resort=crew.verbier)
-    plans.set_plan(crew.anna, start, S.YES, resort=crew.verbier)
-    plans.set_plan(
-        crew.ben, start, S.YES
-    )  # an older day, from before resorts were required
-    plans.set_plan(crew.anna, start + datetime.timedelta(days=1), S.NO)
+    plans.set_plan(crew.sam, start, crew.verbier)
+    plans.set_plan(crew.anna, start, crew.verbier)
+    plans.set_plan(crew.ben, start, crew.zermatt)
     result = board.build_board(crew.group, crew.anna)
     assert len(result.days) == 7 and result.days[0].is_today
     rows = {row.person: row for row in result.rows}
@@ -176,16 +154,7 @@ def test_board_cells(crew: Crew) -> None:
     assert rows[crew.anna].cells[2] == board.EMPTY
     assert rows[crew.anna].cells[0].text == "VERB"
     assert rows[crew.anna].cells[0].title == "Verbier"
-    assert rows[crew.anna].cells[1].text == "–"
-    assert rows[crew.ben].cells[0].text == "?"
-
-
-def test_board_cell_around_a_resort(crew: Crew) -> None:
-    start = plans.today()
-    plans.set_plan(crew.ben, start, S.NO, resort=crew.zermatt)
-    rows = {row.person: row for row in board.build_board(crew.group, crew.sam).rows}
-    cell = rows[crew.ben].cells[0]
-    assert (cell.text, cell.title, cell.quiet) == ("ZERM", "Zermatt, not skiing", True)
+    assert rows[crew.ben].cells[0].text == "ZERM"
 
 
 def test_board_weeks(crew: Crew) -> None:
@@ -202,16 +171,16 @@ def test_board_weeks(crew: Crew) -> None:
 
 def test_upcoming_plans_and_marks(crew: Crew) -> None:
     today = plans.today()
-    plans.set_plan(crew.sam, today - datetime.timedelta(days=1), S.NO)
-    plans.set_plan(crew.sam, today + datetime.timedelta(days=40), S.NO)
-    plans.set_plan(crew.sam, today, S.YES, resort=crew.verbier)
-    plans.set_plan(crew.anna, today, S.NO, resort=crew.zermatt)
+    plans.set_plan(crew.sam, today - datetime.timedelta(days=1), crew.zermatt)
+    plans.set_plan(crew.sam, today + datetime.timedelta(days=40), crew.zermatt)
+    plans.set_plan(crew.sam, today, crew.verbier)
+    plans.set_plan(crew.anna, today, crew.zermatt)
     upcoming = plans.upcoming_plans(crew.sam)
     assert [plan.date for plan in upcoming] == [
         today,
         today + datetime.timedelta(days=40),
     ]
     assert plans.plan_marks(upcoming) == {
-        today.isoformat(): "skiing",
-        (today + datetime.timedelta(days=40)).isoformat(): "not_skiing",
+        today.isoformat(): "Verbier",
+        (today + datetime.timedelta(days=40)).isoformat(): "Zermatt",
     }

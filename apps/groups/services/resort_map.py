@@ -3,9 +3,8 @@ apps/groups/services/resort_map.py — What the map shows for a day.
 
 Every placed resort is a pin; a pass filter narrows them to that pass's
 resorts, but a resort with a friend or your own plan that day always
-stays on the map. A pin counts every friend there, skiing or just around.
-``resort_day`` is what the resort sheet shows: who from each of your
-groups is there, and who isn't skiing.
+stays on the map. A pin counts every friend there. ``resort_day`` is what
+the resort sheet shows: who from each of your groups is there.
 """
 
 from __future__ import annotations
@@ -26,12 +25,11 @@ def map_pins(
 ) -> list[dict[str, object]]:
     """Return one pin per placed resort, as plain data for the map script."""
     counts = friend_counts(viewer, day)
-    mine = (
-        PlanDay.objects.filter(user=viewer, date=day)
-        .at_resorts()
-        .values_list("resort_id", flat=True)
+    mine_ids = set(
+        PlanDay.objects.filter(user=viewer, date=day).values_list(
+            "resort_id", flat=True
+        )
     )
-    mine_ids = set(mine)
     keep = set(counts) | mine_ids
     resorts = Resort.objects.placed().prefetch_related("passes")
     on_pass: set[int] | None = None

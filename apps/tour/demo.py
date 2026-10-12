@@ -38,15 +38,15 @@ RESORTS = {
     "CRA": "Crans-Montana",
     "CHAM": "Champéry",
 }
-# One row per friend, one cell per day from today: a resort code (skiing
-# there) or "" for unsaid. A code can take "-" (there, not skiing). Today
+# One row per friend, one cell per day from today: a resort code or "" for
+# unsaid. Today
 # is the day the tour opens, so it is the busiest: three in Verbier.
 WEEK = {
-    "Sam": ["VERB", "VERB", "VERB-", "", "", "CRA", "SAASF"],
+    "Sam": ["VERB", "VERB", "VERB", "", "", "CRA", "SAASF"],
     "Anna": ["VERB", "GRIME", "", "", "SAASF", "CRA", ""],
-    "Ben": ["SAASF", "VERB", "VERB", "", "VERB", "", "SAASF-"],
-    "Chloé": ["VERB", "VERB", "VERB-", "", "VERB", "CRA", ""],
-    "Ella": ["CHAM", "CHAM-", "CHAM-", "CHAM", "CHAM-", "", ""],
+    "Ben": ["SAASF", "VERB", "VERB", "", "VERB", "", "SAASF"],
+    "Chloé": ["VERB", "VERB", "VERB", "", "VERB", "CRA", ""],
+    "Ella": ["CHAM", "CHAM", "CHAM", "CHAM", "CHAM", "", ""],
     "Felix": ["", "", "", "", "", "CRA", "CRA"],
 }
 # The tour's own resort: the one opened on the map.
@@ -105,16 +105,11 @@ def _friend(name: str) -> User:
 def _write_cell(
     user: User, day: datetime.date, cell: str, resorts: dict[str, Resort]
 ) -> None:
-    """Write one friend's day: a code, a code with ? or -, or nothing."""
+    """Write one friend's day: a resort code, or nothing."""
     if not cell:
         PlanDay.objects.filter(user=user, date=day).delete()
         return
-    skiing = PlanDay.Skiing.YES
-    code = cell
-    if code[-1] == "-":
-        skiing = PlanDay.Skiing.NO
-        code = code[:-1]
-    set_plan(user, day, skiing, resort=resorts[code] if code else None)
+    set_plan(user, day, resorts[cell])
 
 
 @transaction.atomic

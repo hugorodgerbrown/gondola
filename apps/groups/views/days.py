@@ -3,21 +3,18 @@ apps/groups/views/days.py — the calendar, and the sheet for one day.
 
 The calendar is about you: a month, this month by default; arrows step a
 month (``?from=``, any day in it) as far as plans can be made. A day shows
-whether you're skiing and whether friends will be where you are. Chips
+which resort you'll be in and whether friends will be there too. Chips
 above it highlight one resort (``?highlight=``): the days anyone is there
 stand out, and the friends shown are the ones there instead.
 
 Tapping a day selects it (``?day=``) and fills the panel below the month:
-where you are, the friends with you (the day's number, so the highlighted
-resort's while one is picked), where the others are, and Add plans or
-Edit plans, which opens a sheet with two separate answers: where you'll be
-(the resorts friends picked first, then a search over every resort) and
-whether you're skiing (an on/off switch).
+where you are, the friends with you (the highlighted resort's while one
+is picked), where the others are, and Add plans or
+Edit plans, which opens a sheet with one answer: where you'll be (the
+resorts friends picked first, then a search over every resort).
 
 Pressing and holding a day starts selecting: tap more days (or drag
-across a run), then one sheet plans them all (``?days=``). An answer that
-differs across the days is left out of the sheet and kept unless changed,
-so a sheet only ever saves what was touched.
+across a run), then one sheet puts them all in one resort (``?days=``).
 """
 
 from __future__ import annotations
@@ -38,7 +35,7 @@ from apps.core.http import refresh, render_sheet
 from apps.resorts.models import Resort
 from apps.resorts.search import search_resorts
 
-from ..forms import KEEP_RESORT, DayForm
+from ..forms import DayForm
 from ..models import Group, PlanDay
 from ..services.highlight import resorts_in_play
 from ..services.month import (
@@ -49,7 +46,6 @@ from ..services.month import (
     month_start,
 )
 from ..services.plans import (
-    KEEP,
     ResortFriends,
     clear_plan,
     clear_plans,
@@ -202,48 +198,18 @@ def _calendar_url(back: dict[str, str], days: list[datetime.date] | None = None)
     return f"{url}?{urlencode(back)}" if back else url
 
 
-# What a day with no plan yet starts from in the sheet.
-FRESH = {"skiing": PlanDay.Skiing.YES, "resort": ""}
-
-
-def _answers(plan: PlanDay | None) -> dict[str, object]:
-    """Return one day's answers as the sheet's form values."""
-    if plan is None:
-        return dict(FRESH)
-    return {
-        "skiing": plan.skiing,
-        "resort": str(plan.resort.uuid) if plan.resort else "",
-    }
-
-
 def _initial(
     days: list[datetime.date], plans: dict[datetime.date, PlanDay]
-) -> tuple[dict[str, object], set[str]]:
-    """Return the sheet's starting values, and which answers differ by day.
+) -> tuple[dict[str, object], bool]:
+    """Return the sheet's starting resort, and whether the days differ.
 
-    An answer the days share is filled in; one that differs is left out
-    and named in the second value, so saving keeps it unless it's changed.
+    Days that all say the same resort start with it picked; days that say
+    different things (or some nothing) start with none picked.
     """
-    per_day = [_answers(plans.get(day)) for day in days]
-    initial: dict[str, object] = {}
-    mixed = set()
-    for name in FRESH:
-        values = {str(answers[name]) for answers in per_day}
-        if len(values) == 1:
-            initial[name] = per_day[0][name]
-        else:
-            mixed.add(name)
-    # Every day needs a resort, so "keep" is only offered when each has one.
-    if "resort" in mixed and _all_at_resorts(days, plans):
-        initial["resort"] = KEEP_RESORT
-    return initial, mixed
-
-
-def _all_at_resorts(
-    days: list[datetime.date], plans: dict[datetime.date, PlanDay]
-) -> bool:
-    """Return whether every one of ``days`` already has a resort."""
-    return all(day in plans and plans[day].resort_id is not None for day in days)
+    said = {str(plans[day].resort.uuid) if day in plans else "" for day in days}
+    if len(said) == 1:
+        return {"resort": said.pop()}, False
+    return {}, True
 
 
 def _sheet(
@@ -265,22 +231,15 @@ def _sheet(
         )
     }
     initial, mixed = _initial(days, plans)
-    keepable = _all_at_resorts(days, plans)
-    form = DayForm(request.POST or None, initial=initial)
-    if (
-        request.method == "POST"
-        and form.is_valid()
-        and form.cleaned_data["resort"] is KEEP
-        and not keepable
-    ):
-        form.add_error("resort", "Pick a resort for all these days.")
+    # Bound on any POST, even an empty one, so a missing resort is an error.
+    form = DayForm(request.POST if request.method == "POST" else None, initial=initial)
     if request.method == "POST" and form.is_valid():
         record_day_planned(request, user)
-        update_plans(user, days, **form.changes())
+        update_plans(user, days, form.cleaned_data["resort"])
         return refresh(request, _calendar_url(_request_back(request), days))
     friends = friends_by_resort(user, days)
     listed = {entry.resort.pk for entry in friends}
-    picks = {plan.resort for plan in plans.values() if plan.resort is not None}
+    picks = {plan.resort for plan in plans.values()}
     selected = str(form["resort"].value() or "")
     return render_sheet(
         request,
@@ -295,7 +254,6 @@ def _sheet(
             "clear_url": clear_url,
             "has_plans": bool(plans),
             "mixed": mixed,
-            "keepable": keepable,
             "form": form,
             "friends": friends,
             # The days' own resorts that no friend has picked, to keep them
@@ -304,7 +262,6 @@ def _sheet(
                 (r for r in picks if r.pk not in listed), key=lambda r: r.name
             ),
             "selected": selected,
-            "keep_resort": KEEP_RESORT,
             "groups_count": Group.objects.for_user(user).count(),
             "back": _request_back(request),
         },

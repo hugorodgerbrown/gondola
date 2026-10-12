@@ -106,5 +106,4 @@ class PlanDayFactory(DjangoModelFactory[PlanDay]):
 
     user = factory.SubFactory(UserFactory)
     date = factory.Sequence(lambda n: datetime.date(2027, 1, 1) + datetime.timedelta(n))
-    skiing = PlanDay.Skiing.YES
     resort = factory.SubFactory(ResortFactory)

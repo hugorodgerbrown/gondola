@@ -14,7 +14,7 @@
     </div>
     <p class="day-panel__mine">
       {% if plan %}
-        <span class="day-panel__swatch{% if plan.skiing != 'skiing' %} day-panel__swatch--around{% endif %}{% if plan.skiing != 'skiing' and not plan.resort %} day-panel__swatch--none{% endif %}" aria-hidden="true"></span>{{ day.plan_words }}
+        <span class="day-panel__swatch" aria-hidden="true"></span>{{ day.plan_words }}
       {% else %}
         <span class="muted">No plans</span>
       {% endif %}
@@ -27,7 +27,7 @@
         <span class="eyebrow">{% if here_resort %}Elsewhere{% else %}Friends out{% endif %}</span>
         <ul class="day-panel__friends" aria-label="Friends elsewhere that day">
           {% for entry in elsewhere %}
-            <li><span class="day-panel__resort">{{ entry.resort.name }}</span> <span class="muted">{{ entry.plain_names }}</span></li>
+            <li><span class="day-panel__resort">{{ entry.resort.name }}</span> <span class="muted">{{ entry.names }}</span></li>
           {% endfor %}
         </ul>
       </div>

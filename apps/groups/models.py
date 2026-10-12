@@ -7,8 +7,9 @@ apps/groups/models.py — Groups of friends and their plans.
   "Thursday crew": it only ever shows while its owner is touring.
 * ``Membership`` — a person in a group, as its owner or a member. Group
   members see each other's names and days; joining is the consent.
-* ``PlanDay`` — where one person is skiing on one date. It belongs to the
-  person, not a group: say it once and every group they're in sees it.
+* ``PlanDay`` — the resort one person will be in on one date. It belongs
+  to the person, not a group: say it once and every group they're in sees
+  it. Whether they ski that day is left to the group chat.
 ``date`` is Swiss wall-clock, because every resort is Swiss.
 """
 
@@ -166,27 +167,12 @@ class PlanDayQuerySet(models.QuerySet["PlanDay"]):
         """Return plans on or after ``day``."""
         return self.filter(date__gte=day)
 
-    def at_resorts(self) -> PlanDayQuerySet:
-        """Return plans that name a resort, skiing or not."""
-        return self.filter(resort__isnull=False)
-
-    def skiing(self) -> PlanDayQuerySet:
-        """Return plans at a resort where the person is skiing."""
-        return self.filter(resort__isnull=False, skiing=PlanDay.Skiing.YES)
-
 
 class PlanDay(BaseModel):
-    """What one person said about one date: where they'll be, and if skiing.
+    """Which resort one person will be in on one date.
 
-    The two are separate: someone can be in Verbier for ten days and ski
-    three of them, and friends still want to know they're around.
+    Gondola answers "who's in town": a day is said (in Verbier) or unsaid.
     """
-
-    class Skiing(models.TextChoices):
-        """Whether the person is skiing that day."""
-
-        YES = "skiing", "Skiing"
-        NO = "not_skiing", "Not skiing"
 
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -194,14 +180,11 @@ class PlanDay(BaseModel):
         related_name="plan_days",
     )
     date = models.DateField()
-    skiing = models.CharField(max_length=10, choices=Skiing, default=Skiing.YES)
     resort = models.ForeignKey(
         Resort,
         on_delete=models.PROTECT,
-        null=True,
-        blank=True,
         related_name="plan_days",
-        help_text="Where they'll be, skiing or not. Empty: not at a resort.",
+        help_text="Where they'll be.",
     )
 
     objects = PlanDayQuerySet.as_manager()
@@ -220,17 +203,6 @@ class PlanDay(BaseModel):
         """Return who is where on which day."""
         return f"{self.user} · {self.date:%Y-%m-%d} · {self.describe()}"
 
-    @property
-    def is_skiing(self) -> bool:
-        """Return whether the person said they're skiing."""
-        return self.skiing == self.Skiing.YES
-
     def describe(self) -> str:
-        """Return the day in words: "Verbier", "Verbier, not skiing"."""
-        if self.resort is None:
-            if self.skiing == self.Skiing.YES:
-                return "Skiing, not sure where"
-            return self.get_skiing_display()
-        if self.skiing == self.Skiing.NO:
-            return f"{self.resort.name}, not skiing"
+        """Return the day in words: the resort's name."""
         return self.resort.name

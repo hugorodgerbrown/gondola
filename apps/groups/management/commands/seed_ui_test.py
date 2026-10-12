@@ -5,13 +5,12 @@ Makes "UI test" with a tester and four friends, and fills the tester's
 next couple of months with every case the calendar, the day sheet, the map
 and the board have to draw:
 
-- skiing and not skiing ("around"), as single days and as runs of days,
-  with friends at your resort and elsewhere;
+- single days and runs of days, with friends at your resort and
+  elsewhere;
 - days left unsaid;
-- a ten-day run in one resort with mixed skiing, and a run that crosses a
-  month end;
-- friends at your resort, friends elsewhere, a friend "around", and a
-  friend who has said little.
+- a ten-day run in one resort, and a run that crosses a month end;
+- friends at your resort, friends elsewhere, and a friend who has said
+  little.
 
 A bare run prints the plan, day by day, without writing; ``--commit``
 writes it. Re-running rewrites the made-up people's days from today, so the
@@ -54,30 +53,26 @@ RESORTS = {
     "CRA": "Crans-Montana",
     "CHAM": "Champéry",
 }
-# One letter a day for skiing: Y skiing, N not skiing.
-SKIING = {"Y": PlanDay.Skiing.YES, "N": PlanDay.Skiing.NO}
 # The day the tester says nothing about, while friends do.
 UNSAID = 6
 
 
 @dataclass(frozen=True)
 class Run:
-    """Some consecutive days a person said the same place about.
+    """Some consecutive days a person said the same resort about.
 
-    ``skiing`` holds one letter per day, so a run can keep its resort while
-    skiing changes. ``where`` is a resort code.
+    ``where`` is a resort code.
     """
 
     start: int
-    skiing: str
+    length: int
     where: str
     label: str = ""
 
     def days(self, first: datetime.date) -> list[datetime.date]:
         """Return the run's dates, counting ``start`` days from ``first``."""
         return [
-            first + datetime.timedelta(days=self.start + n)
-            for n in range(len(self.skiing))
+            first + datetime.timedelta(days=self.start + n) for n in range(self.length)
         ]
 
 
@@ -95,20 +90,19 @@ def tester_runs(first: datetime.date) -> list[Run]:
     """Return the tester's days, each labelled with the case it covers."""
     edge = month_end_offset(first)
     return [
-        # Single days: skiing and around, today first.
-        Run(0, "Y", "VERB", label="At a resort, skiing (today)"),
-        Run(2, "N", "VERB", label="At a resort, not skiing (around)"),
-        Run(3, "Y", "CHAM", label="Skiing, friends elsewhere"),
-        Run(5, "N", "CHAM", label="Around, friends elsewhere"),
+        # Single days, today first.
+        Run(0, 1, "VERB", label="With friends (today)"),
+        Run(2, 1, "VERB", label="With one friend"),
+        Run(3, 1, "CHAM", label="Friends elsewhere"),
         # Offset UNSAID is left out: friends out, nothing from you.
-        Run(9, "Y", "SAASF", label="Skiing alone, one day"),
-        Run(10, "N", "GRIME", label="Around alone, one day"),
+        Run(9, 1, "SAASF", label="With friends, one day"),
+        Run(10, 1, "GRIME", label="Alone, one day"),
         # Runs.
-        Run(14, "YYNNYYYNYN", "VERB", label="Ten days in one resort, mixed skiing"),
-        Run(26, "YYYYY", "CRA", label="Five days alike"),
-        Run(33, "NNNN", "CRA", label="Around, four days"),
-        Run(45, "YYY", "SAASF", label="Skiing alone, three days"),
-        Run(edge, "YYYY", "CHAM", label="Run across a month end"),
+        Run(14, 10, "VERB", label="Ten days in one resort"),
+        Run(26, 5, "CRA", label="Five days alike"),
+        Run(33, 4, "CRA", label="Alone, four days"),
+        Run(45, 3, "SAASF", label="Alone, three days"),
+        Run(edge, 4, "CHAM", label="Run across a month end"),
     ]
 
 
@@ -117,31 +111,31 @@ def friend_runs() -> dict[str, list[Run]]:
     return {
         # Often with you: the calendar's "friends with me" mark.
         "Anna": [
-            Run(0, "YY", "VERB"),
-            Run(3, "Y", "VERB"),
-            Run(6, "Y", "SAASF"),
-            Run(9, "Y", "SAASF"),
-            Run(14, "YYYYYYYYYY", "VERB"),
-            Run(26, "YYY", "CRA"),
+            Run(0, 2, "VERB"),
+            Run(3, 1, "VERB"),
+            Run(6, 1, "SAASF"),
+            Run(9, 1, "SAASF"),
+            Run(14, 10, "VERB"),
+            Run(26, 3, "CRA"),
         ],
-        # Elsewhere: friends skiing, but not with you.
+        # Elsewhere: friends out, but not with you.
         "Ben": [
-            Run(0, "Y", "SAASF"),
-            Run(4, "YY", "CHAM"),
-            Run(6, "Y", "SAASF"),
-            Run(9, "Y", "SAASF"),
-            Run(20, "NN", "GRIME"),
+            Run(0, 1, "SAASF"),
+            Run(4, 2, "CHAM"),
+            Run(6, 1, "SAASF"),
+            Run(9, 1, "SAASF"),
+            Run(20, 2, "GRIME"),
         ],
-        # Around: at your resort but not skiing, and skiing elsewhere.
+        # Sometimes with you, sometimes elsewhere.
         "Chloé": [
-            Run(0, "N", "VERB"),
-            Run(2, "N", "VERB"),
-            Run(5, "YY", "SAASF"),
-            Run(16, "NNNN", "VERB"),
+            Run(0, 1, "VERB"),
+            Run(2, 1, "VERB"),
+            Run(5, 2, "SAASF"),
+            Run(16, 4, "VERB"),
         ],
         # Says almost nothing: one day, far out.
         "Dan": [
-            Run(26, "Y", "CRA"),
+            Run(26, 1, "CRA"),
         ],
     }
 
@@ -152,7 +146,7 @@ class Command(BaseCommand):
     verbosity = 1
 
     help = (
-        "Create a group whose tester covers every where/skiing case. "
+        "Create a group whose tester covers every calendar case. "
         "Dry run unless --commit."
     )
 
@@ -250,10 +244,5 @@ class Command(BaseCommand):
         resorts: dict[str, Resort],
     ) -> None:
         """Write one run's days."""
-        for day, letter in zip(run.days(first), run.skiing, strict=True):
-            set_plan(
-                user,
-                day,
-                SKIING[letter],
-                resort=resorts[run.where],
-            )
+        for day in run.days(first):
+            set_plan(user, day, resorts[run.where])

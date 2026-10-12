@@ -2,9 +2,9 @@
 apps/groups/services/highlight.py — One resort picked out on the calendar.
 
 Answers "who's in Verbier in January" from the calendar: the chips list
-the resorts anyone (you, or a friend) is at in the month, whether or not
-they're skiing. The month itself (``build_month``) then picks out the
-days someone is at the chosen one.
+the resorts anyone (you, or a friend) is in during the month. The month
+itself (``build_month``) then picks out the days someone is at the chosen
+one.
 """
 
 from __future__ import annotations
@@ -20,11 +20,11 @@ from .people import visible_friend_plans
 
 
 def _resort_plans(viewer: User, dates: list[datetime.date]) -> list[PlanDay]:
-    """Return the viewer's and friends' visible plans at a resort on ``dates``."""
-    mine = PlanDay.objects.filter(user=viewer, date__in=dates).at_resorts()
+    """Return the viewer's and friends' visible plans on ``dates``."""
+    mine = PlanDay.objects.filter(user=viewer, date__in=dates)
     return [
         *mine.select_related("user", "resort"),
-        *visible_friend_plans(viewer, dates).at_resorts(),
+        *visible_friend_plans(viewer, dates),
     ]
 
 
@@ -34,6 +34,6 @@ def resorts_in_play(viewer: User, dates: list[datetime.date]) -> list[Resort]:
     counts = Counter(plan.resort_id for plan in plans)
     resorts = {plan.resort_id: plan.resort for plan in plans}
     return sorted(
-        (r for r in resorts.values() if r is not None),
+        resorts.values(),
         key=lambda r: (-counts[r.pk], r.name.lower()),
     )

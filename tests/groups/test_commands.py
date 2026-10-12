@@ -20,14 +20,13 @@ from tests.factories import UserFactory
 from tests.groups.conftest import Crew
 
 pytestmark = pytest.mark.django_db
-S = PlanDay.Skiing
 
 
 def _tomorrow_plans(crew: Crew) -> datetime.date:
     tomorrow = plans.today() + datetime.timedelta(days=1)
-    plans.set_plan(crew.sam, tomorrow, S.YES, resort=crew.verbier)
-    plans.set_plan(crew.anna, tomorrow, S.YES, resort=crew.verbier)
-    plans.set_plan(crew.ben, tomorrow, S.NO)
+    plans.set_plan(crew.sam, tomorrow, crew.verbier)
+    plans.set_plan(crew.anna, tomorrow, crew.verbier)
+    plans.set_plan(crew.ben, tomorrow, crew.zermatt)
     return tomorrow
 
 
@@ -54,7 +53,7 @@ def test_commit_sends(crew: Crew) -> None:
 
 def test_nothing_new_is_skipped(crew: Crew) -> None:
     day = plans.today() + datetime.timedelta(days=5)
-    plans.set_plan(crew.sam, day, S.NO, resort=crew.zermatt)
+    plans.set_plan(crew.sam, day, crew.zermatt)
     out = StringIO()
     call_command(
         "send_evening_emails",
@@ -99,8 +98,7 @@ def test_seed_demo_dry_run_then_commit_twice() -> None:
     group = Group.objects.get()
     assert group.owner.email == "me@example.com"
     assert group.memberships.count() == 6
-    assert PlanDay.objects.filter(skiing=S.NO).exists()
-    assert not PlanDay.objects.filter(resort__isnull=True).exists()
+    assert PlanDay.objects.filter(user=group.owner).exists()
 
 
 @freeze_time("2026-10-12 09:00:00+02:00")
@@ -144,7 +142,7 @@ def test_seed_ui_test_dry_run_prints_the_cases() -> None:
     out = StringIO()
     call_command("seed_ui_test", stdout=out)
     assert "Dry run" in out.getvalue()
-    assert "Around, four days" in out.getvalue()
+    assert "Alone, four days" in out.getvalue()
     assert "Unsaid, friends out" in out.getvalue()
     assert not Group.objects.exists()
     quiet = StringIO()
@@ -168,9 +166,7 @@ def test_seed_ui_test_covers_every_case_and_reruns() -> None:
     assert is_member(group, me)
     assert get_testers_group().user_set.count() == 6
     mine = PlanDay.objects.filter(user=tester)
-    # Every day has a resort; both skiing answers.
-    assert not mine.filter(resort__isnull=True).exists()
-    assert {plan.skiing for plan in mine} == set(S.values)
+    assert mine.exists()
     # Nothing from the tester on the unsaid day, but friends out.
     unsaid = plans.today() + datetime.timedelta(days=UNSAID)
     assert not mine.filter(date=unsaid).exists()

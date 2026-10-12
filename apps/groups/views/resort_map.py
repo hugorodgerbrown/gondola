@@ -110,7 +110,5 @@ def plan_here(request: HttpRequest, resort_uuid: str) -> HttpResponse:
     url = f"{reverse('planning:map')}?date={day.isoformat()}"
     if is_plannable(day):
         record_day_planned(request, current_user(request))
-        # Only where changes: skiing or not, and privacy, stay as they were
-        # (a new day is skiing).
-        update_plans(current_user(request), [day], resort=resort)
+        update_plans(current_user(request), [day], resort)
     return refresh(request, url)

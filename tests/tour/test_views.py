@@ -151,13 +151,13 @@ def test_the_demo_share_button_is_not_counted(touring: Client, tourist: User) ->
 
 def test_saving_a_day_moves_on_to_the_group(touring: Client, tourist: User) -> None:
     url = reverse("planning:day", kwargs={"day": today()})
-    response = touring.post(url, {"skiing": "skiing", "resort": ""}, headers=HTMX)
+    response = touring.post(url, {"resort": ""}, headers=HTMX)
     group_url = reverse(
         "planning:group_detail", kwargs={"group_uuid": _demo(tourist).uuid}
     )
     assert response.status_code == 204
     assert response["HX-Redirect"] == group_url
-    plain = touring.post(url, {"skiing": "skiing", "resort": ""})
+    plain = touring.post(url, {"resort": ""})
     assert plain["Location"] == group_url
     assert not PlanDay.objects.filter(user=tourist).exists()
 
@@ -355,7 +355,7 @@ def test_real_days_are_counted(client: Client, tourist: User) -> None:
     day = today() + datetime.timedelta(days=1)
     client.post(
         reverse("planning:day", kwargs={"day": day}),
-        {"skiing": "skiing", "resort": resort.uuid},
+        {"resort": resort.uuid},
     )
     client.post(
         reverse("planning:plan_here", kwargs={"resort_uuid": resort.uuid}),

@@ -2,10 +2,9 @@
 apps/groups/services/evening.py — The evening-before email.
 
 Sent once a day, the evening before. A person gets it when they have said
-something about tomorrow (any status) and there is something from friends
-to tell them: who in each group is where tomorrow (marking who's around
-but not skiing). Private days are left out, as everywhere. Anyone can
-stop it with one tap from the footer.
+something about tomorrow and there is something from friends to tell
+them: who in each group is where tomorrow. Anyone can stop it with one
+tap from the footer.
 """
 
 from __future__ import annotations
@@ -80,7 +79,6 @@ def build_digest(user: User, day: datetime.date) -> Digest:
     shared = list(
         PlanDay.objects.filter(
             date=day,
-            resort__isnull=False,
             user__group_memberships__group__in=groups,
         )
         .select_related("user", "resort")
@@ -91,10 +89,8 @@ def build_digest(user: User, day: datetime.date) -> Digest:
         member_ids = set(group.memberships.values_list("user_id", flat=True))
         by_resort: dict[str, list[str]] = {}
         for plan in shared:
-            if plan.user_id in member_ids and plan.resort is not None:
+            if plan.user_id in member_ids:
                 name = "you" if plan.user_id == user.pk else plan.user.to_string()
-                if not plan.is_skiing and name != "you":
-                    name += " (around)"
                 by_resort.setdefault(plan.resort.name, []).append(name)
         lines = [
             ResortLine(

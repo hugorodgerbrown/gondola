@@ -1,8 +1,7 @@
 """
 apps/groups/services/board.py — The who's-where board for one group.
 
-People down the side, seven days across, a short resort code in each cell,
-quieter when that person is around but not skiing.
+People down the side, seven days across, a short resort code in each cell.
 The viewer's own row comes first.
 """
 
@@ -26,7 +25,6 @@ class Cell:
 
     text: str
     title: str
-    quiet: bool = False
 
 
 @dataclass(frozen=True)
@@ -83,16 +81,7 @@ def cell_for(plan: PlanDay | None, *, mine: bool) -> Cell:
     """Return the cell for one plan, as the viewer may see it."""
     if plan is None:
         return EMPTY
-    if plan.resort is not None:
-        text = plan.resort.display_code
-    else:
-        text = "–" if plan.skiing == PlanDay.Skiing.NO else "?"
-    return Cell(
-        text=text,
-        title=plan.describe(),
-        # Only a day out skiing is drawn at full strength.
-        quiet=not plan.is_skiing,
-    )
+    return Cell(text=plan.resort.display_code, title=plan.describe())
 
 
 def build_board(

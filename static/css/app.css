@@ -18,7 +18,6 @@
   --accent: #2563eb;
   --accent-soft: rgba(37, 99, 235, 0.12);
   /* A day at a resort but not skiing: the skiing blue, lightened. */
-  --accent-light: #bcd0fa;
   /* Magic Pass resorts on the map: a violet square instead of a round pin. */
   --pass-magic: #7c3aed;
   /* The demo bar's amber, apart from your own (blue) days. */
@@ -789,10 +788,6 @@ fieldset.field {
   color: var(--text-1);
 }
 
-.board td.is-quiet {
-  color: var(--text-3);
-}
-
 .board td a {
   color: inherit;
   text-decoration: none;
@@ -810,10 +805,6 @@ fieldset.field {
 .legend dt {
   font: 500 11px var(--font-mono);
   color: var(--text-1);
-}
-
-.legend dt.is-quiet {
-  color: var(--text-3);
 }
 
 .legend dd {
@@ -1029,6 +1020,7 @@ fieldset.field {
   width: 5px;
   height: 5px;
   border-radius: 50%;
+  background: var(--accent);
 }
 
 .calendar__day .calendar__mark {
@@ -1038,39 +1030,16 @@ fieldset.field {
   transform: translateX(-50%);
 }
 
-/* Skiing is a filled dot; not skiing a faint dot. */
-.calendar__mark--skiing {
-  background: var(--accent);
-}
-
-.calendar__mark--not_skiing {
-  background: var(--text-3);
-  opacity: 0.5;
-}
-
-.calendar__day--selected .calendar__mark--skiing {
+.calendar__day--selected .calendar__mark {
   background: var(--card);
 }
 
 .calendar__footer {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-end;
   gap: 8px;
   margin-top: 8px;
-}
-
-.calendar__legend {
-  display: flex;
-  gap: 12px;
-  font-size: 12px;
-  color: var(--text-2);
-}
-
-.calendar__key {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
 }
 
 .calendar .calendar__today {
@@ -1433,7 +1402,7 @@ a.mday:focus-visible {
 }
 
 /* Two rows: the date and the friends with you on top; your resort's code
-   and the lock below. The count and the lock keep to the right. */
+   below. The friends mark keeps to the right. */
 .mday__row {
   display: flex;
   align-items: center;
@@ -1458,7 +1427,7 @@ a.mday:focus-visible {
   font: 600 15px var(--font-sans);
 }
 
-/* The day the panel below is showing (its ring wins over an around border). */
+/* The day the panel below is showing. */
 .mday.mday--selected {
   outline: 2px solid var(--text-1);
   outline-offset: -2px;
@@ -1468,20 +1437,15 @@ a.mday:focus-visible {
   outline: none;
 }
 
-/* Blue is a day you're skiing; light blue is a day you're at a resort but
-   not skiing. Fill only, so the outline stays free for the selected day. */
-.mday--skiing {
+/* Blue is a day you're in a resort. Fill only, so the outline stays free
+   for the selected day. */
+.mday--in {
   background: var(--accent);
   color: #fff;
 }
 
-.mday--around {
-  background: var(--accent-light);
-}
-
-/* Friends where you are that day (or at the highlighted resort): white on
-   your blue days, the skiing blue on any other tile, where white won't read. */
-/* Friends with you: one person, or two for more. No number. */
+/* Friends with you (or at the highlighted resort): one person, or two for
+   more, with no number. White on your blue days, blue on any other. */
 .mday__friends {
   display: inline-flex;
   color: var(--accent);
@@ -1492,21 +1456,17 @@ a.mday:focus-visible {
   height: 14px;
 }
 
-.mday--skiing .mday__friends {
+.mday--in .mday__friends {
   color: #fff;
 }
 
-/* A colour swatch, as the day panel shows beside your answer. */
+/* The cell's blue, beside your answer in the day panel. */
 .day-panel__swatch {
   display: inline-block;
   width: 14px;
   height: 14px;
   border-radius: 4px;
   background: var(--accent);
-}
-
-.day-panel__swatch--around {
-  background: var(--accent-light);
 }
 
 /* --- Calendar: one resort highlighted ----------------------------------- */
@@ -1536,7 +1496,7 @@ a.mday:focus-visible {
   opacity: 0.55;
 }
 
-.month--highlight .mday--lit:not(.mday--skiing) {
+.month--highlight .mday--lit:not(.mday--in) {
   background: var(--accent-soft);
 }
 
@@ -1600,11 +1560,6 @@ a.mday:focus-visible {
   font-weight: 500;
 }
 
-.day-panel__swatch--none {
-  background: var(--sunk);
-  box-shadow: inset 0 0 0 1px var(--rule-strong);
-}
-
 /* The friends with you, by name: the same ones the cell marks. */
 .day-panel__here {
   display: flex;
@@ -1665,12 +1620,12 @@ a.mday.mday--picked:hover {
   box-shadow: inset 0 0 0 2px var(--accent);
 }
 
-.mday--picked:not(.mday--skiing) {
+.mday--picked:not(.mday--in) {
   background: var(--accent-soft);
 }
 
-.mday--skiing.mday--picked,
-a.mday.mday--skiing.mday--picked:hover {
+.mday--in.mday--picked,
+a.mday.mday--in.mday--picked:hover {
   box-shadow: inset 0 0 0 2px var(--text-1);
 }
 

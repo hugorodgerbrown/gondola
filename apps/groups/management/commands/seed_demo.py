@@ -37,14 +37,14 @@ RESORTS = {
     "CRA": "Crans-Montana",
     "CHAM": "Champéry",
 }
-# One row per person, one cell per day from today: a resort code (skiing
-# there) or "" for unsaid. A code can take "-" (there, not skiing).
+# One row per person, one cell per day from today: a resort code or "" for
+# unsaid.
 WEEK = {
-    "you": ["VERB", "VERB", "VERB-", "", "", "CRA", "SAASF"],
+    "you": ["VERB", "VERB", "VERB", "", "", "CRA", "SAASF"],
     "Anna": ["VERB", "GRIME", "", "", "SAASF", "CRA", ""],
-    "Ben": ["SAASF", "VERB", "VERB", "", "VERB", "", "SAASF-"],
-    "Chloé": ["VERB", "VERB", "VERB-", "", "VERB", "CRA", ""],
-    "Ella": ["CHAM", "CHAM-", "CHAM-", "CHAM", "CHAM-", "", ""],
+    "Ben": ["SAASF", "VERB", "VERB", "", "VERB", "", "SAASF"],
+    "Chloé": ["VERB", "VERB", "VERB", "", "VERB", "CRA", ""],
+    "Ella": ["CHAM", "CHAM", "CHAM", "CHAM", "CHAM", "", ""],
     "Felix": ["", "", "", "", "", "CRA", "CRA"],
 }
 # Out of season, the demo week starts on the first Saturday on or after
@@ -165,11 +165,5 @@ class Command(BaseCommand):
         resorts: dict[str, Resort],
     ) -> None:
         """Write one cell of the demo week."""
-        code = cell
-        if not code:
-            return
-        skiing = PlanDay.Skiing.YES
-        if code[-1] == "-":
-            skiing = PlanDay.Skiing.NO
-            code = code[:-1]
-        set_plan(user, day, skiing, resort=resorts[code] if code else None)
+        if cell:
+            set_plan(user, day, resorts[cell])

@@ -1,14 +1,14 @@
-{# One day of the calendar: blue if you ski, light blue if you're at a resort but not skiing, the date with a friends mark top right (one person for one friend with you, two for more), and the resort code along the bottom. Needs day, selected and highlight. #}
+{# One day of the calendar: blue if you're in a resort, the date with a friends mark top right (one person for one friend with you, two for more), and the resort code along the bottom. Needs day, selected and highlight. #}
 {% with plan=day.plan %}
   {% if day.plannable %}
     <a data-date="{{ day.date|date:'Y-m-d' }}"
-       class="mday{% if plan.skiing == 'skiing' %} mday--skiing{% elif plan.resort %} mday--around{% endif %}{% if day.date == selected.date %} mday--selected{% endif %}{% if day.lit %} mday--lit{% endif %}"
+       class="mday{% if plan %} mday--in{% endif %}{% if day.date == selected.date %} mday--selected{% endif %}{% if day.lit %} mday--lit{% endif %}"
        href="?day={{ day.date|date:'Y-m-d' }}{% if highlight %}&highlight={{ highlight.uuid }}{% endif %}"
        hx-get="?day={{ day.date|date:'Y-m-d' }}{% if highlight %}&highlight={{ highlight.uuid }}{% endif %}"
        hx-select="#day-panel" hx-target="#day-panel" hx-swap="outerHTML" hx-replace-url="true"
        {% if day.date == selected.date %}aria-current="date" {% endif %}aria-label="{{ day.summary }}">
   {% else %}
-    <span class="mday mday--past{% if day.lit %} mday--lit{% endif %}{% if plan.skiing == 'skiing' %} mday--skiing{% elif plan.resort %} mday--around{% endif %}" aria-label="{{ day.summary }}">
+    <span class="mday mday--past{% if day.lit %} mday--lit{% endif %}{% if plan %} mday--in{% endif %}" aria-label="{{ day.summary }}">
   {% endif %}
     <span class="mday__row" aria-hidden="true">
       <span class="mday__date">{{ day.date.day }}</span>

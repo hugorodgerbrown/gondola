@@ -73,9 +73,8 @@ CHAPTERS: tuple[Chapter, ...] = (
         (
             Frame(
                 "1.0",
-                "This is your calendar. Blue days are the days you're skiing, "
-                "and the number on a day is how many friends will be in the "
-                "same place.",
+                "This is your calendar. Blue days are the days you're in a "
+                "resort, and the people mark shows friends will be there too.",
             ),
             Frame(
                 "1.1",
@@ -108,9 +107,8 @@ CHAPTERS: tuple[Chapter, ...] = (
         (
             Frame(
                 "2.0",
-                "Planning a day. Here you tell your groups where you'll be and "
-                "whether you're skiing. We show you where your friends are "
-                "going first.",
+                "Planning a day. Here you tell your groups where you'll be. "
+                "We show you where your friends are going first.",
             ),
             Frame(
                 "2.1",
@@ -124,12 +122,6 @@ CHAPTERS: tuple[Chapter, ...] = (
             ),
             Frame(
                 "2.3",
-                "Skiing is on when you're up for the slopes. "
-                "Switch it off if you'll be around but not skiing.",
-                ("[data-day-form] label[for=day-skiing]",),
-            ),
-            Frame(
-                "2.4",
                 "Save shares the day with your groups.",
                 ("[data-day-form] button[type=submit]",),
                 tap="[data-day-form] button[type=submit]",
@@ -178,8 +170,7 @@ CHAPTERS: tuple[Chapter, ...] = (
             ),
             Frame(
                 "4.1",
-                "Each code is a resort: VERB is Verbier. – is not "
-                "skiing, blank hasn't said.",
+                "Each code is a resort: VERB is Verbier. Blank hasn't said.",
                 (".board",),
             ),
             Frame(

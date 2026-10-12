@@ -46,8 +46,7 @@ class MembershipAdmin(admin.ModelAdmin):
 class PlanDayAdmin(admin.ModelAdmin):
     """Admin for ``PlanDay``."""
 
-    list_display = ["user", "date", "resort", "skiing"]
-    list_filter = ["skiing"]
+    list_display = ["user", "date", "resort"]
     search_fields = ["user__email", "resort__name"]
     date_hierarchy = "date"
     autocomplete_fields = ["user", "resort"]

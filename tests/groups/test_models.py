@@ -89,38 +89,14 @@ def test_planday_to_string() -> None:
     at_resort = PlanDayFactory.create(
         user=user, date=SATURDAY, resort=ResortFactory.create(name="Zinal")
     )
-    around = PlanDayFactory.create(
-        user=user,
-        date=SATURDAY + datetime.timedelta(1),
-        skiing=PlanDay.Skiing.NO,
-        resort=at_resort.resort,
-    )
     assert str(at_resort) == "Cleo · 2027-01-09 · Zinal"
-    assert str(around) == "Cleo · 2027-01-10 · Zinal, not skiing"
+    assert at_resort.describe() == "Zinal"
 
 
 def test_one_plan_per_user_per_day() -> None:
     plan = PlanDayFactory.create(date=SATURDAY)
     with pytest.raises(IntegrityError):
         PlanDayFactory.create(user=plan.user, date=SATURDAY)
-
-
-@pytest.mark.parametrize(
-    ("skiing", "named", "words"),
-    [
-        (PlanDay.Skiing.YES, True, "Zinal"),
-        (PlanDay.Skiing.NO, True, "Zinal, not skiing"),
-        (PlanDay.Skiing.YES, False, "Skiing, not sure where"),
-        (PlanDay.Skiing.NO, False, "Not skiing"),
-    ],
-)
-def test_where_and_skiing_are_separate(skiing: str, named: bool, words: str) -> None:
-    resort = ResortFactory.create(name="Zinal") if named else None
-    plan = PlanDayFactory.create(skiing=skiing, resort=resort)
-    assert plan.describe() == words
-    assert plan.is_skiing == (skiing == PlanDay.Skiing.YES)
-    assert PlanDay.objects.at_resorts().contains(plan) == named
-    assert PlanDay.objects.skiing().contains(plan) == (named and plan.is_skiing)
 
 
 def test_planday_querysets() -> None:

@@ -59,13 +59,13 @@ on the control that leads to the next page.
 
 ## Chapter 1: Your calendar
 
-**Page intro:** This is your calendar. Blue days are the days you're skiing, and the number on a day is how many friends will be in the same place.
+**Page intro:** This is your calendar. Blue days are the days you're in a resort, and the people mark shows friends will be there too.
 
 *Why:* The calendar is where people spend most of their time, and every mark on it carries meaning. The intro names the marks; each zoom explains one control. Press and hold has no hint on the page, so the tour is where people learn it.
 
 | Frame | Element | Advances on | Coach mark |
 |---|---|---|---|
-| 1.0 | Page intro | Next | This is your calendar. Blue days are the days you're skiing, and the number on a day is how many friends will be in the same place. |
+| 1.0 | Page intro | Next | This is your calendar. Blue days are the days you're in a resort, and the people mark shows friends will be there too. |
 | 1.1 | Resort chips | Next | Tap a resort to light up the days your friends will be there. |
 | 1.2 | Several days | Next | Tap and hold a day to start selecting, then tap more days. Plan sets them all at once. |
 | 1.3 | Day panel | Next | Tap a day to see it here: your plans, and where each friend will be. |
@@ -73,17 +73,16 @@ on the control that leads to the next page.
 
 ## Chapter 2: A single day
 
-**Page intro:** Planning a day. Here you tell your groups where you'll be and whether you're skiing. We show you where your friends are going first.
+**Page intro:** Planning a day. Here you tell your groups where you'll be. We show you where your friends are going first.
 
-*Why:* The day sheet has the most going on, so it gets an overview before the details: friends first, then search, then the skiing question, then the optional extras.
+*Why:* The day sheet has the most going on, so it gets an overview before the details: friends first, then search, then Save.
 
 | Frame | Element | Advances on | Coach mark |
 |---|---|---|---|
-| 2.0 | Page intro | Next | Planning a day. Here you tell your groups where you'll be and whether you're skiing. We show you where your friends are going first. |
+| 2.0 | Page intro | Next | Planning a day. Here you tell your groups where you'll be. We show you where your friends are going first. |
 | 2.1 | Friends' resorts | Next | We show you where friends will be that day. Tap one to join them. |
 | 2.2 | Search | Next | Somewhere else? Look up any resort. |
-| 2.3 | Skiing toggle | Next | Skiing is on when you're up for the slopes. Switch it off if you'll be around but not skiing. |
-| 2.4 | Save | Tap Save | Save shares the day with your groups. |
+| 2.3 | Save | Tap Save | Save shares the day with your groups. |
 
 ## Chapter 3: Your group
 
@@ -107,7 +106,7 @@ on the control that leads to the next page.
 | Frame | Element | Advances on | Coach mark |
 |---|---|---|---|
 | 4.0 | Page intro | Next | The group's week at a glance. Everyone side by side, so you can see who overlaps where. |
-| 4.1 | Resort codes | Next | Each code is a resort: VERB is Verbier. – is not skiing, blank hasn't said. |
+| 4.1 | Resort codes | Next | Each code is a resort: VERB is Verbier. Blank hasn't said. |
 | 4.2 | Map tab | Tap Map | Tap Map to see where your friends are on any day. |
 
 ## Chapter 5: The map

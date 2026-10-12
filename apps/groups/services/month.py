@@ -2,9 +2,9 @@
 apps/groups/services/month.py — the calendar, one month at a time.
 
 One month at a time, weeks starting Monday. Each day carries what the
-viewer said about it and what their groups are up to: how many friends
-are at a resort (skiing or just around), how many of them at the viewer's
-resort (the number the calendar shows).
+viewer said about it and what their groups are up to: which friends are
+in town somewhere, and how many of them in the viewer's resort (the
+calendar marks one or several).
 
 With one resort highlighted, each day also says which friends are there,
 and whether the viewer is, so the calendar can pick those days out.
@@ -54,23 +54,13 @@ class MonthDay:
 
     @property
     def count(self) -> int:
-        """Return the number on the day: friends where you are (or at the highlight)."""
+        """Return the friends the day marks: where you are (or at the highlight)."""
         return len(self.there) if self.highlight else self.with_me
 
     @property
     def plan_words(self) -> str:
-        """Return your answer for the day panel: "In Verbier".
-
-        The swatch beside it says whether you're skiing, so only a day off
-        the slopes says so in words.
-        """
-        plan = self.plan
-        if plan is None:
-            return ""
-        resort = plan.resort.name if plan.resort is not None else ""
-        if plan.skiing == PlanDay.Skiing.YES:
-            return f"In {resort}" if resort else "Skiing"
-        return f"In {resort}, not skiing" if resort else "Not skiing"
+        """Return your answer for the day panel: "In Verbier"."""
+        return f"In {self.plan.resort.name}" if self.plan is not None else ""
 
     @property
     def summary(self) -> str:
@@ -143,7 +133,7 @@ def build_month(
     friends: dict[datetime.date, list[str]] = defaultdict(list)
     with_me: dict[datetime.date, int] = defaultdict(int)
     there: dict[datetime.date, list[str]] = defaultdict(list)
-    for plan in visible_friend_plans(viewer, dates).at_resorts():
+    for plan in visible_friend_plans(viewer, dates):
         friends[plan.date].append(plan.user.to_string())
         if highlight is not None and plan.resort_id == highlight.pk:
             there[plan.date].append(plan.user.to_string())

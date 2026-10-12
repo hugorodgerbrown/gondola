@@ -3,7 +3,7 @@
   {% for name, value in back.items %}<input type="hidden" name="{{ name }}" value="{{ value }}">{% endfor %}
   {% csrf_token %}
   {% if mixed %}
-    <p class="help">These days don't all say the same. Anything you leave alone stays as each day has it.</p>
+    <p class="help">These days don't all say the same. Pick a resort to put them all there.</p>
   {% endif %}
   {% if form.non_field_errors or form.resort.errors %}
     <ul class="errors">{% for error in form.non_field_errors %}<li>{{ error }}</li>{% endfor %}{% for error in form.resort.errors %}<li>{{ error }}</li>{% endfor %}</ul>
@@ -11,14 +11,8 @@
 
   <div class="field">
     <span class="eyebrow">Where will you be?</span>
-    {% if friends or elsewhere or "resort" in mixed and keepable %}
+    {% if friends or elsewhere %}
     <div class="choices" role="radiogroup" aria-label="Resort">
-      {% if "resort" in mixed and keepable %}
-        <label class="choice">
-          <input type="radio" name="resort" value="{{ keep_resort }}"{% if selected == keep_resort %} checked{% endif %}>
-          <span class="choice__main"><span class="choice__title">Leave as it is</span><span class="choice__meta">Each day keeps its own resort</span></span>
-        </label>
-      {% endif %}
       {% for entry in friends %}
         <label class="choice">
           <input type="radio" name="resort" value="{{ entry.resort.uuid }}"{% if selected == entry.resort.uuid|stringformat:"s" %} checked{% endif %}>
@@ -42,14 +36,6 @@
            hx-get="{% url 'planning:resort_search' %}" hx-trigger="input changed delay:200ms, search" hx-target="#resort-results" hx-include="this" hx-sync="this:replace">
     <div id="resort-results" class="choices" role="radiogroup" aria-label="Search results" hidden></div>
   </div>
-
-  <label class="check" for="day-skiing">
-    <span class="row__main"><span>Skiing</span><span class="small muted">{% if "skiing" in mixed %}Differs across these days: switch it to set them all.{% else %}Off means you're around but not on the slopes.{% endif %}</span></span>
-    {# Unticked sends the hidden value; ticked sends both and the last wins. #}
-    <input type="hidden" name="skiing" {% if "skiing" in mixed %}value="" data-keep-for="skiing" data-off="not_skiing"{% else %}value="not_skiing"{% endif %}>
-    <input id="day-skiing" type="checkbox" name="skiing" value="skiing"{% if form.skiing.value == "skiing" %} checked{% endif %}>
-  </label>
-
 
   <div class="field">
     <button type="submit" class="button button--block">{{ save_label }}</button>
