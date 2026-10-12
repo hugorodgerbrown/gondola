@@ -31,6 +31,7 @@ from ..services.plans import (
     update_plans,
 )
 from ..services.resort_map import map_pins, resort_day, resort_index
+from .days import record_day_planned
 from .helpers import current_user, parse_day
 
 
@@ -110,6 +111,7 @@ def plan_here(request: HttpRequest, resort_uuid: str) -> HttpResponse:
     day = parse_day(request.POST.get("date"))
     url = f"{reverse('planning:map')}?date={day.isoformat()}"
     if is_plannable(day):
+        record_day_planned(request, current_user(request))
         # Only where changes: skiing or not, and privacy, stay as they were
         # (a new day is skiing).
         update_plans(current_user(request), [day], resort=resort)

@@ -29,9 +29,8 @@ def current_user(request: HttpRequest) -> User:
 def member_group(request: HttpRequest, group_uuid: object) -> Group:
     """Return the group if the signed-in user belongs to it, else 404."""
     return get_object_or_404(
-        Group.objects.select_related("owner"),
+        Group.objects.for_user(current_user(request)).select_related("owner"),
         uuid=group_uuid,
-        memberships__user=current_user(request),
     )
 
 

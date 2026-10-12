@@ -25,7 +25,7 @@
   {% endif %}
 
   {% if plannable %}
-    <div class="stack" style="gap:8px">
+    <div class="stack" style="gap:8px" data-tour="resort-actions">
       {% if not info.my_plan or info.my_plan.resort_id != resort.pk %}
         <form method="post" action="{% url 'planning:plan_here' resort.uuid %}" hx-post="{% url 'planning:plan_here' resort.uuid %}">
           {% csrf_token %}
@@ -34,7 +34,7 @@
         </form>
       {% endif %}
       {% if groups %}
-        <a class="button button--secondary button--block" href="{% url 'planning:meetup_choose_group' %}?date={{ info.day|date:'Y-m-d' }}&resort={{ resort.uuid }}">Propose a meet-up here</a>
+        <a class="button button--secondary button--block" href="{% url 'planning:meetup_choose_group' %}?date={{ info.day|date:'Y-m-d' }}&resort={{ resort.uuid }}&from=map">Propose a meet-up here</a>
       {% endif %}
     </div>
   {% endif %}

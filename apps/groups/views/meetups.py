@@ -20,6 +20,7 @@ from django.urls import reverse
 from django.views.decorators.http import require_POST
 
 from apps.accounts.models import User
+from apps.core.analytics import record
 from apps.resorts.models import Resort
 
 from ..forms import MeetUpForm
@@ -52,6 +53,16 @@ def _initial_resort(
     if resort:
         return resort
     return suggestions[0].resort if suggestions else None
+
+
+# Where a proposal started, for fivebar: ``?from=`` on the link that opened it.
+SOURCES = {"board", "map"}
+
+
+def _source(request: HttpRequest) -> str:
+    """Return where the proposal was started: the board, the map, or other."""
+    source = request.GET.get("from", "")
+    return source if source in SOURCES else "other"
 
 
 @login_required
@@ -88,6 +99,7 @@ def meetup_new(request: HttpRequest, group_uuid: str) -> HttpResponse:
         except MeetUpError as exc:
             form.add_error(None, str(exc))
         else:
+            record(request, "Meet-up proposed", **{"from": _source(request)})
             messages.success(
                 request, "Meet-up proposed. Share the link in your group chat."
             )

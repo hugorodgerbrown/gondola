@@ -89,6 +89,11 @@ class User(BaseModel, AbstractBaseUser, PermissionsMixin):
         default=True,
         help_text="Send the evening-before email. Covers that email only.",
     )
+    toured_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text="When they last finished the onboarding tour, if ever.",
+    )
     is_staff = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
 

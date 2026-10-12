@@ -17,8 +17,12 @@ from ..models import Group, Membership, PlanDay, PlanDayQuerySet
 
 
 def friend_ids(user: User) -> set[int]:
-    """Return the ids of everyone who shares a group with ``user``."""
-    groups = Membership.objects.filter(user=user).values("group_id")
+    """Return the ids of everyone who shares a group with ``user``.
+
+    Only the groups ``user`` sees count: their real ones, or the demo copy
+    while they tour (``GroupQuerySet.for_user``).
+    """
+    groups = Group.objects.for_user(user).values("pk")
     return set(
         Membership.objects.filter(group_id__in=groups)
         .exclude(user=user)

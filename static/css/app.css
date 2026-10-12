@@ -1835,3 +1835,138 @@ a.mday.mday--skiing.mday--picked:hover {
   border: 1px solid var(--rule);
   box-shadow: var(--shadow-float);
 }
+
+/* --- Onboarding tour (static/js/tour.js, docs/onboarding-tour.md) --------- */
+
+:root {
+  --tour-bar-height: 40px;
+  --tour-shade: rgba(20, 18, 14, 0.62);
+}
+
+/* The demo bar: amber, just above the tab bar, never dimmed. */
+.tour-bar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: calc(var(--tabbar-height) + env(safe-area-inset-bottom));
+  z-index: 45;
+  height: var(--tour-bar-height);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 0 16px;
+  background: var(--meetup);
+  /* Dark on amber: white would miss AA contrast at this size. */
+  color: var(--text-1);
+  font-size: 13px;
+}
+
+.tour-bar__end {
+  padding: 4px 10px;
+  border: 1px solid rgba(0, 0, 0, 0.4);
+  border-radius: 999px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+body:has(.tour-bar) .page {
+  padding-bottom: calc(var(--tabbar-height) + var(--tour-bar-height) + 32px);
+}
+
+body:has(.tour-bar) .map-page {
+  bottom: calc(var(--tabbar-height) + var(--tour-bar-height) + env(safe-area-inset-bottom));
+}
+
+body:has(.tour-bar) .select-bar {
+  bottom: calc(var(--tabbar-height) + var(--tour-bar-height) + env(safe-area-inset-bottom) + 12px);
+}
+
+/* The layer: shades round a hole, a ring on its edge, and the coach mark. */
+.tour-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  pointer-events: none;
+}
+
+.tour-shade {
+  position: fixed;
+  background: var(--tour-shade);
+  pointer-events: auto;
+}
+
+.tour-ring {
+  position: fixed;
+  border: 2px solid #fff;
+  border-radius: var(--radius-control);
+  box-shadow: 0 0 0 4px rgba(217, 119, 6, 0.55);
+  pointer-events: none;
+}
+
+.tour-ring[hidden] {
+  display: none;
+}
+
+.tour-card {
+  position: fixed;
+  left: 16px;
+  right: 16px;
+  max-width: 420px;
+  margin: 0 auto;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border-radius: var(--radius-card);
+  background: var(--card);
+  color: var(--text-1);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.28);
+  pointer-events: auto;
+}
+
+.tour-card--centred {
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.tour-card__title[hidden],
+.tour-card__note[hidden],
+.tour-card .button[hidden] {
+  display: none;
+}
+
+.tour-card__text {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.45;
+}
+
+.tour-card__note {
+  margin: 0;
+}
+
+.tour-card__actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.tour-card__actions .button {
+  flex: 0 0 auto;
+}
+
+/* Chapter 7 over the real My days: a card on a plain dimmed page. */
+.tour-layer--handoff {
+  background: var(--tour-shade);
+  pointer-events: auto;
+}
+
+.tour-welcome {
+  margin-top: 8px;
+}

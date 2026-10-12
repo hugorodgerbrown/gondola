@@ -34,6 +34,7 @@ from django.urls import reverse
 from django.views.decorators.http import require_GET, require_POST
 
 from apps.core.ratelimit import client_ip, over_limit
+from apps.tour.session import after_welcome
 
 from . import passkeys
 from .forms import NameForm, ProfileForm, SignInForm
@@ -127,7 +128,8 @@ def welcome(request: HttpRequest) -> HttpResponse:
     form = NameForm(request.POST or None, instance=request.user)
     if request.method == "POST" and form.is_valid():
         form.save()
-        query = urlencode({"next": next_url})
+        # The tour is offered next, once (apps/tour/session.py).
+        query = urlencode({"next": after_welcome(request, next_url)})
         return redirect(f"{reverse('accounts:passkey_welcome')}?{query}")
     return render(
         request, "accounts/welcome.html", {"form": form, "next_url": next_url}

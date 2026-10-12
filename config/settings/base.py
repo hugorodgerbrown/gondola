@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     "apps.accounts",
     "apps.resorts",
     "apps.groups",
+    "apps.tour",
 ]
 
 MIDDLEWARE = [
@@ -50,6 +51,8 @@ MIDDLEWARE = [
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
+    # After auth and messages: scopes the request to the demo while touring.
+    "apps.tour.middleware.TourMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
@@ -67,6 +70,8 @@ TEMPLATES = [
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
                 "apps.core.context_processors.site",
+                "apps.core.analytics.analytics",
+                "apps.tour.context_processors.tour",
             ],
         },
     },
@@ -116,6 +121,15 @@ SITE_URL = config("SITE_URL", default="http://localhost:8000")
 _site_host = urlsplit(config("SITE_URL", default="")).hostname
 if _site_host and _site_host not in ALLOWED_HOSTS:
     ALLOWED_HOSTS.append(_site_host)
+
+# Visitor counts and goals by fivebar, under the site's own domain: the
+# host SITE_URL names, so production needs nothing extra. Off when SITE_URL
+# is unset or local, or when FIVEBAR_DOMAIN is set to something else (empty
+# turns it off). See apps/core/analytics.py.
+_fivebar_default = (
+    _site_host if _site_host not in {None, "localhost", "127.0.0.1"} else ""
+)
+FIVEBAR_DOMAIN: str = config("FIVEBAR_DOMAIN", default=_fivebar_default or "")
 
 # Signing in is an emailed link; there are no passwords for people.
 LOGIN_URL = "accounts:sign_in"

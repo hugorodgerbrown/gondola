@@ -1,0 +1,19 @@
+{# Chapter 7: over to you, once, on the real My days after the tour. #}
+<div class="tour-layer tour-layer--handoff" data-tour-handoff>
+  <section class="tour-card tour-card--centred" role="dialog" aria-modal="true" aria-labelledby="tour-handoff-heading">
+    <span class="eyebrow">Over to you</span>
+    <h2 class="title" id="tour-handoff-heading">Your calendar</h2>
+    <p>{{ handoff.text }}</p>
+    {% if handoff.share_url %}
+      <button type="button" class="button button--secondary button--block" data-share-url="{{ handoff.share_url }}" data-share-text="{{ handoff.share_text }}" data-tally="Invite shared" data-tally-from="tour">Tell the group</button>
+    {% endif %}
+    <div class="tour-card__actions">
+      <button type="button" class="button button--secondary" data-tour-close>Later</button>
+      {% if handoff.go_url %}
+        <a class="button" href="{{ handoff.go_url }}">Let's go</a>
+      {% else %}
+        <button type="button" class="button" data-tour-close>Let's go</button>
+      {% endif %}
+    </div>
+  </section>
+</div>

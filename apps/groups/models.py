@@ -3,6 +3,8 @@ apps/groups/models.py — Groups of friends, their plans and their meet-ups.
 
 * ``Group`` — friends who share plans. Joined through one invite link
   that joins at once; the owner can reset the link to kill the old one.
+  A demo group (``is_demo``) is the onboarding tour's private copy of
+  "Thursday crew": it only ever shows while its owner is touring.
 * ``Membership`` — a person in a group, as its owner or a member. Group
   members see each other's names and days; joining is the consent.
 * ``PlanDay`` — where one person is skiing on one date. It belongs to the
@@ -39,8 +41,27 @@ class GroupQuerySet(models.QuerySet["Group"]):
     """Custom queryset for Group."""
 
     def for_user(self, user: User) -> GroupQuerySet:
-        """Return the groups ``user`` belongs to, as owner or member."""
-        return self.filter(memberships__user=user)
+        """Return the groups ``user`` sees: their real ones, or the tour's.
+
+        While someone tours, ``apps.tour.middleware`` sets
+        ``user.tour_group_id`` and their only group is the demo copy, so
+        every screen shows the made-up friends and nothing real. Otherwise
+        a demo group never shows: not on the map, the board, My days or in
+        the evening email, which runs with no request at all.
+        """
+        mine = self.filter(memberships__user=user)
+        tour_group_id = getattr(user, "tour_group_id", None)
+        if tour_group_id is not None:
+            return mine.filter(pk=tour_group_id)
+        return mine.filter(is_demo=False)
+
+    def real(self) -> GroupQuerySet:
+        """Return the groups that aren't the tour's demo copies."""
+        return self.filter(is_demo=False)
+
+    def demos(self) -> GroupQuerySet:
+        """Return the tour's demo copies."""
+        return self.filter(is_demo=True)
 
 
 class Group(BaseModel):
@@ -55,6 +76,11 @@ class Group(BaseModel):
     )
     invite_token = models.CharField(
         max_length=64, unique=True, default=make_token, editable=False
+    )
+    is_demo = models.BooleanField(
+        default=False,
+        editable=False,
+        help_text="The onboarding tour's private copy; deleted when the tour ends.",
     )
 
     objects = GroupQuerySet.as_manager()
