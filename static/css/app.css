@@ -1499,10 +1499,24 @@ a.mday:focus-visible {
   opacity: 0.4;
 }
 
-.mday__top {
+/* Two rows: the date and the lock on top, the friends and the meet-up below.
+   The lock and the dot keep to the right even when the row has nothing on
+   its left. */
+.mday__row {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  min-height: 16px;
+}
+
+.mday__row > svg {
+  width: 10px;
+  height: 10px;
+}
+
+.mday__row > svg,
+.mday__row > .mday__meetup {
+  margin-left: auto;
 }
 
 .mday__date {
@@ -1519,17 +1533,6 @@ a.mday:focus-visible {
   outline: none;
 }
 
-.mday__marks {
-  display: inline-flex;
-  align-items: center;
-  gap: 2px;
-}
-
-.mday__marks svg {
-  width: 10px;
-  height: 10px;
-}
-
 /* Blue is a day you're skiing; light blue is a day you're at a resort but
    not skiing. Fill only, so the outline stays free for the selected day.
    Where, and anything else, is in the panel. */
@@ -1542,13 +1545,13 @@ a.mday:focus-visible {
   background: var(--accent-light);
 }
 
-/* Friends where you are that day (or at the highlighted resort). */
+/* Friends where you are that day (or at the highlighted resort): white on
+   your blue days, the skiing blue on any other tile, where white won't read. */
 .mday__friends {
   display: inline-flex;
   align-items: center;
   gap: 3px;
-  align-self: flex-start;
-  color: var(--ok);
+  color: var(--accent);
   font: 600 12px var(--font-sans);
 }
 

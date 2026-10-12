@@ -1,4 +1,4 @@
-{# One day of the calendar: blue if you ski, light blue if you're at a resort but not skiing, the friends-with-you count, the lock and the meet-up dot. Needs day, selected and highlight. #}
+{# One day of the calendar: blue if you ski, light blue if you're at a resort but not skiing, the date with the lock top right, and the friends-with-you count with the meet-up dot along the bottom. Needs day, selected and highlight. #}
 {% with plan=day.plan %}
   {% if day.plannable %}
     <a data-date="{{ day.date|date:'Y-m-d' }}"
@@ -10,15 +10,15 @@
   {% else %}
     <span class="mday mday--past{% if day.lit %} mday--lit{% endif %}{% if plan.skiing == 'skiing' %} mday--skiing{% elif plan.resort %} mday--around{% endif %}" aria-label="{{ day.summary }}">
   {% endif %}
-    <span class="mday__top" aria-hidden="true">
+    <span class="mday__row" aria-hidden="true">
       <span class="mday__date">{{ day.date.day }}</span>
-      <span class="mday__marks">
-        {% if plan.is_private %}{% include "includes/icons/lock.html" %}{% endif %}
-        {% if day.meetup %}<span class="mday__meetup"></span>{% endif %}
-      </span>
+      {% if plan.is_private %}{% include "includes/icons/lock.html" %}{% endif %}
     </span>
-    {% if day.count %}
-      <span class="mday__friends" aria-hidden="true">{% include "includes/icons/people.html" %}{{ day.count }}</span>
-    {% endif %}
+    <span class="mday__row" aria-hidden="true">
+      {% if day.count %}
+        <span class="mday__friends">{% include "includes/icons/people.html" %}{{ day.count }}</span>
+      {% endif %}
+      {% if day.meetup %}<span class="mday__meetup"></span>{% endif %}
+    </span>
   {% if day.plannable %}</a>{% else %}</span>{% endif %}
 {% endwith %}
