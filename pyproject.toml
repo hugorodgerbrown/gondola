@@ -1,5 +1,5 @@
 [project]
-name = "resort-planner"
+name = "gondola"
 version = "0.1.0"
 description = "Plan who is skiing at which resort on which day, and meet up."
 authors = [{ name = "Hugo Rodger-Brown" }]

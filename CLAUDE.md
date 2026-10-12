@@ -5,8 +5,9 @@ Snowdesk feature and was split out on purpose: it shares Snowdesk's tooling
 and conventions, not its code or database.
 
 The product name users see is `SITE_NAME` ("Gondola"). The repository,
-Python package, Render service and database keep the old `resort-planner`
-name on purpose.
+Python package, Render service and database are all named `gondola` too
+(the database `gondola`, since Postgres names read better without hyphens);
+it lives at <https://gondola.ultraniche.ai>.
 
 Python 3.14 / Django 6.0, pinned in `pyproject.toml`.
 

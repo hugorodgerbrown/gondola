@@ -6,14 +6,14 @@
 # job): run `send_evening_emails --commit` by hand (Render shell) when wanted.
 #
 # DATABASE_URL points at a database of the app's own on shared-db (e.g.
-# .../resort_planner), never at another app's database: Django's tables
+# .../gondola), never at another app's database: Django's tables
 # (auth, sessions, migrations) would clash. Secrets marked `sync: false`
 # are entered in the Render dashboard when the blueprint is first applied
 # (Render only prompts for them at service scope, never inside an
 # environment group); nothing secret lives in this file.
 
 envVarGroups:
-  - name: resort-planner
+  - name: gondola
     envVars:
       - key: DJANGO_SETTINGS_MODULE
         value: config.settings.production
@@ -35,7 +35,7 @@ envVarGroups:
 
 services:
   - type: web
-    name: resort-planner
+    name: gondola
     runtime: python
     plan: starter
     region: frankfurt
@@ -51,11 +51,11 @@ services:
     # (/healthz also reads the database; bin/titan checks it after a deploy.)
     healthCheckPath: /livez
     envVars:
-      - fromGroup: resort-planner
+      - fromGroup: gondola
       # The shared-db internal URL, with this app's own database name.
       - key: DATABASE_URL
         sync: false
-      # The public address, for links in emails (e.g. https://resort-planner.onrender.com).
+      # The public address, for links in emails (e.g. https://gondola.ultraniche.ai).
       - key: SITE_URL
         sync: false
       # SMTP for sign-in links and the evening email (e.g. Resend's relay:
