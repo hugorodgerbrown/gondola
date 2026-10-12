@@ -1654,6 +1654,44 @@ a.mday:focus-visible {
   background: repeating-linear-gradient(-45deg, var(--card) 0 3px, var(--rule-strong) 3px 4px);
 }
 
+/* --- My days: one resort highlighted ----------------------------------- */
+
+.month-resorts {
+  margin: 0 -16px;
+  padding: 2px 16px 4px;
+  scrollbar-width: none;
+}
+
+.month-resorts .chip {
+  box-shadow: none;
+  flex: none;
+  color: var(--text-1);
+}
+
+.month-resorts .chip[aria-current="true"] {
+  color: #ffffff;
+}
+
+.chip__x {
+  margin: 0 -4px 0 6px;
+  font-size: 16px;
+  line-height: 1;
+  opacity: 0.8;
+}
+
+/* Days nobody is at the resort step back, so the ones somebody is stand out. */
+.month--highlight .mday:not(.mday--lit):not(.mday--out) {
+  opacity: 0.28;
+}
+
+.month--highlight .mday--past.mday--lit {
+  opacity: 0.55;
+}
+
+.month--highlight .mday--lit:not(.mday--skiing):not(.mday--not_sure):not(.mday--not_skiing) {
+  background: var(--accent-soft);
+}
+
 /* --- My days: selecting several days ------------------------------------ */
 
 .month a.mday {

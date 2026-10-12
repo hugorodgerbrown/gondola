@@ -241,8 +241,8 @@
       return;
     }
     let url = grid.dataset.selectDays + "?days=" + Array.from(selected).sort().join(",");
-    if (grid.dataset.selectFrom) {
-      url += "&from=" + grid.dataset.selectFrom;
+    if (grid.dataset.selectBack) {
+      url += "&" + grid.dataset.selectBack;
     }
     htmx.ajax("GET", url, { target: "#sheet-body" });
   });

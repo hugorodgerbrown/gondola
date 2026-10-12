@@ -91,6 +91,65 @@ def test_plain_forms_keep_the_month(sam: Client, crew: Crew) -> None:
     assert sam.get(reverse("planning:my_days")).context["window_from"] is None
 
 
+def test_my_days_highlights_a_resort(sam: Client, crew: Crew) -> None:
+    """Chips list the month's resorts; one picked lights the days someone is there."""
+    far = plans.today() + datetime.timedelta(days=60)
+    first = far.replace(day=1).isoformat()
+    plans.set_plan(crew.anna, far, S.YES, resort=crew.verbier)
+    plans.set_plan(crew.ben, far, S.NO, resort=crew.zermatt)
+    url = reverse("planning:my_days")
+    page = sam.get(url, {"from": first})
+    assert page.context["resorts"] == [crew.verbier, crew.zermatt]
+    assert page.context["highlight"] is None
+    assert (
+        f'href="?from={first}&highlight={crew.verbier.uuid}"'.encode() in page.content
+    )
+
+    lit = sam.get(url, {"from": first, "highlight": str(crew.verbier.uuid)})
+    assert lit.context["highlight"] == crew.verbier
+    assert b"month--highlight" in lit.content and b"mday--lit" in lit.content
+    assert b"Verbier in " not in lit.content  # no who's-there card
+    # The picked chip clears it; the arrows, day links and selection keep it.
+    assert f'aria-current="true" href="?from={first}"'.encode() in lit.content
+    back = f"from={first}&amp;highlight={crew.verbier.uuid}"
+    assert f'data-select-back="{back}"'.encode() in lit.content
+    day_url = reverse("planning:day", kwargs={"day": far})
+    assert f'href="{day_url}?{back}"'.encode() in lit.content
+    assert f"&highlight={crew.verbier.uuid}".encode() in lit.content
+
+
+def test_a_highlight_nobody_is_at_still_shows(sam: Client, crew: Crew) -> None:
+    page = sam.get(reverse("planning:my_days"), {"highlight": str(crew.zermatt.uuid)})
+    assert page.context["resorts"] == [crew.zermatt]
+    assert b"month--highlight" in page.content
+    assert b"mday--lit" not in page.content
+
+
+@pytest.mark.parametrize("value", ["nope", "00000000-0000-0000-0000-000000000000"])
+def test_a_bad_highlight_is_ignored(sam: Client, value: str) -> None:
+    page = sam.get(reverse("planning:my_days"), {"highlight": value})
+    assert page.status_code == 200
+    assert page.context["highlight"] is None
+
+
+def test_saving_a_day_keeps_the_highlight(sam: Client, crew: Crew) -> None:
+    """The highlight rides through the sheet without clashing with its resort."""
+    highlighted = str(crew.verbier.uuid)
+    day_url = reverse("planning:day", kwargs={"day": crew.day})
+    sheet = sam.get(day_url, {"highlight": highlighted})
+    hidden = f'type="hidden" name="highlight" value="{highlighted}"'
+    assert hidden.encode() in sheet.content
+    saved = sam.post(
+        day_url,
+        {"skiing": S.YES, "resort": str(crew.zermatt.uuid), "highlight": highlighted},
+    )
+    assert saved["Location"] == (
+        f"{reverse('planning:my_days')}?highlight={highlighted}"
+    )
+    plan = PlanDay.objects.get(user=crew.sam, date=crew.day)
+    assert plan.resort == crew.zermatt
+
+
 def test_my_days_without_groups(client: Client, crew: Crew) -> None:
     client.force_login(crew.outsider)
     assert b"Nobody sees these yet" in client.get(reverse("planning:my_days")).content
