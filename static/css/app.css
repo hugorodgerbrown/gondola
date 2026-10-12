@@ -1444,8 +1444,8 @@ a.mday:focus-visible {
   color: #fff;
 }
 
-/* Friends with you (or, on a day you haven't said, at the resort most of
-   them are in): one person, or two for more, with no number. White on your
+/* Friends with you (or, on a pale day, at the resort most of the picked
+   group are in): one person, or two for more, with no number. White on your
    blue days, blue on any other. */
 .mday__friends {
   display: inline-flex;
@@ -1461,8 +1461,8 @@ a.mday:focus-visible {
   color: #fff;
 }
 
-/* A day you haven't said that friends have: pale blue, with their resort's
-   code where yours would be. */
+/* With a group picked, a day you haven't said that its people have: pale
+   blue, with their resort's code where yours would be. */
 .mday--friends {
   background: var(--accent-soft);
 }
@@ -1480,15 +1480,15 @@ a.mday:focus-visible {
   background: var(--accent);
 }
 
-/* --- Calendar: one resort picked ---------------------------------------- */
+/* --- Calendar: the group chips ----------------------------------------- */
 
-.month-resorts {
+.month-groups {
   margin: 0 -16px;
   padding: 2px 16px 4px;
   scrollbar-width: none;
 }
 
-.month-resorts .chip {
+.month-groups .chip {
   box-shadow: none;
   flex: none;
   color: var(--text-1);
@@ -1497,26 +1497,8 @@ a.mday:focus-visible {
   font-size: 14px;
 }
 
-.month-resorts .chip[aria-current="true"] {
+.month-groups .chip[aria-current="true"] {
   color: #ffffff;
-}
-
-/* Resort chips carry the three-letter code; the picked one's name sits
-   below, since two resorts can share a code. */
-.month-resorts .chip:not(:first-child) {
-  font: 500 13px var(--font-mono);
-  letter-spacing: 0.04em;
-}
-
-.month-resorts__name {
-  margin: 0;
-  font-size: 14px;
-  color: var(--text-2);
-}
-
-/* Days with nobody at the picked resort step back; your own days never do. */
-.month--highlight .mday:not(.mday--in):not(.mday--friends):not(.mday--out) {
-  opacity: 0.28;
 }
 
 /* --- Calendar: selecting several days ------------------------------------ */

@@ -66,7 +66,7 @@ on the control that leads to the next page.
 | Frame | Element | Advances on | Coach mark |
 |---|---|---|---|
 | 1.0 | Page intro | Next | This is your calendar. Blue days are the days you're in a resort, and the people mark shows friends will be there too. |
-| 1.1 | A pale day | Next | A pale day is one you haven't said: it shows where most of your friends will be. |
+| 1.1 | Group chips | Next | Pick a group to see, in pale, where its people will be on the days you haven't said. |
 | 1.2 | Several days | Next | Tap and hold a day to start selecting, then tap more days. Plan sets them all at once. |
 | 1.3 | Day panel | Next | Tap a day to see it here: your plans, and where each friend will be. |
 | 1.4 | Add plans | Tap Add plans | Add plans tells your groups where you'll be. |

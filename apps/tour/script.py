@@ -78,9 +78,9 @@ CHAPTERS: tuple[Chapter, ...] = (
             ),
             Frame(
                 "1.1",
-                "A pale day is one you haven't said: it shows where most of your "
-                "friends will be.",
-                (".mday--friends",),
+                "Pick a group to see, in pale, where its people will be on the "
+                "days you haven't said.",
+                ("nav.month-groups",),
             ),
             Frame(
                 "1.2",

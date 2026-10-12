@@ -1,4 +1,4 @@
-"""Tests for an unsaid day's crowd: where most friends are (services/month.py)."""
+"""Tests for a picked group's pale days: where its people are (month.py)."""
 
 import datetime
 
@@ -42,13 +42,19 @@ def test_an_unsaid_day_shows_where_most_friends_are(crew: Crew) -> None:
     lone = UserFactory.create(display_name="Lone")
     plans.set_plan(lone, dec(8), ResortFactory.create(name="Hidden", code="HIDE"))
 
+    # Just me shows no pale days at all.
+    plain = month.build_month(crew.sam, dec(1)).weeks
+    assert not any(d.crowd for week in plain for d in week)
     days = {
-        d.date: d for week in month.build_month(crew.sam, dec(1)).weeks for d in week
+        d.date: d
+        for week in month.build_month(crew.sam, dec(1), crew.group).weeks
+        for d in week
     }
     crowd = days[dec(5)].crowd
     assert crowd is not None and crowd.resort == crew.zermatt
     assert crowd.names == "Anna and Chloé"
-    assert days[dec(5)].count == 2
+    assert days[dec(5)].count == 2 and days[dec(5)].more == 1
+    assert days[dec(5)].summary.endswith("Anna and Chloé, others elsewhere")
     tie = days[dec(6)].crowd
     assert tie is not None and tie.resort == crew.verbier
     assert days[dec(7)].crowd is None and days[dec(7)].count == 0

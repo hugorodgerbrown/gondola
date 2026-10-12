@@ -25,6 +25,9 @@ Python 3.14 / Django 6.0, pinned in `pyproject.toml`.
   skiing yes/no, no "not sure" and no "no resort": an unsaid day is the
   undecided one, and a missing resort gets added to the sheet.
 - A sheet for several days puts them all in one resort.
+- The calendar shows you by default. Its chips pick one of your groups,
+  which only adds pale days: where that group's people will be on the days
+  you haven't said. Your own days never change.
 - Meet-ups are not in the app: friends agree them in their group chat.
 - Touring spots are not resorts and are never imported.
 - New accounts are offered a look-and-tap tour of a private demo group
