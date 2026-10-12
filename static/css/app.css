@@ -103,7 +103,7 @@ textarea {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: var(--ground);
+  background: var(--card);
   border-bottom: 1px solid var(--rule);
 }
 

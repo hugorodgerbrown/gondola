@@ -1,0 +1,35 @@
+{# The selected day under the month: your answer, who is where, the meet-up, and Add or Edit plans. Needs selected, selected_friends and back_query. #}
+{% with day=selected plan=selected.plan %}
+  <section id="day-panel" class="day-panel" aria-labelledby="day-panel-heading" aria-live="polite">
+    <div class="day-panel__head">
+      <h2 class="day-panel__title" id="day-panel-heading">{{ day.date|date:"j F" }}</h2>
+      {% if day.plannable %}
+        <a class="button button--small{% if plan %} button--secondary{% endif %}" data-day-plan
+           href="{% url 'planning:day' day.date %}{% if back_query %}?{{ back_query }}{% endif %}"
+           hx-get="{% url 'planning:day' day.date %}{% if back_query %}?{{ back_query }}{% endif %}"
+           hx-target="#sheet-body" hx-push-url="false">{% if plan %}Edit plans{% else %}Add plans{% endif %}</a>
+      {% endif %}
+    </div>
+    {% if plan %}
+      <p class="day-panel__mine">{% if plan.skiing == 'skiing' %}<span class="day-panel__dot" aria-hidden="true"></span>{% endif %}{{ day.plan_words }}{% if plan.is_private %}<span class="day-panel__private">{% include "includes/icons/lock.html" %}Only you see this day</span>{% endif %}</p>
+      {% if plan.note %}<p class="small muted">“{{ plan.note }}”</p>{% endif %}
+    {% endif %}
+    {% if day.meetup %}
+      <a class="day-panel__meetup" href="{% url 'planning:meetup' day.meetup.share_token %}"><span class="mday__meetup" aria-hidden="true"></span>Meet-up at {{ day.meetup.resort.name }}{% if day.meetup.start_time %}, {{ day.meetup.start_time|time:"H:i" }}{% endif %}</a>
+    {% endif %}
+    {% if selected_friends %}
+      <ul class="day-panel__friends" aria-label="Friends that day">
+        {% for entry in selected_friends %}
+          <li>
+            <span class="day-panel__resort">{{ entry.resort.name }}{% if plan.resort_id == entry.resort.pk %} <span class="day-panel__with-you">with you</span>{% endif %}</span>
+            <span class="small muted">{{ entry.names }}</span>
+          </li>
+        {% endfor %}
+      </ul>
+    {% elif not plan %}
+      <p class="muted">No ski plans shown for this date.</p>
+    {% else %}
+      <p class="muted">No friends have plans for this date.</p>
+    {% endif %}
+  </section>
+{% endwith %}

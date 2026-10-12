@@ -1,0 +1,24 @@
+{# One day of the calendar: blue if you ski, the friends-with-you count, the lock and the meet-up dot. Needs day, selected and highlight. #}
+{% with plan=day.plan %}
+  {% if day.plannable %}
+    <a data-date="{{ day.date|date:'Y-m-d' }}"
+       class="mday{% if plan.skiing == 'skiing' %} mday--skiing{% endif %}{% if day.date == selected.date %} mday--selected{% endif %}{% if day.lit %} mday--lit{% endif %}"
+       href="?day={{ day.date|date:'Y-m-d' }}{% if highlight %}&highlight={{ highlight.uuid }}{% endif %}"
+       hx-get="?day={{ day.date|date:'Y-m-d' }}{% if highlight %}&highlight={{ highlight.uuid }}{% endif %}"
+       hx-select="#day-panel" hx-target="#day-panel" hx-swap="outerHTML" hx-replace-url="true"
+       {% if day.date == selected.date %}aria-current="date" {% endif %}aria-label="{{ day.summary }}">
+  {% else %}
+    <span class="mday mday--past{% if day.lit %} mday--lit{% endif %}{% if plan.skiing == 'skiing' %} mday--skiing{% endif %}" aria-label="{{ day.summary }}">
+  {% endif %}
+    <span class="mday__top" aria-hidden="true">
+      <span class="mday__date">{{ day.date.day }}</span>
+      <span class="mday__marks">
+        {% if plan.is_private %}{% include "includes/icons/lock.html" %}{% endif %}
+        {% if day.meetup %}<span class="mday__meetup"></span>{% endif %}
+      </span>
+    </span>
+    {% if day.count %}
+      <span class="mday__friends" aria-hidden="true">{% include "includes/icons/people.html" %}{{ day.count }}</span>
+    {% endif %}
+  {% if day.plannable %}</a>{% else %}</span>{% endif %}
+{% endwith %}
