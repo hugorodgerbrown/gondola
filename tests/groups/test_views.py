@@ -2,6 +2,7 @@
 
 import datetime
 import json
+import re
 
 import pytest
 from django.test import Client
@@ -691,3 +692,17 @@ def test_day_sheet_skiing_toggle(sam: Client, crew: Crew) -> None:
     # Switched off, only the hidden value is sent.
     sam.post(url, {"skiing": "not_skiing", "resort": where}, headers=HTMX)
     assert PlanDay.objects.get(user=crew.sam).skiing == S.NO
+
+
+@freeze_time("2026-10-11 09:00:00+02:00")
+def test_calendar_marks_one_friend_or_several(sam: Client, crew: Crew) -> None:
+    one, two = datetime.date(2026, 12, 5), datetime.date(2026, 12, 6)
+    for day in (one, two):
+        plans.set_plan(crew.sam, day, S.YES, resort=crew.verbier)
+        plans.set_plan(crew.anna, day, S.YES, resort=crew.verbier)
+    plans.set_plan(crew.ben, two, S.NO, resort=crew.verbier)
+    page = sam.get(reverse("planning:calendar") + "?from=2026-12-01").content.decode()
+    marks = re.findall(r'class="mday__friends"><svg[^>]*>(.*?)</svg>', page)
+    single, double = '<circle cx="12"', '<circle cx="9"'
+    assert len(marks) == 2
+    assert marks[0].startswith(single) and marks[1].startswith(double)

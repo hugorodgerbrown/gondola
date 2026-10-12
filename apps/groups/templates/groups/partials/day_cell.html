@@ -1,4 +1,4 @@
-{# One day of the calendar: blue if you ski, light blue if you're at a resort but not skiing, the date with the friends-with-you count top right, and the resort code along the bottom. Needs day, selected and highlight. #}
+{# One day of the calendar: blue if you ski, light blue if you're at a resort but not skiing, the date with a friends mark top right (one person for one friend with you, two for more), and the resort code along the bottom. Needs day, selected and highlight. #}
 {% with plan=day.plan %}
   {% if day.plannable %}
     <a data-date="{{ day.date|date:'Y-m-d' }}"
@@ -13,7 +13,7 @@
     <span class="mday__row" aria-hidden="true">
       <span class="mday__date">{{ day.date.day }}</span>
       {% if day.count %}
-        <span class="mday__friends">{% include "includes/icons/people.html" %}{{ day.count }}</span>
+        <span class="mday__friends">{% if day.count == 1 %}{% include "includes/icons/user.html" %}{% else %}{% include "includes/icons/people.html" %}{% endif %}</span>
       {% endif %}
     </span>
     <span class="mday__row" aria-hidden="true">
