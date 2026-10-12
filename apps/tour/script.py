@@ -55,14 +55,15 @@ WELCOME = (
 
 HANDOFF = (
     "That's the tour. The demo group is gone. This is your real calendar: "
-    "tap a day you might ski, and your group will see it. The evening before "
-    "you ski, we'll email you who's where."
+    "tap a day you might ski, then Add plans, and your group will see it. "
+    "The evening before you ski, we'll email you who's where."
 )
 
 # What a quiet group's Tell the group button shares with the invite link.
 TELL_THE_GROUP = "My ski days are on Gondola, add yours"
 
-DAY = '.mday[data-date="{start}"]'
+# The selected day's Add plans (or Edit plans) under the month.
+PLAN_DAY = "#day-panel [data-day-plan]"
 
 CHAPTERS: tuple[Chapter, ...] = (
     Chapter(
@@ -72,37 +73,37 @@ CHAPTERS: tuple[Chapter, ...] = (
         (
             Frame(
                 "1.0",
-                "This is your calendar. It shows the days you're skiing, and how "
-                "many of your friends are skiing each day.",
+                "This is your calendar. Blue days are the days you're skiing, "
+                "and the number on a day is how many friends will be in the "
+                "same place.",
             ),
             Frame(
                 "1.1",
-                "The number on a day is how many friends are skiing it.",
-                (DAY + " .mday__friends",),
-            ),
-            Frame(
-                "1.2",
                 "An amber dot means a meet-up is planned that day.",
                 ('.mday[data-date="{meetup_day}"] .mday__meetup',),
             ),
             Frame(
-                "1.3",
+                "1.2",
                 "Tap a resort to light up the days your friends will be there.",
                 ("nav.month-resorts",),
             ),
             Frame(
-                "1.4",
-                "Your own days show in blue: solid when you're skiing, dashed "
-                "when you're not sure.",
-                (".month-key",),
-            ),
-            Frame(
-                "1.5",
+                "1.3",
                 "Tap and hold a day to start selecting, then tap more days. Plan "
                 "sets them all at once.",
                 (".month",),
             ),
-            Frame("1.6", "Tap a day to plan it.", (DAY,), tap=DAY),
+            Frame(
+                "1.4",
+                "Tap a day to see it here: your plans, and where each friend will be.",
+                ("#day-panel",),
+            ),
+            Frame(
+                "1.5",
+                "Add plans tells your groups where you'll be.",
+                (PLAN_DAY,),
+                tap=PLAN_DAY,
+            ),
         ),
     ),
     Chapter(

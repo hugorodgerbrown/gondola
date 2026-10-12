@@ -117,9 +117,21 @@ textarea {
   text-decoration: none;
 }
 
-/* The bare gondola, no tile, so it sits on the page like a glyph. */
+/* The gondola in a bordered tile, so it reads the same on any ground. */
 .topbar__logo {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-control);
+  background: var(--card);
+  border: 1px solid var(--rule-strong);
+}
+
+.topbar__logo img {
   display: block;
+  width: 20px;
+  height: 25px;
 }
 
 .page {
@@ -950,12 +962,6 @@ fieldset.field {
   color: var(--text-2);
 }
 
-/* My days: the same control, on the page rather than over the map. */
-.float--page {
-  align-self: flex-start;
-  background: var(--card);
-}
-
 .icon-button--off {
   color: var(--text-3);
   opacity: 0.35;
@@ -1450,13 +1456,13 @@ fieldset.field {
 }
 
 .month__weekday {
-  font: 600 10px var(--font-mono);
+  font: 600 11px var(--font-sans);
   color: var(--text-3);
   text-align: center;
   padding-bottom: 2px;
 }
 
-/* One day: the date, what you said, and how many friends are skiing. */
+/* One day: the date, whether you're skiing, and how many friends are with you. */
 .mday {
   position: relative;
   display: flex;
@@ -1498,28 +1504,17 @@ a.mday:focus-visible {
 }
 
 .mday__date {
-  font: 500 12px var(--font-mono);
+  font: 600 15px var(--font-sans);
 }
 
-.mday--today .mday__date {
-  display: inline-grid;
-  place-items: center;
-  min-width: 20px;
-  height: 20px;
-  margin: -2px 0 0 -2px;
-  border-radius: 10px;
-  background: var(--text-1);
-  color: var(--card);
+/* The day the panel below is showing. */
+.mday--selected {
+  outline: 2px solid var(--text-1);
+  outline-offset: -2px;
 }
 
-.mday__plan {
-  display: flex;
-  align-items: center;
-  gap: 2px;
-  min-height: 14px;
-  font: 600 10px var(--font-mono);
-  letter-spacing: 0.02em;
-  white-space: nowrap;
+.month--selecting .mday--selected {
+  outline: none;
 }
 
 .mday__marks {
@@ -1533,71 +1528,28 @@ a.mday:focus-visible {
   height: 10px;
 }
 
-/* The fill says skiing: filled is skiing, a dashed outline is not sure, a
-   plain outline is at a resort but not skiing, hatching is not skiing at
-   all. The code says where. */
+/* Blue is a day you're skiing. Where, and anything else, is in the panel. */
 .mday--skiing {
   background: var(--accent);
   color: #fff;
 }
 
-.mday--not_sure {
-  background: var(--card);
-  outline: 1.5px dashed var(--accent);
-  outline-offset: -1.5px;
-  color: var(--accent);
-}
-
-.mday--not_skiing {
-  background: repeating-linear-gradient(
-    -45deg,
-    var(--sunk) 0 4px,
-    var(--rule) 4px 5px
-  );
-  color: var(--text-3);
-}
-
-.mday--not_skiing .mday__plan {
-  color: var(--text-3);
-}
-
-.mday--not_skiing.mday--at {
-  background: var(--card);
-  outline: 1.5px solid var(--accent);
-  outline-offset: -1.5px;
-  color: var(--accent);
-}
-
-.mday--not_skiing.mday--at .mday__plan {
-  color: var(--accent);
-}
-
+/* Friends where you are that day (or at the highlighted resort). */
 .mday__friends {
   display: inline-flex;
   align-items: center;
-  gap: 2px;
+  gap: 3px;
   align-self: flex-start;
-  padding: 1px 4px 1px 3px;
-  border-radius: 8px;
-  background: var(--card);
-  color: var(--text-2);
-  font: 600 10px var(--font-mono);
+  color: var(--ok);
+  font: 600 12px var(--font-sans);
 }
 
 .mday__friends svg {
-  width: 11px;
-  height: 11px;
+  width: 14px;
+  height: 14px;
 }
 
 .mday--skiing .mday__friends {
-  background: rgba(255, 255, 255, 0.22);
-  color: #fff;
-}
-
-/* Friends at your resort that day. */
-.mday__friends--with-me,
-.mday--skiing .mday__friends--with-me {
-  background: var(--ok);
   color: #fff;
 }
 
@@ -1613,11 +1565,11 @@ a.mday:focus-visible {
 .month-key {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px 14px;
+  gap: 8px 18px;
   margin: 0;
   padding: 0 4px;
   list-style: none;
-  font-size: 12px;
+  font-size: 13px;
   color: var(--text-2);
 }
 
@@ -1631,30 +1583,16 @@ a.mday:focus-visible {
   display: inline-block;
   width: 14px;
   height: 14px;
-  min-height: 0;
-  padding: 0;
   border-radius: 4px;
-  background: var(--sunk);
-}
-
-.month-key__swatch.mday--skiing {
   background: var(--accent);
 }
 
-.month-key__swatch.mday--not_sure {
-  background: var(--card);
+.month-key svg {
+  width: 16px;
+  height: 16px;
 }
 
-.month-key__swatch.mday--not_skiing.mday--at {
-  background: var(--card);
-  outline-width: 1.25px;
-}
-
-.month-key__swatch.mday--not_skiing {
-  background: repeating-linear-gradient(-45deg, var(--card) 0 3px, var(--rule-strong) 3px 4px);
-}
-
-/* --- My days: one resort highlighted ----------------------------------- */
+/* --- Calendar: one resort highlighted ----------------------------------- */
 
 .month-resorts {
   margin: 0 -16px;
@@ -1672,13 +1610,6 @@ a.mday:focus-visible {
   color: #ffffff;
 }
 
-.chip__x {
-  margin: 0 -4px 0 6px;
-  font-size: 16px;
-  line-height: 1;
-  opacity: 0.8;
-}
-
 /* Days nobody is at the resort step back, so the ones somebody is stand out. */
 .month--highlight .mday:not(.mday--lit):not(.mday--out) {
   opacity: 0.28;
@@ -1688,11 +1619,11 @@ a.mday:focus-visible {
   opacity: 0.55;
 }
 
-.month--highlight .mday--lit:not(.mday--skiing):not(.mday--not_sure):not(.mday--not_skiing) {
+.month--highlight .mday--lit:not(.mday--skiing) {
   background: var(--accent-soft);
 }
 
-/* --- My days: selecting several days ------------------------------------ */
+/* --- Calendar: selecting several days ------------------------------------ */
 
 .month a.mday {
   -webkit-user-select: none;
@@ -1700,8 +1631,109 @@ a.mday:focus-visible {
   -webkit-touch-callout: none;
 }
 
-.month-hint {
-  margin: -4px 4px 0;
+/* --- Calendar: the month heading and the selected day's panel ---------- */
+
+.month-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.month-head__nav {
+  display: flex;
+  gap: 4px;
+}
+
+.month-resorts .chip {
+  height: 36px;
+  padding: 0 16px;
+  font-size: 14px;
+}
+
+.day-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-top: 16px;
+  border-top: 1px solid var(--rule-strong);
+}
+
+.day-panel__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.day-panel__title {
+  font-size: 20px;
+  line-height: 28px;
+  font-weight: 600;
+}
+
+.day-panel__mine {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+  font-weight: 500;
+}
+
+/* The calendar's blue, beside a day you're skiing. */
+.day-panel__dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  background: var(--accent);
+}
+
+.day-panel__private {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--text-2);
+}
+
+.day-panel__private svg {
+  width: 12px;
+  height: 12px;
+}
+
+.day-panel__meetup {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  align-self: flex-start;
+  font-size: 14px;
+}
+
+.day-panel__friends {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.day-panel__friends li {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.day-panel__resort {
+  font-weight: 500;
+}
+
+.day-panel__with-you {
+  margin-left: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ok);
 }
 
 /* Every day gets an empty tick circle; a picked day fills it. */

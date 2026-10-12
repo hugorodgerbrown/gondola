@@ -4,7 +4,8 @@ apps/groups/services/month.py — the calendar, one month at a time.
 One month at a time, weeks starting Monday. Each day carries what the
 viewer said about it and what their groups are up to: how many friends
 are at a resort (skiing or just around), how many of them at the viewer's
-resort, and whether one of the viewer's groups has a meet-up. Friends'
+resort (the number the calendar shows), and whether one of the viewer's
+groups has a meet-up. Friends'
 private days count for nothing, as everywhere else.
 
 With one resort highlighted, each day also says which friends are there,
@@ -53,6 +54,24 @@ class MonthDay:
     def friends_out(self) -> int:
         """Return how many friends are at a resort that day."""
         return len(self.friends)
+
+    @property
+    def count(self) -> int:
+        """Return the number on the day: friends where you are (or at the highlight)."""
+        return len(self.there) if self.highlight else self.with_me
+
+    @property
+    def plan_words(self) -> str:
+        """Return your answer for the day panel: "Skiing at Verbier"."""
+        plan = self.plan
+        if plan is None:
+            return ""
+        resort = plan.resort.name if plan.resort is not None else ""
+        if plan.skiing == PlanDay.Skiing.YES:
+            return f"Skiing at {resort}" if resort else "Skiing, not sure where"
+        if plan.skiing == PlanDay.Skiing.NOT_SURE:
+            return f"Maybe skiing at {resort}" if resort else "Not sure yet"
+        return f"At {resort}, not skiing" if resort else "Not skiing"
 
     @property
     def summary(self) -> str:

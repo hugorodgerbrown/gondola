@@ -59,19 +59,18 @@ on the control that leads to the next page.
 
 ## Chapter 1: Your calendar
 
-**Page intro:** This is your calendar. It shows the days you're skiing, and how many of your friends are skiing each day.
+**Page intro:** This is your calendar. Blue days are the days you're skiing, and the number on a day is how many friends will be in the same place.
 
-*Why:* The calendar is where people spend most of their time, and every mark on it carries meaning. The intro names the page; each zoom explains one mark.
+*Why:* The calendar is where people spend most of their time, and every mark on it carries meaning. The intro names the marks; each zoom explains one control. Press and hold has no hint on the page, so the tour is where people learn it.
 
 | Frame | Element | Advances on | Coach mark |
 |---|---|---|---|
-| 1.0 | Page intro | Next | This is your calendar. It shows the days you're skiing, and how many of your friends are skiing each day. |
-| 1.1 | Friend count | Next | The number on a day is how many friends are skiing it. |
-| 1.2 | Meet-up dot | Next | An amber dot means a meet-up is planned that day. |
-| 1.3 | Resort chips | Next | Tap a resort to light up the days your friends will be there. |
-| 1.4 | Your days | Next | Your own days show in blue: solid when you're skiing, dashed when you're not sure. |
-| 1.5 | Several days | Next | Tap and hold a day to start selecting, then tap more days. Plan sets them all at once. |
-| 1.6 | Open a day | Tap the day | Tap a day to plan it. |
+| 1.0 | Page intro | Next | This is your calendar. Blue days are the days you're skiing, and the number on a day is how many friends will be in the same place. |
+| 1.1 | Meet-up dot | Next | An amber dot means a meet-up is planned that day. |
+| 1.2 | Resort chips | Next | Tap a resort to light up the days your friends will be there. |
+| 1.3 | Several days | Next | Tap and hold a day to start selecting, then tap more days. Plan sets them all at once. |
+| 1.4 | Day panel | Next | Tap a day to see it here: your plans, and where each friend will be. |
+| 1.5 | Add plans | Tap Add plans | Add plans tells your groups where you'll be. |
 
 ## Chapter 2: A single day
 
@@ -145,13 +144,13 @@ on the control that leads to the next page.
 
 ## Chapter 7: Over to you
 
-**Page intro:** That's the tour. The demo group is gone. This is your real calendar: tap a day you might ski, and your group will see it.
+**Page intro:** That's the tour. The demo group is gone. This is your real calendar: tap a day you might ski, then Add plans, and your group will see it.
 
 *Why:* The amber bar disappears, so the switch from practice to real is visible, and they land where the measured goal happens. In a quiet group the card adds Tell the group; an organiser with no group lands on Groups to start one. Someone who signed up through an invite link is offered the tour only after tapping Join, so they arrive here already in the group; if they started it with the invite still pending, Let's go goes back to that invite, which comes before Groups.
 
 | Frame | Element | Advances on | Coach mark |
 |---|---|---|---|
-| 7.0 | Hand-off | Let's go | That's the tour. The demo group is gone. This is your real calendar: tap a day you might ski, and your group will see it. The evening before you ski, we'll email you who's where. |
+| 7.0 | Hand-off | Let's go | That's the tour. The demo group is gone. This is your real calendar: tap a day you might ski, then Add plans, and your group will see it. The evening before you ski, we'll email you who's where. |
 
 ## Measuring it: fivebar goals
 

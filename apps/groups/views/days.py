@@ -1,16 +1,19 @@
 """
 apps/groups/views/days.py — the calendar, and the sheet for one day.
 
-The calendar shows a month, this month by default; arrows step a month
-(``?from=``, any day in it) as far as plans can be made. Each day shows
-what you said about it and what your groups are up to: friends at a
-resort, friends at yours, and a meet-up. Chips above it highlight one
+The calendar is about you: a month, this month by default; arrows step a
+month (``?from=``, any day in it) as far as plans can be made. A day shows
+whether you're skiing, how many friends will be where you are, a lock if
+you keep it private and a dot for a meet-up. Chips above it highlight one
 resort (``?highlight=``): the days anyone is there stand out, and the
-friends badge counts only the people there. Tapping a day opens a sheet with
-two separate answers: where you'll be (the resorts friends picked first,
-then a search over every resort, or no resort) and whether you're skiing
-(yes, not sure yet, no); then an optional note, and a switch to keep the
-day private.
+count is the friends there instead.
+
+Tapping a day selects it (``?day=``) and fills the panel below the month:
+your answer, where every friend is that day, any meet-up, and Add plans or
+Edit plans, which opens a sheet with two separate answers: where you'll
+be (the resorts friends picked first, then a search over every resort, or
+no resort) and whether you're skiing (yes, not sure yet, no); then an
+optional note, and a switch to keep the day private.
 
 Pressing and holding a day starts selecting: tap more days (or drag
 across a run), then one sheet plans them all (``?days=``). An answer that
@@ -40,7 +43,13 @@ from ..forms import KEEP_RESORT, DayForm
 from ..models import Group, PlanDay
 from ..services.highlight import resorts_in_play
 from ..services.meetups import meetups_for
-from ..services.month import build_month, month_dates, month_start
+from ..services.month import (
+    Month,
+    MonthDay,
+    build_month,
+    month_dates,
+    month_start,
+)
 from ..services.plans import (
     clear_plan,
     clear_plans,
@@ -73,18 +82,22 @@ def calendar(request: HttpRequest) -> HttpResponse:
     """Show a month of days: the person's plans and their groups' activity."""
     user = current_user(request)
     highlight = _highlight(request)
-    month = build_month(user, parse_day(request.GET.get("from")), highlight)
+    picked = _picked_day(request)
+    month = build_month(user, picked or parse_day(request.GET.get("from")), highlight)
     resorts = resorts_in_play(user, month_dates(month.first))
     if highlight is not None and highlight not in resorts:
         resorts.insert(0, highlight)
     window_from = _later_month(month.first)
     back = _back(window_from, highlight)
+    selected = _selected(month, picked)
     return render(
         request,
         "groups/calendar.html",
         {
             "month": month,
             "today": today(),
+            "selected": selected,
+            "selected_friends": friends_by_resort(user, selected.date),
             # Only a later month needs carrying through a plain form post.
             "window_from": window_from,
             "back_query": urlencode(back),
@@ -94,6 +107,27 @@ def calendar(request: HttpRequest) -> HttpResponse:
             "highlight": highlight,
         },
     )
+
+
+def _picked_day(request: HttpRequest) -> datetime.date | None:
+    """Return the day tapped on the calendar (``day=``), if any and valid."""
+    value = request.GET.get("day")
+    if not value:
+        return None
+    try:
+        return datetime.date.fromisoformat(value)
+    except ValueError:
+        return None
+
+
+def _selected(month: Month, picked: datetime.date | None) -> MonthDay:
+    """Return the month's selected day: the one tapped, else today, else the 1st."""
+    days = [day for week in month.weeks for day in week if day.in_month]
+    for wanted in (picked, today()):
+        for day in days:
+            if day.date == wanted:
+                return day
+    return days[0]
 
 
 def _later_month(first: datetime.date) -> datetime.date | None:
@@ -136,8 +170,13 @@ def _request_back(request: HttpRequest) -> dict[str, str]:
     return _back(_window_from(request), _highlight(request))
 
 
-def _calendar_url(back: dict[str, str]) -> str:
-    """Return the calendar, as the person was looking at it."""
+def _calendar_url(back: dict[str, str], days: list[datetime.date] | None = None) -> str:
+    """Return the calendar, as the person was looking at it.
+
+    After one day's sheet, ``days`` keeps that day selected in the panel.
+    """
+    if days is not None and len(days) == 1:
+        back = {**back, "day": days[0].isoformat()}
     url = reverse("planning:calendar")
     return f"{url}?{urlencode(back)}" if back else url
 
@@ -203,7 +242,7 @@ def _sheet(
     if request.method == "POST" and form.is_valid():
         record_day_planned(request, user)
         update_plans(user, days, **form.changes())
-        return refresh(request, _calendar_url(_request_back(request)))
+        return refresh(request, _calendar_url(_request_back(request), days))
     friends = friends_by_resort(user, days)
     listed = {entry.resort.pk for entry in friends}
     picks = {plan.resort for plan in plans.values() if plan.resort is not None}
@@ -259,7 +298,7 @@ def day(request: HttpRequest, day: datetime.date) -> HttpResponse:
 def day_clear(request: HttpRequest, day: datetime.date) -> HttpResponse:
     """Forget what the person said about a day."""
     clear_plan(current_user(request), day)
-    return refresh(request, _calendar_url(_request_back(request)))
+    return refresh(request, _calendar_url(_request_back(request), [day]))
 
 
 def _selected_days(request: HttpRequest) -> list[datetime.date]:

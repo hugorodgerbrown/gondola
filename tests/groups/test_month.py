@@ -76,3 +76,42 @@ def test_month_day_summary_for_quiet_days(crew: Crew) -> None:
     days = days_of(month.build_month(crew.sam, today))
     assert days[today].summary == "Sunday 11 October, today, Not sure yet, private"
     assert days[datetime.date(2026, 10, 12)].summary == "Monday 12 October, no plan"
+
+
+@pytest.mark.parametrize(
+    ("skiing", "at_resort", "words"),
+    [
+        (S.YES, True, "Skiing at Verbier"),
+        (S.YES, False, "Skiing, not sure where"),
+        (S.NOT_SURE, True, "Maybe skiing at Verbier"),
+        (S.NOT_SURE, False, "Not sure yet"),
+        (S.NO, True, "At Verbier, not skiing"),
+        (S.NO, False, "Not skiing"),
+    ],
+)
+def test_month_day_plan_words(
+    crew: Crew, skiing: str, at_resort: bool, words: str
+) -> None:
+    plan = plans.set_plan(
+        crew.sam, crew.day, skiing, resort=crew.verbier if at_resort else None
+    )
+    day = month.MonthDay(
+        date=crew.day, in_month=True, is_today=False, plannable=True, plan=plan
+    )
+    assert day.plan_words == words
+    assert (
+        month.MonthDay(
+            date=crew.day, in_month=True, is_today=False, plannable=True
+        ).plan_words
+        == ""
+    )
+
+
+def test_month_day_count_is_friends_with_you_or_at_the_highlight(crew: Crew) -> None:
+    day = month.MonthDay(
+        date=crew.day, in_month=True, is_today=False, plannable=True, with_me=2
+    )
+    assert day.count == 2
+    day.highlight = "Verbier"
+    day.there = ["Anna"]
+    assert day.count == 1

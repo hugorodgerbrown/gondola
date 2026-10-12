@@ -5,39 +5,39 @@
   <script src="{% static 'js/day_select.js' %}"></script>
 {% endblock %}
 {% block content %}
-  <div class="heading">
-    <span class="eyebrow">{{ month.first|date:"F Y" }}</span>
-    <h1 class="title">Your calendar</h1>
-    {% if groups %}
-      <p class="lede">Everyone in {% for group in groups %}{% if not forloop.first %}{% if forloop.last %} and {% else %}, {% endif %}{% endif %}{{ group.name }}{% endfor %} sees these, except days you keep private.</p>
-    {% else %}
-      <p class="lede">Nobody sees these yet. <a href="{% url 'planning:group_list' %}">Start a group</a> or open an invite link from a friend.</p>
-    {% endif %}
+  <div class="month-head">
+    <h1 class="title title--large">{{ month.first|date:"F Y" }}</h1>
+    <nav class="month-head__nav" aria-label="Month">
+      {% if month.previous %}
+        <a class="icon-button" href="?from={{ month.previous|date:'Y-m-d' }}{% if highlight %}&highlight={{ highlight.uuid }}{% endif %}" aria-label="{{ month.previous|date:'F' }}">{% include "includes/icons/chevron-left.html" %}</a>
+      {% else %}
+        <span class="icon-button icon-button--off" aria-hidden="true">{% include "includes/icons/chevron-left.html" %}</span>
+      {% endif %}
+      {% if month.next %}
+        <a class="icon-button" href="?from={{ month.next|date:'Y-m-d' }}{% if highlight %}&highlight={{ highlight.uuid }}{% endif %}" aria-label="{{ month.next|date:'F' }}">{% include "includes/icons/chevron-right.html" %}</a>
+      {% else %}
+        <span class="icon-button icon-button--off" aria-hidden="true">{% include "includes/icons/chevron-right.html" %}</span>
+      {% endif %}
+    </nav>
   </div>
-  <nav class="float float--page" aria-label="Month">
-    {% if month.previous %}
-      <a class="icon-button" href="?from={{ month.previous|date:'Y-m-d' }}{% if highlight %}&highlight={{ highlight.uuid }}{% endif %}" aria-label="{{ month.previous|date:'F' }}">{% include "includes/icons/chevron-left.html" %}</a>
-    {% else %}
-      <span class="icon-button icon-button--off" aria-hidden="true">{% include "includes/icons/chevron-left.html" %}</span>
-    {% endif %}
-    <span class="float__label float__label--month">{{ month.first|date:"F Y" }}</span>
-    {% if month.next %}
-      <a class="icon-button" href="?from={{ month.next|date:'Y-m-d' }}{% if highlight %}&highlight={{ highlight.uuid }}{% endif %}" aria-label="{{ month.next|date:'F' }}">{% include "includes/icons/chevron-right.html" %}</a>
-    {% else %}
-      <span class="icon-button icon-button--off" aria-hidden="true">{% include "includes/icons/chevron-right.html" %}</span>
-    {% endif %}
-  </nav>
+  {% if not groups %}
+    <p class="lede">Nobody sees your days yet. <a href="{% url 'planning:group_list' %}">Start a group</a> or open an invite link from a friend.</p>
+  {% endif %}
 
   {% if resorts %}
-    <nav class="chips month-resorts" aria-label="Highlight a resort">
-      {% for resort in resorts %}
-        {% if resort == highlight %}
-          <a class="chip chip--clear" aria-current="true" href="?{% if window_from %}from={{ window_from|date:'Y-m-d' }}{% endif %}" aria-label="{{ resort.name }}, highlighted. Stop highlighting">{{ resort.name }}<span class="chip__x" aria-hidden="true">&times;</span></a>
-        {% else %}
-          <a class="chip" href="?{% if window_from %}from={{ window_from|date:'Y-m-d' }}&{% endif %}highlight={{ resort.uuid }}">{{ resort.name }}</a>
-        {% endif %}
-      {% endfor %}
-    </nav>
+    <div class="heading">
+      <span class="eyebrow" id="resorts-label">Resorts</span>
+      <nav class="chips month-resorts" aria-labelledby="resorts-label">
+        <a class="chip"{% if not highlight %} aria-current="true"{% endif %} href="?day={{ selected.date|date:'Y-m-d' }}">All resorts</a>
+        {% for resort in resorts %}
+          {% if resort == highlight %}
+            <a class="chip" aria-current="true" href="?day={{ selected.date|date:'Y-m-d' }}" aria-label="{{ resort.name }}, highlighted. Show all resorts">{{ resort.name }}</a>
+          {% else %}
+            <a class="chip" href="?day={{ selected.date|date:'Y-m-d' }}&highlight={{ resort.uuid }}">{{ resort.name }}</a>
+          {% endif %}
+        {% endfor %}
+      </nav>
+    </div>
   {% endif %}
 
   <div class="month card{% if highlight %} month--highlight{% endif %}" role="group" aria-label="{{ month.first|date:'F Y' }}"{% if month.previous %} data-swipe-previous="?from={{ month.previous|date:'Y-m-d' }}{% if highlight %}&highlight={{ highlight.uuid }}{% endif %}"{% endif %}{% if month.next %} data-swipe-next="?from={{ month.next|date:'Y-m-d' }}{% if highlight %}&highlight={{ highlight.uuid }}{% endif %}"{% endif %}
@@ -54,13 +54,13 @@
             {% with plan=day.plan %}
               {% if day.plannable %}
                 <a data-date="{{ day.date|date:'Y-m-d' }}"
-                   class="mday{% if plan %} mday--{{ plan.skiing }}{% if plan.resort %} mday--at{% endif %}{% endif %}{% if day.is_today %} mday--today{% endif %}{% if day.lit %} mday--lit{% endif %}"
-                   href="{% url 'planning:day' day.date %}{% if back_query %}?{{ back_query }}{% endif %}"
-                   hx-get="{% url 'planning:day' day.date %}{% if back_query %}?{{ back_query }}{% endif %}"
-                   hx-target="#sheet-body" hx-push-url="false"
-                   aria-label="{{ day.summary }}">
+                   class="mday{% if plan.skiing == 'skiing' %} mday--skiing{% endif %}{% if day.date == selected.date %} mday--selected{% endif %}{% if day.lit %} mday--lit{% endif %}"
+                   href="?day={{ day.date|date:'Y-m-d' }}{% if highlight %}&highlight={{ highlight.uuid }}{% endif %}"
+                   hx-get="?day={{ day.date|date:'Y-m-d' }}{% if highlight %}&highlight={{ highlight.uuid }}{% endif %}"
+                   hx-select="#day-panel" hx-target="#day-panel" hx-swap="outerHTML" hx-replace-url="true"
+                   {% if day.date == selected.date %}aria-current="date" {% endif %}aria-label="{{ day.summary }}">
               {% else %}
-                <span class="mday mday--past{% if day.lit %} mday--lit{% endif %}{% if plan %} mday--{{ plan.skiing }}{% if plan.resort %} mday--at{% endif %}{% endif %}" aria-label="{{ day.summary }}">
+                <span class="mday mday--past{% if day.lit %} mday--lit{% endif %}{% if plan.skiing == 'skiing' %} mday--skiing{% endif %}" aria-label="{{ day.summary }}">
               {% endif %}
                 <span class="mday__top" aria-hidden="true">
                   <span class="mday__date">{{ day.date.day }}</span>
@@ -69,15 +69,8 @@
                     {% if day.meetup %}<span class="mday__meetup"></span>{% endif %}
                   </span>
                 </span>
-                <span class="mday__plan" aria-hidden="true">
-                  {% if plan.resort %}{{ plan.resort.display_code }}{% elif plan.skiing == "not_skiing" %}–{% elif plan %}?{% endif %}
-                </span>
-                {% if highlight %}
-                  {% if day.there %}
-                    <span class="mday__friends{% if day.me_there %} mday__friends--with-me{% endif %}" aria-hidden="true">{% include "includes/icons/people.html" %}{{ day.there|length }}</span>
-                  {% endif %}
-                {% elif day.friends_out %}
-                  <span class="mday__friends{% if day.with_me %} mday__friends--with-me{% endif %}" aria-hidden="true">{% include "includes/icons/people.html" %}{{ day.friends_out }}</span>
+                {% if day.count %}
+                  <span class="mday__friends" aria-hidden="true">{% include "includes/icons/people.html" %}{{ day.count }}</span>
                 {% endif %}
               {% if day.plannable %}</a>{% else %}</span>{% endif %}
             {% endwith %}
@@ -87,7 +80,10 @@
     {% endfor %}
   </div>
 
-  <p class="small muted month-hint">Press and hold a day to select several.</p>
+  <ul class="month-key" aria-label="Key">
+    <li><span class="month-key__swatch"></span>You're skiing</li>
+    <li>{% include "includes/icons/people.html" %}{% if highlight %}Friends at {{ highlight.name }}{% else %}Friends with you{% endif %}</li>
+  </ul>
 
   <div class="select-bar" data-select-bar role="region" aria-label="Selected days" hidden>
     <button type="button" class="button button--secondary button--small" data-select-cancel>Cancel</button>
@@ -95,17 +91,39 @@
     <button type="button" class="button button--small" data-select-plan>Plan</button>
   </div>
 
-  <ul class="month-key" aria-label="Key">
-    <li><span class="month-key__swatch mday--skiing"></span>Skiing</li>
-    <li><span class="month-key__swatch mday--not_sure"></span>Not sure</li>
-    <li><span class="month-key__swatch mday--not_skiing mday--at"></span>Around, not skiing</li>
-    <li><span class="month-key__swatch mday--not_skiing"></span>Not skiing</li>
-    <li><span class="mday__friends">{% include "includes/icons/people.html" %}2</span>Friends at a resort</li>
-    <li><span class="mday__friends mday__friends--with-me">{% include "includes/icons/people.html" %}2</span>With you</li>
-    <li><span class="mday__meetup"></span>Meet-up</li>
-  </ul>
 
-  {% if groups %}
-    <a href="{% url 'planning:board' groups.0.uuid %}" class="small">See who's where →</a>
-  {% endif %}
+  {% with day=selected plan=selected.plan %}
+    <section id="day-panel" class="day-panel" aria-labelledby="day-panel-heading" aria-live="polite">
+      <div class="day-panel__head">
+        <h2 class="day-panel__title" id="day-panel-heading">{{ day.date|date:"j F" }}</h2>
+        {% if day.plannable %}
+          <a class="button button--small{% if plan %} button--secondary{% endif %}" data-day-plan
+             href="{% url 'planning:day' day.date %}{% if back_query %}?{{ back_query }}{% endif %}"
+             hx-get="{% url 'planning:day' day.date %}{% if back_query %}?{{ back_query }}{% endif %}"
+             hx-target="#sheet-body" hx-push-url="false">{% if plan %}Edit plans{% else %}Add plans{% endif %}</a>
+        {% endif %}
+      </div>
+      {% if plan %}
+        <p class="day-panel__mine">{% if plan.skiing == 'skiing' %}<span class="day-panel__dot" aria-hidden="true"></span>{% endif %}{{ day.plan_words }}{% if plan.is_private %}<span class="day-panel__private">{% include "includes/icons/lock.html" %}Only you see this day</span>{% endif %}</p>
+        {% if plan.note %}<p class="small muted">“{{ plan.note }}”</p>{% endif %}
+      {% endif %}
+      {% if day.meetup %}
+        <a class="day-panel__meetup" href="{% url 'planning:meetup' day.meetup.share_token %}"><span class="mday__meetup" aria-hidden="true"></span>Meet-up at {{ day.meetup.resort.name }}{% if day.meetup.start_time %}, {{ day.meetup.start_time|time:"H:i" }}{% endif %}</a>
+      {% endif %}
+      {% if selected_friends %}
+        <ul class="day-panel__friends" aria-label="Friends that day">
+          {% for entry in selected_friends %}
+            <li>
+              <span class="day-panel__resort">{{ entry.resort.name }}{% if plan.resort_id == entry.resort.pk %} <span class="day-panel__with-you">with you</span>{% endif %}</span>
+              <span class="small muted">{{ entry.names }}</span>
+            </li>
+          {% endfor %}
+        </ul>
+      {% elif not plan %}
+        <p class="muted">No ski plans shown for this date.</p>
+      {% else %}
+        <p class="muted">No friends have plans for this date.</p>
+      {% endif %}
+    </section>
+  {% endwith %}
 {% endblock %}

@@ -11,7 +11,7 @@ from freezegun import freeze_time
 from apps.groups.models import Group, MeetUp, PlanDay
 from apps.groups.services import meetups, plans
 from apps.groups.services.people import is_member
-from tests.factories import PassFactory
+from tests.factories import MeetUpFactory, PassFactory
 from tests.groups.conftest import Crew
 
 pytestmark = pytest.mark.django_db
@@ -47,10 +47,20 @@ def test_calendar_is_this_month(sam: Client, crew: Crew) -> None:
     cal = response.context["month"]
     assert cal.first == today.replace(day=1)
     assert cal.previous is None
-    assert b"Thursday crew sees these" in response.content
-    # Today's square: the resort code, the lock, and a friend with you.
-    assert b"VERB" in response.content
-    assert b"mday__friends--with-me" in response.content
+    # The month is the title; today is selected, blue, locked, and counts
+    # the one friend with you.
+    assert f'<h1 class="title title--large">{today:%B %Y}</h1>'.encode() in (
+        response.content
+    )
+    assert response.context["selected"].date == today
+    assert b"mday--skiing mday--selected" in response.content
+    assert response.context["selected"].count == 1
+    assert b'class="mday__friends"' in response.content
+    # The panel: your answer, kept private, who's where, and Edit plans.
+    assert b"Skiing at Verbier" in response.content
+    assert b"Only you see this day" in response.content
+    assert b"with you</span>" in response.content
+    assert b"Edit plans" in response.content
     assert f"{today:%A} {today.day} {today:%B}, today, Verbier, private".encode() in (
         response.content
     )
@@ -75,12 +85,15 @@ def test_plain_forms_keep_the_month(sam: Client, crew: Crew) -> None:
     """Without JavaScript, saving or clearing a day returns to its month."""
     far = plans.today() + datetime.timedelta(days=60)
     first = far.replace(day=1)
-    page = sam.get(reverse("planning:calendar"), {"from": far.isoformat()})
+    page = sam.get(reverse("planning:calendar"), {"day": far.isoformat()})
     day_url = reverse("planning:day", kwargs={"day": far})
     assert f'href="{day_url}?from={first.isoformat()}"'.encode() in page.content
     sheet = sam.get(day_url, {"from": first.isoformat()})
     assert f'name="from" value="{first.isoformat()}"'.encode() in sheet.content
-    back = f"{reverse('planning:calendar')}?from={first.isoformat()}"
+    # Back to the month, with the day still selected in the panel.
+    back = (
+        f"{reverse('planning:calendar')}?from={first.isoformat()}&day={far.isoformat()}"
+    )
     saved = sam.post(day_url, {"skiing": S.NOT_SURE, "from": first.isoformat()})
     assert saved["Location"] == back
     cleared = sam.post(
@@ -101,16 +114,17 @@ def test_calendar_highlights_a_resort(sam: Client, crew: Crew) -> None:
     page = sam.get(url, {"from": first})
     assert page.context["resorts"] == [crew.verbier, crew.zermatt]
     assert page.context["highlight"] is None
-    assert (
-        f'href="?from={first}&highlight={crew.verbier.uuid}"'.encode() in page.content
-    )
+    # A chip keeps the selected day (here the month's first).
+    assert f'href="?day={first}&highlight={crew.verbier.uuid}"'.encode() in page.content
 
-    lit = sam.get(url, {"from": first, "highlight": str(crew.verbier.uuid)})
+    lit = sam.get(url, {"day": far.isoformat(), "highlight": str(crew.verbier.uuid)})
     assert lit.context["highlight"] == crew.verbier
     assert b"month--highlight" in lit.content and b"mday--lit" in lit.content
     assert b"Verbier in " not in lit.content  # no who's-there card
-    # The picked chip clears it; the arrows, day links and selection keep it.
-    assert f'aria-current="true" href="?from={first}"'.encode() in lit.content
+    # The picked chip and All resorts clear it; the arrows, day links and
+    # selection keep it. The count is the friends at the resort.
+    assert lit.context["selected"].count == 1
+    assert f'aria-current="true" href="?day={far.isoformat()}"'.encode() in lit.content
     back = f"from={first}&amp;highlight={crew.verbier.uuid}"
     assert f'data-select-back="{back}"'.encode() in lit.content
     day_url = reverse("planning:day", kwargs={"day": far})
@@ -145,14 +159,67 @@ def test_saving_a_day_keeps_the_highlight(sam: Client, crew: Crew) -> None:
     )
     assert saved["Location"] == (
         f"{reverse('planning:calendar')}?highlight={highlighted}"
+        f"&day={crew.day.isoformat()}"
     )
     plan = PlanDay.objects.get(user=crew.sam, date=crew.day)
     assert plan.resort == crew.zermatt
 
 
+def test_the_panel_shows_the_picked_day(sam: Client, crew: Crew) -> None:
+    """A tapped day fills the panel: Add plans, friends there, the meet-up."""
+    plans.set_plan(crew.anna, crew.day, S.YES, resort=crew.verbier)
+    plans.set_plan(crew.ben, crew.day, S.NO, resort=crew.zermatt)
+    MeetUpFactory.create(group=crew.group, date=crew.day, resort=crew.verbier)
+    url = reverse("planning:calendar")
+    page = sam.get(url, {"day": crew.day.isoformat()})
+    assert page.context["selected"].date == crew.day
+    assert [e.resort for e in page.context["selected_friends"]] == [
+        crew.verbier,
+        crew.zermatt,
+    ]
+    assert b"Add plans" in page.content and b"Edit plans" not in page.content
+    assert b"Meet-up at Verbier" in page.content
+    assert b"Ben (around)" in page.content
+    # Nobody is with Sam, so no day carries a number.
+    assert b'class="mday__friends"' not in page.content
+    # A day with nothing on says so.
+    empty = sam.get(url, {"day": (crew.day + datetime.timedelta(days=1)).isoformat()})
+    assert b"No ski plans shown for this date." in empty.content
+
+
+def test_the_panel_without_friends_out(sam: Client, crew: Crew) -> None:
+    plans.set_plan(crew.sam, crew.day, S.NOT_SURE)
+    page = sam.get(reverse("planning:calendar"), {"day": crew.day.isoformat()})
+    assert b"Not sure yet" in page.content
+    assert b"No friends have plans for this date." in page.content
+
+
+@pytest.mark.parametrize("value", ["nope", "2099-01-01"])
+def test_an_unknown_day_selects_a_default(sam: Client, value: str) -> None:
+    page = sam.get(reverse("planning:calendar"), {"day": value})
+    selected = page.context["selected"]
+    assert selected.in_month
+    assert selected.date in (plans.today(), page.context["month"].first)
+
+
+def test_a_later_month_selects_its_first(sam: Client, crew: Crew) -> None:
+    later = (plans.today().replace(day=1) + datetime.timedelta(days=40)).replace(day=1)
+    page = sam.get(reverse("planning:calendar"), {"from": later.isoformat()})
+    assert page.context["selected"].date == later
+
+
+@freeze_time("2026-10-12 09:00:00+02:00")
+def test_a_past_day_has_no_plans_button(sam: Client, crew: Crew) -> None:
+    page = sam.get(reverse("planning:calendar"), {"day": "2026-10-10"})
+    assert page.context["selected"].date == datetime.date(2026, 10, 10)
+    assert b"data-day-plan" not in page.content
+
+
 def test_calendar_without_groups(client: Client, crew: Crew) -> None:
     client.force_login(crew.outsider)
-    assert b"Nobody sees these yet" in client.get(reverse("planning:calendar")).content
+    assert (
+        b"Nobody sees your days yet" in client.get(reverse("planning:calendar")).content
+    )
 
 
 def test_day_sheet_shows_friends_first(sam: Client, crew: Crew) -> None:
@@ -241,7 +308,10 @@ def test_day_sheet_shows_the_days_meetups(sam: Client, crew: Crew) -> None:
 def test_day_sheet_not_sure_and_clear(sam: Client, crew: Crew) -> None:
     url = reverse("planning:day", kwargs={"day": crew.day})
     response = sam.post(url, {"skiing": "not_sure"})
-    assert response["Location"] == reverse("planning:calendar")
+    # Back to the calendar with the day still in the panel.
+    assert response["Location"] == (
+        f"{reverse('planning:calendar')}?day={crew.day.isoformat()}"
+    )
     assert PlanDay.objects.get(user=crew.sam).skiing == S.NOT_SURE
     assert b"Clear this day" in sam.get(url).content
     sam.post(reverse("planning:day_clear", kwargs={"day": crew.day}), headers=HTMX)

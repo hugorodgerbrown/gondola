@@ -1,7 +1,8 @@
 /*
  * static/js/day_select.js — Select several days on the calendar and plan them at once.
  *
- * A tap opens one day, as before. Pressing and holding a day (or, with a
+ * A tap selects one day: it gets the ring, and htmx fills the panel below
+ * the month with it (the link's own job). Pressing and holding a day (or, with a
  * mouse, dragging from one day onto another) starts selecting, as in the
  * Photos app: ticked days, and a bar above the tabs that counts them. While
  * selecting, a tap adds or removes a day, and a hold-and-drag sweeps a run
@@ -215,6 +216,9 @@
       event.preventDefault();
       event.stopPropagation();
     }
+    if (!ending && !selecting && cell) {
+      pick(cell);
+    }
     if (ending || !selecting || !cell) {
       return;
     }
@@ -227,6 +231,16 @@
     save();
     render();
   }, true);
+
+  // The ring moves to the tapped day at once; the panel follows from htmx.
+  function pick(cell) {
+    cells().forEach(function (other) {
+      other.classList.remove("mday--selected");
+      other.removeAttribute("aria-current");
+    });
+    cell.classList.add("mday--selected");
+    cell.setAttribute("aria-current", "date");
+  }
 
   bar.querySelector("[data-select-cancel]").addEventListener("click", finish);
 

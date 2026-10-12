@@ -5,8 +5,8 @@ The session names the person's demo group and where they were headed
 before the tour (``next``). ``apps.tour.middleware`` reads it on every
 request. Two more keys carry the tour's edges: ``OFFER_KEY`` holds back
 the offer for someone who signed up through an invite link until they've
-joined, and ``HANDOFF_KEY`` carries chapter 7's hand-off to the real My
-days, shown once.
+joined, and ``HANDOFF_KEY`` carries chapter 7's hand-off to the real
+calendar, shown once.
 """
 
 from __future__ import annotations
