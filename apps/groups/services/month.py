@@ -6,6 +6,10 @@ questions, all about the viewer: where am I, who'll be with me, and, on
 the days I haven't said, where are my friends? So each day carries the
 viewer's plan and the friends with them; a day without a plan carries the
 resort most of their friends are in instead.
+
+A resort picked from the chips (the resorts friends are in) narrows that
+last answer to the one resort: a day without a plan then shows the friends
+there, or nothing. The viewer's own days never change.
 """
 
 from __future__ import annotations
@@ -16,6 +20,7 @@ from collections import defaultdict
 from dataclasses import dataclass, field
 
 from apps.accounts.models import User
+from apps.resorts.models import Resort
 
 from ..models import PlanDay
 from .people import visible_friend_plans
@@ -121,8 +126,14 @@ def _crowd(plans: list[PlanDay]) -> ResortFriends | None:
     return crowd
 
 
-def build_month(viewer: User, first: datetime.date) -> Month:
-    """Return ``viewer``'s calendar for the month starting ``first``."""
+def build_month(
+    viewer: User, first: datetime.date, highlight: Resort | None = None
+) -> Month:
+    """Return ``viewer``'s calendar for the month starting ``first``.
+
+    With ``highlight``, a day without the viewer's plan shows only the
+    friends at that resort.
+    """
     first = month_start(first)
     weeks_of_dates = calendar.Calendar(firstweekday=0).monthdatescalendar(
         first.year, first.month
@@ -139,7 +150,9 @@ def build_month(viewer: User, first: datetime.date) -> Month:
     free: dict[datetime.date, list[PlanDay]] = defaultdict(list)
     for plan in visible_friend_plans(viewer, dates):
         friends[plan.date].append(plan.user.to_string())
-        if plan.date not in mine:
+        if plan.date not in mine and (
+            highlight is None or plan.resort_id == highlight.pk
+        ):
             free[plan.date].append(plan)
         own = mine.get(plan.date)
         if own is not None and own.resort_id == plan.resort_id:

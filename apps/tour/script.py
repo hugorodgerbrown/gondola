@@ -171,7 +171,7 @@ CHAPTERS: tuple[Chapter, ...] = (
             ),
             Frame(
                 "4.1",
-                "Each code is a resort: VERB is Verbier. Blank hasn't said.",
+                "Each code is a resort: VER is Verbier. Blank hasn't said.",
                 (".board",),
             ),
             Frame(

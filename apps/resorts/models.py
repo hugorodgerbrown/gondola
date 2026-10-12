@@ -99,8 +99,13 @@ class Resort(BaseModel):
 
     @property
     def display_code(self) -> str:
-        """Return the board code, or the name's first letters if none is set."""
-        return self.code or "".join(c for c in self.name if c.isalpha())[:5].upper()
+        """Return the three-letter code shown on the calendar, board and map.
+
+        The first three letters of the code (or of the name, if none is set).
+        Two resorts can share one: the full name is always shown beside it.
+        """
+        letters = self.code or "".join(c for c in self.name if c.isalpha())
+        return letters[:3].upper()
 
     @property
     def is_placed(self) -> bool:

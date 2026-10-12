@@ -125,9 +125,66 @@ def test_a_day_you_have_not_said_shows_where_friends_are(
     assert b"mday--friends" in page.content
     assert b'class="mday__friends"' in page.content
     assert crew.verbier.display_code.encode() in page.content
-    # No chips any more.
-    assert b"month-resorts" not in page.content
-    assert b"highlight" not in page.content
+
+
+def test_chips_pick_where_friends_are(sam: Client, crew: Crew) -> None:
+    """Chips list where friends are; one picked keeps to it across the page."""
+    far = plans.today() + datetime.timedelta(days=60)
+    first = far.replace(day=1).isoformat()
+    plans.set_plan(crew.anna, far, crew.verbier)
+    plans.set_plan(crew.ben, far, crew.zermatt)
+    url = reverse("planning:calendar")
+    page = sam.get(url, {"from": first})
+    assert page.context["resorts"] == [crew.verbier, crew.zermatt]
+    assert page.context["highlight"] is None
+    assert b"Where friends are" in page.content and b">Anywhere</a>" in page.content
+    # A chip keeps the selected day (here the month's first).
+    assert f'href="?day={first}&highlight={crew.verbier.uuid}"'.encode() in page.content
+
+    lit = sam.get(url, {"day": far.isoformat(), "highlight": str(crew.zermatt.uuid)})
+    assert lit.context["highlight"] == crew.zermatt
+    assert b"month--highlight" in lit.content
+    # Chips show the code; the picked resort's full name sits below them.
+    assert b'aria-label="Verbier" title="Verbier">VER</a>' in lit.content
+    assert b"Friends in Zermatt" in lit.content
+    # The unsaid day now shows Zermatt, and the panel leads with it.
+    assert lit.context["selected"].crowd.resort == crew.zermatt
+    assert [e.resort for e in lit.context["elsewhere"]] == [
+        crew.zermatt,
+        crew.verbier,
+    ]
+    # Anywhere clears it; the arrows, day links and selection keep it.
+    assert f'aria-current="true" href="?day={far.isoformat()}"'.encode() in lit.content
+    back = f"from={first}&amp;highlight={crew.zermatt.uuid}"
+    assert f'data-select-back="{back}"'.encode() in lit.content
+    day_url = reverse("planning:day", kwargs={"day": far})
+    assert f'href="{day_url}?{back}"'.encode() in lit.content
+
+
+@pytest.mark.parametrize("value", ["nope", "00000000-0000-0000-0000-000000000000"])
+def test_a_bad_highlight_is_ignored(sam: Client, value: str) -> None:
+    page = sam.get(reverse("planning:calendar"), {"highlight": value})
+    assert page.status_code == 200
+    assert page.context["highlight"] is None
+
+
+def test_saving_a_day_keeps_the_highlight(sam: Client, crew: Crew) -> None:
+    """The highlight rides through the sheet without clashing with its resort."""
+    highlighted = str(crew.verbier.uuid)
+    day_url = reverse("planning:day", kwargs={"day": crew.day})
+    sheet = sam.get(day_url, {"highlight": highlighted})
+    hidden = f'type="hidden" name="highlight" value="{highlighted}"'
+    assert hidden.encode() in sheet.content
+    saved = sam.post(
+        day_url,
+        {"resort": str(crew.zermatt.uuid), "highlight": highlighted},
+    )
+    assert saved["Location"] == (
+        f"{reverse('planning:calendar')}?highlight={highlighted}"
+        f"&day={crew.day.isoformat()}"
+    )
+    plan = PlanDay.objects.get(user=crew.sam, date=crew.day)
+    assert plan.resort == crew.zermatt
 
 
 def test_the_panel_shows_the_picked_day(sam: Client, crew: Crew) -> None:
@@ -436,7 +493,7 @@ def test_map_pins_json(sam: Client, crew: Crew) -> None:
     response = sam.get(reverse("planning:map_pins"), {"date": crew.day.isoformat()})
     data = json.loads(response.content)
     verbier = next(p for p in data["pins"] if p["name"] == "Verbier")
-    assert verbier["friends"] == 1 and verbier["code"] == "VERB"
+    assert verbier["friends"] == 1 and verbier["code"] == "VER"
 
 
 def test_resort_sheet_and_plan_here(sam: Client, crew: Crew) -> None:
@@ -583,7 +640,7 @@ def test_board(sam: Client, crew: Crew) -> None:
     plans.set_plan(crew.ben, plans.today(), crew.zermatt)
     url = reverse("planning:board", kwargs={"group_uuid": crew.group.uuid})
     page = sam.get(url)
-    assert b"VERB" in page.content and b"ZERM" in page.content
+    assert b"VER" in page.content and b"ZER" in page.content
     week = sam.get(url, {"start": "2027-01-04"})
     assert week.context["board"].start == datetime.date(2027, 1, 4)
 

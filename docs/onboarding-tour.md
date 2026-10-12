@@ -106,7 +106,7 @@ on the control that leads to the next page.
 | Frame | Element | Advances on | Coach mark |
 |---|---|---|---|
 | 4.0 | Page intro | Next | The group's week at a glance. Everyone side by side, so you can see who overlaps where. |
-| 4.1 | Resort codes | Next | Each code is a resort: VERB is Verbier. Blank hasn't said. |
+| 4.1 | Resort codes | Next | Each code is a resort: VER is Verbier. Blank hasn't said. |
 | 4.2 | Map tab | Tap Map | Tap Map to see where your friends are on any day. |
 
 ## Chapter 5: The map

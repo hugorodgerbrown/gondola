@@ -150,11 +150,11 @@ def test_board_cells(crew: Crew) -> None:
     assert len(result.days) == 7 and result.days[0].is_today
     rows = {row.person: row for row in result.rows}
     assert result.rows[0].person == crew.anna and result.rows[0].is_me
-    assert rows[crew.sam].cells[0].text == "VERB"
+    assert rows[crew.sam].cells[0].text == "VER"
     assert rows[crew.anna].cells[2] == board.EMPTY
-    assert rows[crew.anna].cells[0].text == "VERB"
+    assert rows[crew.anna].cells[0].text == "VER"
     assert rows[crew.anna].cells[0].title == "Verbier"
-    assert rows[crew.ben].cells[0].text == "ZERM"
+    assert rows[crew.ben].cells[0].text == "ZER"
 
 
 def test_board_weeks(crew: Crew) -> None:

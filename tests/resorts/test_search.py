@@ -25,9 +25,10 @@ def test_search_ranks_and_ignores_accents() -> None:
     assert search_resorts("zzz") == []
 
 
-def test_display_code_falls_back_to_name() -> None:
-    assert ResortFactory.create(name="Saas-Fee", code="").display_code == "SAASF"
-    assert ResortFactory.create(code="VERB").display_code == "VERB"
+def test_display_code_is_three_letters() -> None:
+    assert ResortFactory.create(name="Saas-Fee", code="").display_code == "SAA"
+    assert ResortFactory.create(code="VERB").display_code == "VER"
+    assert ResortFactory.create(code="CRA").display_code == "CRA"
 
 
 def test_is_placed() -> None:

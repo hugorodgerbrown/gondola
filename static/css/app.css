@@ -1480,6 +1480,45 @@ a.mday:focus-visible {
   background: var(--accent);
 }
 
+/* --- Calendar: one resort picked ---------------------------------------- */
+
+.month-resorts {
+  margin: 0 -16px;
+  padding: 2px 16px 4px;
+  scrollbar-width: none;
+}
+
+.month-resorts .chip {
+  box-shadow: none;
+  flex: none;
+  color: var(--text-1);
+  height: 36px;
+  padding: 0 16px;
+  font-size: 14px;
+}
+
+.month-resorts .chip[aria-current="true"] {
+  color: #ffffff;
+}
+
+/* Resort chips carry the three-letter code; the picked one's name sits
+   below, since two resorts can share a code. */
+.month-resorts .chip:not(:first-child) {
+  font: 500 13px var(--font-mono);
+  letter-spacing: 0.04em;
+}
+
+.month-resorts__name {
+  margin: 0;
+  font-size: 14px;
+  color: var(--text-2);
+}
+
+/* Days with nobody at the picked resort step back; your own days never do. */
+.month--highlight .mday:not(.mday--in):not(.mday--friends):not(.mday--out) {
+  opacity: 0.28;
+}
+
 /* --- Calendar: selecting several days ------------------------------------ */
 
 .month a.mday {
