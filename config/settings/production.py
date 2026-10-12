@@ -28,8 +28,12 @@ SECURE_HSTS_PRELOAD = True
 SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
 
-CSRF_TRUSTED_ORIGINS: list[str] = config(  # noqa: F405 — from base
-    "CSRF_TRUSTED_ORIGINS",
-    default="",
-    cast=Csv(),  # noqa: F405
-)
+# Both names add up: Titan's shared env group sets DJANGO_CSRF_TRUSTED_ORIGINS
+# (every app under the parent domain), the bare name stays for overrides.
+CSRF_TRUSTED_ORIGINS: list[str] = [
+    *config("CSRF_TRUSTED_ORIGINS", default="", cast=Csv()),  # noqa: F405 — from base
+    *config("DJANGO_CSRF_TRUSTED_ORIGINS", default="", cast=Csv()),  # noqa: F405
+]
+# The service's own onrender.com address is always trusted, as it is allowed.
+if RENDER_EXTERNAL_HOSTNAME:  # noqa: F405 — from base
+    CSRF_TRUSTED_ORIGINS.append(f"https://{RENDER_EXTERNAL_HOSTNAME}")  # noqa: F405
