@@ -115,7 +115,7 @@ def test_plain_forms_keep_the_month(sam: Client, crew: Crew) -> None:
 def test_a_group_shows_its_people_on_days_you_have_not_said(
     sam: Client, crew: Crew
 ) -> None:
-    """Just me hides pale days; a group shows its people there, pale."""
+    """My calendar hides pale days; a group shows its people there, pale."""
     far = plans.today() + datetime.timedelta(days=60)
     first = far.replace(day=1).isoformat()
     plans.set_plan(crew.anna, far, crew.verbier)
@@ -125,7 +125,7 @@ def test_a_group_shows_its_people_on_days_you_have_not_said(
     assert page.context["group"] is None
     assert page.context["selected"].crowd is None
     assert b"mday--friends" not in page.content
-    assert b">Just me</a>" in page.content
+    assert b">My calendar</a>" in page.content
     picked = f'href="?day={far.isoformat()}&group={crew.group.uuid}"'
     assert picked.encode() in page.content
 
@@ -135,8 +135,8 @@ def test_a_group_shows_its_people_on_days_you_have_not_said(
     assert selected.crowd.resort == crew.verbier and selected.more == 1
     assert selected.count == 1
     assert b"mday--friends" in shown.content
-    assert f"{crew.verbier.display_code}…".encode() in shown.content
-    # The picked chip goes back to Just me; the arrows, day links and
+    assert f"{crew.verbier.display_code} …".encode() in shown.content
+    # The picked chip goes back to My calendar; the arrows, day links and
     # selection keep the group.
     current = f'aria-current="true" href="?day={far.isoformat()}"'
     assert current.encode() in shown.content
@@ -199,7 +199,7 @@ def test_the_panel_shows_the_picked_day(sam: Client, crew: Crew) -> None:
     assert b"Friends out" in page.content
     assert b"Add plans" in page.content and b"Edit plans" not in page.content
     assert b"Meet-up" not in page.content
-    # Just me: no pale day, whatever friends do.
+    # My calendar: no pale day, whatever friends do.
     assert page.context["selected"].crowd is None
     # A day with nothing on says so.
     empty = sam.get(url, {"day": (crew.day + datetime.timedelta(days=1)).isoformat()})

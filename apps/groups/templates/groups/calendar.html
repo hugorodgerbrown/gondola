@@ -28,7 +28,7 @@
     <div class="heading">
       <span class="eyebrow" id="groups-label">Show</span>
       <nav class="chips month-groups" aria-labelledby="groups-label">
-        <a class="chip"{% if not group %} aria-current="true"{% endif %} href="?day={{ selected.date|date:'Y-m-d' }}">Just me</a>
+        <a class="chip"{% if not group %} aria-current="true"{% endif %} href="?day={{ selected.date|date:'Y-m-d' }}">My calendar</a>
         {% for each in groups %}
           <a class="chip"{% if each == group %} aria-current="true"{% endif %} href="?day={{ selected.date|date:'Y-m-d' }}{% if each != group %}&group={{ each.uuid }}{% endif %}">{{ each.name }}</a>
         {% endfor %}

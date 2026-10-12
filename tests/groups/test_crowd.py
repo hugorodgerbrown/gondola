@@ -42,7 +42,7 @@ def test_an_unsaid_day_shows_where_most_friends_are(crew: Crew) -> None:
     lone = UserFactory.create(display_name="Lone")
     plans.set_plan(lone, dec(8), ResortFactory.create(name="Hidden", code="HIDE"))
 
-    # Just me shows no pale days at all.
+    # My calendar shows no pale days at all.
     plain = month.build_month(crew.sam, dec(1)).weeks
     assert not any(d.crowd for week in plain for d in week)
     days = {

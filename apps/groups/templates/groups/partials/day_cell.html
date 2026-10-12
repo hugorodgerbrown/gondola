@@ -17,7 +17,7 @@
       {% endif %}
     </span>
     <span class="mday__row" aria-hidden="true">
-      {% if plan %}<span class="mday__resort">{{ plan.resort.display_code }}</span>{% elif crowd %}<span class="mday__resort">{{ crowd.resort.display_code }}{% if day.more %}…{% endif %}</span>{% endif %}
+      {% if plan %}<span class="mday__resort">{{ plan.resort.display_code }}</span>{% elif crowd %}<span class="mday__resort">{{ crowd.resort.display_code }}{% if day.more %} …{% endif %}</span>{% endif %}
     </span>
   {% if day.plannable %}</a>{% else %}</span>{% endif %}
 {% endwith %}
