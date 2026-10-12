@@ -117,9 +117,9 @@ textarea {
   text-decoration: none;
 }
 
+/* The bare gondola, no tile, so it sits on the page like a glyph. */
 .topbar__logo {
   display: block;
-  border-radius: 7px;
 }
 
 .page {
@@ -1826,14 +1826,6 @@ a.mday.mday--skiing.mday--picked:hover {
 }
 
 /* --- Front page ---------------------------------------------------------- */
-
-.hero__logo {
-  display: block;
-  width: 64px;
-  height: 64px;
-  border-radius: 16px;
-  margin-bottom: 8px;
-}
 
 .hero-picture {
   display: block;
