@@ -7,7 +7,9 @@ from unittest import mock
 import pytest
 from django.core import mail
 from django.core.management import CommandError, call_command
+from freezegun import freeze_time
 
+from apps.groups.management.commands.seed_demo import demo_start
 from apps.groups.management.commands.seed_ui_test import UNSAID
 from apps.groups.models import Group, MeetUp, PlanDay
 from apps.groups.services import plans
@@ -100,6 +102,38 @@ def test_seed_demo_dry_run_then_commit_twice() -> None:
     assert MeetUp.objects.get().participants.count() == 3
     assert PlanDay.objects.filter(skiing=S.NOT_SURE).exists()
     assert PlanDay.objects.filter(is_private=True).count() == 1
+
+
+@freeze_time("2026-10-12 09:00:00+02:00")
+def test_seed_demo_lands_in_january() -> None:
+    import_sheets(commit=True)
+    out = StringIO()
+    call_command("seed_demo", "--commit", stdout=out)
+    days = sorted({plan.date for plan in PlanDay.objects.all()})
+    assert days[0] == datetime.date(2027, 1, 9)  # a Saturday
+    assert days[-1] <= datetime.date(2027, 1, 15)
+    assert MeetUp.objects.get().date == datetime.date(2027, 1, 14)
+    assert "Sat 09 Jan 2027" in out.getvalue()
+    assert "?start=2027-01-09" in out.getvalue()
+
+
+def test_demo_start_is_mid_january_or_today_in_season() -> None:
+    assert demo_start(datetime.date(2026, 10, 12)) == datetime.date(2027, 1, 9)
+    assert demo_start(datetime.date(2027, 5, 1)) == datetime.date(2028, 1, 15)
+    # In season, today.
+    for day in (datetime.date(2026, 12, 20), datetime.date(2027, 4, 30)):
+        assert demo_start(day) == day
+
+
+@freeze_time("2026-10-12 09:00:00+02:00")
+def test_seed_demo_start_option() -> None:
+    import_sheets(commit=True)
+    call_command("seed_demo", "--commit", "--start", "2026-12-26", stdout=StringIO())
+    assert min(p.date for p in PlanDay.objects.all()) == datetime.date(2026, 12, 26)
+    with pytest.raises(CommandError, match="YYYY-MM-DD"):
+        call_command("seed_demo", "--start", "soon", stdout=StringIO())
+    with pytest.raises(CommandError, match="can't be planned"):
+        call_command("seed_demo", "--start", "2026-01-01", stdout=StringIO())
 
 
 def test_seed_ui_test_needs_resorts() -> None:

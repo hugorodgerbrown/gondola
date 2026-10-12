@@ -2,9 +2,12 @@
 apps/groups/management/commands/seed_demo.py — A populated group to try.
 
 Makes six friends in "Thursday crew" with a week of plans and a meet-up,
-starting today, so a tester (or a screenshot) lands on a busy board and
-map. Needs the resorts imported first. A bare run says what it would do;
-``--commit`` writes it. Re-running moves the plans to the new week.
+so a tester (or a screenshot) finds a busy board, map and calendar. The
+week starts on a Saturday in mid-January, in the thick of the season, so
+screenshots don't look like an autumn ski app (in season it starts
+today); ``--start`` picks another day. Needs the resorts imported first.
+A bare run says what it would do; ``--commit`` writes it. Re-running
+rewrites that week.
 
 ``--email`` makes that address the group's owner, so you can sign in as
 yourself and see it. The other five are ``*@demo.invalid`` accounts that
@@ -23,7 +26,7 @@ from apps.accounts.models import User, normalise_email
 from apps.groups.models import Group, MeetUp, PlanDay
 from apps.groups.services.meetups import join_meetup, propose_meetup
 from apps.groups.services.memberships import create_group, join_group
-from apps.groups.services.plans import set_plan, today
+from apps.groups.services.plans import is_plannable, set_plan, today
 from apps.resorts.models import Resort
 
 GROUP_NAME = "Thursday crew"
@@ -49,6 +52,32 @@ WEEK = {
 }
 NOTES = {("Anna", 0): "First lift, then Mont Fort", ("you", 5): "With the kids"}
 MEETUP_DAY = 5
+# Out of season, the demo week starts on the first Saturday on or after
+# this January day.
+JANUARY_DAY = 9
+SATURDAY = 5
+SEASON_MONTHS = {12, 1, 2, 3, 4}
+
+
+def demo_start(now: datetime.date) -> datetime.date:
+    """Return when the demo week starts: today in season, else mid-January.
+
+    In season (December to April) today already looks like a ski app, and
+    a date that's passed can't be planned. Out of season it's the first
+    Saturday on or after 9 January to come.
+    """
+    if now.month in SEASON_MONTHS:
+        return now
+    day = datetime.date(now.year + 1, 1, JANUARY_DAY)
+    return day + datetime.timedelta(days=(SATURDAY - day.weekday()) % 7)
+
+
+def parse_start(value: str) -> datetime.date:
+    """Return ``--start`` as a date, or fail the command."""
+    try:
+        return datetime.date.fromisoformat(value)
+    except ValueError:
+        raise CommandError(f"--start {value!r} isn't a YYYY-MM-DD date.") from None
 
 
 class Command(BaseCommand):
@@ -57,8 +86,14 @@ class Command(BaseCommand):
     help = "Create a demo group with a week of plans. Dry run unless --commit."
 
     def add_arguments(self, parser: CommandParser) -> None:
-        """Add --commit and --email."""
+        """Add --commit, --email and --start."""
         parser.add_argument("--commit", action="store_true", help="Write the data.")
+        parser.add_argument(
+            "--start",
+            type=parse_start,
+            help="The week's first day (YYYY-MM-DD). Default: mid-January "
+            "(today in season).",
+        )
         parser.add_argument(
             "--email",
             default="sam@demo.invalid",
@@ -74,16 +109,29 @@ class Command(BaseCommand):
                 f"Missing resorts {sorted(missing)}: run import_resorts --commit first."
             )
         email = normalise_email(options["email"])
+        start = options["start"] or demo_start(today())
+        days = [start + datetime.timedelta(days=n) for n in range(len(WEEK["you"]))]
+        if not all(is_plannable(day) for day in days):
+            raise CommandError(
+                f"{start:%d %b %Y} can't be planned: pick a week from today "
+                "to a year ahead."
+            )
         if not options["commit"]:
             self.stdout.write(
                 f"Would create {GROUP_NAME} owned by {email} with "
-                f"{len(FRIENDS)} friends, 7 days of plans from {today():%d %b} "
+                f"{len(FRIENDS)} friends, 7 days of plans from {start:%a %d %b %Y} "
                 "and one meet-up. Dry run. Re-run with --commit to save."
             )
             return
         with transaction.atomic():
-            self._seed(email, {code: resorts[name] for code, name in RESORTS.items()})
-        self.stdout.write(f"Seeded {GROUP_NAME}. Sign in as {email} to see it.")
+            self._seed(
+                email, days, {code: resorts[name] for code, name in RESORTS.items()}
+            )
+        self.stdout.write(
+            f"Seeded {GROUP_NAME} from {start:%a %d %b %Y}. Sign in as {email} "
+            f"and open My days at {start:%B}, the board at ?start={start}, or "
+            f"the map at ?date={start}."
+        )
 
     def _person(self, email: str, name: str) -> User:
         """Return the user for ``email``, creating them if needed."""
@@ -95,7 +143,9 @@ class Command(BaseCommand):
             user.save(update_fields=["password"])
         return user
 
-    def _seed(self, email: str, resorts: dict[str, Resort]) -> None:
+    def _seed(
+        self, email: str, days: list[datetime.date], resorts: dict[str, Resort]
+    ) -> None:
         """Write the people, the group, the week and the meet-up."""
         owner = self._person(email, "Sam")
         people = {"you": owner}
@@ -107,8 +157,6 @@ class Command(BaseCommand):
             group = create_group(owner, GROUP_NAME)
         for person in people.values():
             join_group(group, person)
-        start = today()
-        days = [start + datetime.timedelta(days=n) for n in range(len(WEEK["you"]))]
         PlanDay.objects.filter(user__in=people.values(), date__in=days).delete()
         MeetUp.objects.filter(group=group, date__in=days).delete()
         for key, cells in WEEK.items():
