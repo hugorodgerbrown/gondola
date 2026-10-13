@@ -2,38 +2,79 @@
  * static/css/app.css — The whole stylesheet.
  *
  * Mobile first: every screen is designed at 390px and centres in a column
- * on wider screens. Colours, type and radii are tokens on :root, taken from
- * the Snowdesk Groups mockups; components below use only the tokens.
+ * on wider screens. This file is Gondola's design system (DESIGN.md):
+ * tokens on :root, components below that use only tokens, and every
+ * component shown on the design page at /app/design/.
  */
 
 :root {
+  /* Colour: surfaces, rules, text, then the colours that mean something.
+     Text tokens keep 4.5:1 on --ground, --sunk and --card. */
   --ground: #f2f0ec;
   --card: #ffffff;
   --sunk: #f5f3ef;
-  --text-1: #1a1916;
-  --text-2: #6b6860;
-  --text-3: #6e6b65;
+  --glass: rgba(255, 255, 255, 0.92);
+  --map-ground: #e9e7e1;
   --rule: rgba(0, 0, 0, 0.09);
   --rule-strong: rgba(0, 0, 0, 0.16);
+  --scrim: rgba(20, 18, 14, 0.5);
+  --text-1: #1a1916;
+  --text-2: #6b6860;
+  /* Text and marks on a filled colour (--accent, --danger, --text-1). */
+  --on-accent: #ffffff;
+  /* Your days, your resort, anything you picked. */
   --accent: #2563eb;
   --accent-soft: rgba(37, 99, 235, 0.12);
-  /* A day at a resort but not skiing: the skiing blue, lightened. */
+  /* A day waiting to send: stripes over its own colour. */
+  --stripe: rgba(255, 255, 255, 0.35);
   /* Magic Pass resorts on the map: a violet square instead of a round pin. */
   --pass-magic: #7c3aed;
-  /* The demo bar's amber, apart from your own (blue) days. */
+  /* The demo, apart from your own (blue) days; and notices. */
   --amber: #d97706;
+  --amber-soft: rgba(217, 119, 6, 0.12);
   --danger: #b42318;
-  --ok: #067647;
-  --map-ground: #e9e7e1;
-  --radius-card: 12px;
-  --radius-control: 8px;
-  --radius-tag: 4px;
-  --shadow-sheet: 0 -2px 16px rgba(0, 0, 0, 0.12);
-  --shadow-float: 0 1px 4px rgba(0, 0, 0, 0.12);
+  --danger-soft: #fef3f2;
+
+  /* Type: DM Sans for words, DM Mono for codes, dates and labels. */
   --font-sans: "DM Sans", system-ui, -apple-system, sans-serif;
   --font-mono: "DM Mono", ui-monospace, monospace;
+  --type-2xs: 10px;
+  --type-xs: 11px;
+  --type-sm: 13px;
+  --type-base: 15px;
+  /* Inputs never go below 16px, or iOS zooms in on focus. */
+  --type-md: 16px;
+  --type-lg: 20px;
+  --type-xl: 24px;
+  --type-2xl: 28px;
+
+  /* Space: the shared 4px scale (DESIGN.md). */
+  --space-2xs: 2px;
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 12px;
+  --space-lg: 16px;
+  --space-xl: 20px;
+  --space-2xl: 24px;
+  --space-3xl: 32px;
+  --space-4xl: 48px;
+
+  /* Shape and depth. */
+  --radius-sm: 2px;
+  --radius-tag: 4px;
+  --radius-control: 8px;
+  --radius-card: 12px;
+  --radius-full: 999px;
+  --shadow-float: 0 1px 4px rgba(0, 0, 0, 0.12);
+  --shadow-sheet: 0 -2px 16px rgba(0, 0, 0, 0.12);
+  --shadow-overlay: 0 8px 28px rgba(0, 0, 0, 0.16);
+  /* A pale edge round map labels, so they read over any ground. */
+  --shadow-halo: 0 0 3px var(--card), 0 0 3px var(--card);
+
+  /* Layout. */
   --topbar-height: 56px;
   --tabbar-height: 64px;
+  --tour-bar-height: 40px;
   --column: 560px;
 }
 
@@ -51,7 +92,7 @@ body {
   margin: 0;
   background: var(--ground);
   color: var(--text-1);
-  font: 400 15px/1.5 var(--font-sans);
+  font: 400 var(--type-base)/1.5 var(--font-sans);
   -webkit-font-smoothing: antialiased;
 }
 
@@ -100,7 +141,7 @@ textarea {
   top: 0;
   z-index: 20;
   height: var(--topbar-height);
-  padding: 0 8px 0 16px;
+  padding: 0 var(--space-sm) 0 var(--space-lg);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -111,9 +152,9 @@ textarea {
 .topbar__brand {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--space-sm);
   font-weight: 600;
-  font-size: 17px;
+  font-size: var(--type-md);
   letter-spacing: -0.01em;
   text-decoration: none;
 }
@@ -138,14 +179,14 @@ textarea {
 .page {
   max-width: var(--column);
   margin: 0 auto;
-  padding: 20px 16px calc(var(--tabbar-height) + 32px);
+  padding: var(--space-xl) var(--space-lg) calc(var(--tabbar-height) + var(--space-3xl));
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: var(--space-lg);
 }
 
 .page--signed-out {
-  padding-bottom: 48px;
+  padding-bottom: var(--space-4xl);
 }
 
 .tabbar {
@@ -158,7 +199,7 @@ textarea {
   padding-bottom: env(safe-area-inset-bottom);
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  background: rgba(255, 255, 255, 0.94);
+  background: var(--glass);
   backdrop-filter: blur(12px);
   border-top: 1px solid var(--rule);
 }
@@ -168,10 +209,10 @@ textarea {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 2px;
+  gap: var(--space-2xs);
   text-decoration: none;
-  color: var(--text-3);
-  font: 500 11px var(--font-sans);
+  color: var(--text-2);
+  font: 500 var(--type-xs) var(--font-sans);
   letter-spacing: 0.01em;
 }
 
@@ -187,25 +228,25 @@ textarea {
 /* --- Type --------------------------------------------------------------- */
 
 .eyebrow {
-  font: 400 12px var(--font-mono);
+  font: 400 var(--type-xs) var(--font-mono);
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: var(--text-3);
+  color: var(--text-2);
 }
 
 .title {
-  font-size: 24px;
+  font-size: var(--type-xl);
   line-height: 32px;
   font-weight: 600;
 }
 
 .title--large {
-  font-size: 28px;
+  font-size: var(--type-2xl);
   line-height: 34px;
 }
 
 .lede {
-  font-size: 14px;
+  font-size: var(--type-sm);
   color: var(--text-2);
 }
 
@@ -214,7 +255,7 @@ textarea {
 }
 
 .small {
-  font-size: 13px;
+  font-size: var(--type-sm);
 }
 
 .mono {
@@ -224,14 +265,14 @@ textarea {
 .heading {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: var(--space-xs);
 }
 
 .heading-row {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  gap: 12px;
+  gap: var(--space-md);
 }
 
 /* --- Cards and lists ---------------------------------------------------- */
@@ -243,10 +284,10 @@ textarea {
 }
 
 .card--padded {
-  padding: 16px;
+  padding: var(--space-lg);
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: var(--space-md);
 }
 
 .list {
@@ -262,9 +303,9 @@ textarea {
 .row {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: var(--space-md);
   min-height: 48px;
-  padding: 10px 14px;
+  padding: var(--space-sm) var(--space-lg);
 }
 
 .row--link {
@@ -279,49 +320,27 @@ textarea {
   flex-direction: column;
 }
 
-.row__date {
-  width: 58px;
-  flex-shrink: 0;
-  font: 500 12px var(--font-mono);
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: var(--text-3);
-}
-
-.row__date--long {
-  width: 84px;
-}
-
-.row__date--today {
-  color: var(--text-1);
-}
-
 .row__label {
-  font-size: 15px;
+  font-size: var(--type-base);
   font-weight: 500;
 }
 
-.row__label--quiet {
-  font-weight: 400;
-  color: var(--text-3);
-}
-
 .row__note {
-  font-size: 12px;
+  font-size: var(--type-xs);
   color: var(--text-2);
 }
 
 .tiles {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 8px;
+  gap: var(--space-sm);
 }
 
 .tile {
   display: flex;
   flex-direction: column;
-  gap: 2px;
-  padding: 14px;
+  gap: var(--space-2xs);
+  padding: var(--space-lg);
   text-decoration: none;
   color: var(--text-1);
 }
@@ -333,13 +352,13 @@ textarea {
 .tag {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  font: 500 9.5px var(--font-mono);
+  gap: var(--space-xs);
+  font: 500 var(--type-2xs) var(--font-mono);
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  padding: 3px 6px;
+  padding: var(--space-xs) var(--space-sm);
   border-radius: var(--radius-tag);
-  background: rgba(0, 0, 0, 0.06);
+  background: var(--rule);
   color: var(--text-1);
   white-space: nowrap;
 }
@@ -355,12 +374,12 @@ textarea {
 }
 
 .empty {
-  padding: 24px 16px;
+  padding: var(--space-2xl) var(--space-lg);
   text-align: center;
   color: var(--text-2);
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: var(--space-md);
   align-items: center;
 }
 
@@ -370,19 +389,24 @@ textarea {
   display: inline-grid;
   place-items: center;
   min-height: 48px;
-  padding: 0 18px;
+  padding: 0 var(--space-lg);
   border: 0;
   border-radius: var(--radius-control);
   background: var(--text-1);
-  color: #ffffff;
-  font: 600 15px var(--font-sans);
+  color: var(--on-accent);
+  font: 600 var(--type-base) var(--font-sans);
   text-decoration: none;
   cursor: pointer;
 }
 
 .button:hover {
-  color: #ffffff;
+  color: var(--on-accent);
   opacity: 0.9;
+}
+
+.button:disabled {
+  opacity: 0.35;
+  cursor: default;
 }
 
 .button--block {
@@ -414,8 +438,8 @@ textarea {
 
 .button--small {
   min-height: 40px;
-  padding: 0 14px;
-  font-size: 14px;
+  padding: 0 var(--space-lg);
+  font-size: var(--type-sm);
 }
 
 .icon-button {
@@ -432,6 +456,12 @@ textarea {
   cursor: pointer;
 }
 
+@media (hover: hover) {
+  .icon-button:hover:not(.icon-button--off) {
+    background: var(--sunk);
+  }
+}
+
 .icon-button svg {
   width: 20px;
   height: 20px;
@@ -443,12 +473,12 @@ textarea {
   padding: 0;
   text-decoration: underline;
   cursor: pointer;
-  font-size: 14px;
+  font-size: var(--type-sm);
 }
 
 .actions {
   display: flex;
-  gap: 8px;
+  gap: var(--space-sm);
   flex-wrap: wrap;
 }
 
@@ -459,16 +489,16 @@ textarea {
 .field {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: var(--space-sm);
 }
 
 .field > label,
 .field > legend,
 .field > .eyebrow {
-  font: 400 12px var(--font-mono);
+  font: 400 var(--type-xs) var(--font-mono);
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: var(--text-3);
+  color: var(--text-2);
   padding: 0;
 }
 
@@ -481,16 +511,21 @@ fieldset.field {
 .input {
   width: 100%;
   height: 48px;
-  padding: 0 12px;
+  padding: 0 var(--space-md);
   border: 1px solid var(--rule-strong);
   border-radius: var(--radius-control);
   background: var(--card);
-  font-size: 16px;
+  font-size: var(--type-md);
+}
+
+/* Django marks a field with errors aria-invalid. */
+.input[aria-invalid="true"] {
+  border-color: var(--danger);
 }
 
 .input--code {
   font-family: var(--font-mono);
-  font-size: 22px;
+  font-size: var(--type-lg);
   letter-spacing: 0.3em;
   text-align: center;
 }
@@ -499,7 +534,7 @@ fieldset.field {
 .code-boxes {
   display: grid;
   grid-template-columns: repeat(6, minmax(0, 1fr));
-  gap: 8px;
+  gap: var(--space-sm);
 }
 
 .code-box {
@@ -510,7 +545,7 @@ fieldset.field {
   border-radius: var(--radius-control);
   background: var(--card);
   font-family: var(--font-mono);
-  font-size: 24px;
+  font-size: var(--type-xl);
   text-align: center;
   caret-color: var(--accent);
 }
@@ -521,34 +556,53 @@ fieldset.field {
   outline-offset: -1px;
 }
 
+/* A search field: the icon sits in the field's left padding. */
+.search-field {
+  position: relative;
+}
+
+.search-field__icon {
+  position: absolute;
+  left: var(--space-md);
+  top: 50%;
+  width: 18px;
+  height: 18px;
+  transform: translateY(-50%);
+  color: var(--text-2);
+  pointer-events: none;
+}
+
+.search-field__icon svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
 .input--search {
-  padding-left: 38px;
-  background: var(--card)
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%236e6b65' stroke-width='2' stroke-linecap='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='M20 20l-3.5-3.5'/%3E%3C/svg%3E")
-    no-repeat 12px center;
+  padding-left: calc(var(--space-2xl) + var(--space-lg));
 }
 
 .help {
-  font-size: 13px;
+  font-size: var(--type-sm);
   color: var(--text-2);
 }
 
 .errors {
   margin: 0;
-  padding: 10px 12px;
+  padding: var(--space-sm) var(--space-md);
   list-style: none;
   border-radius: var(--radius-control);
-  background: #fef3f2;
+  background: var(--danger-soft);
   color: var(--danger);
-  font-size: 14px;
+  font-size: var(--type-sm);
 }
 
 .check {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
-  font-size: 15px;
+  gap: var(--space-md);
+  font-size: var(--type-base);
 }
 
 /* A checkbox in a .check row is drawn as an on/off switch. */
@@ -559,7 +613,7 @@ fieldset.field {
   height: 26px;
   margin: 0;
   flex-shrink: 0;
-  border-radius: 13px;
+  border-radius: var(--radius-full);
   background: var(--rule-strong);
   cursor: pointer;
   transition: background 0.15s;
@@ -572,9 +626,9 @@ fieldset.field {
   left: 3px;
   width: 20px;
   height: 20px;
-  border-radius: 50%;
-  background: #fff;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+  border-radius: var(--radius-full);
+  background: var(--card);
+  box-shadow: var(--shadow-float);
   transition: transform 0.15s;
 }
 
@@ -604,8 +658,8 @@ fieldset.field {
 .choice {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 12px 14px;
+  gap: var(--space-md);
+  padding: var(--space-md) var(--space-lg);
   cursor: pointer;
 }
 
@@ -631,10 +685,10 @@ fieldset.field {
   flex-shrink: 0;
   width: 24px;
   height: 24px;
-  border-radius: 50%;
+  border-radius: var(--radius-full);
   display: grid;
   place-items: center;
-  font-size: 18px;
+  font-size: var(--type-md);
   line-height: 1;
   color: var(--text-2);
   background: var(--rule);
@@ -648,18 +702,18 @@ fieldset.field {
 }
 
 .choice__title {
-  font-size: 15px;
+  font-size: var(--type-base);
   font-weight: 500;
 }
 
 .choice__meta {
-  font-size: 13px;
+  font-size: var(--type-sm);
   color: var(--text-2);
 }
 
 .choice__count {
-  font: 500 12px var(--font-mono);
-  color: var(--text-3);
+  font: 500 var(--type-xs) var(--font-mono);
+  color: var(--text-2);
   text-align: right;
   white-space: nowrap;
 }
@@ -672,15 +726,15 @@ fieldset.field {
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--space-sm);
 }
 
 .message {
-  padding: 12px 14px;
+  padding: var(--space-md) var(--space-lg);
   border-radius: var(--radius-control);
   background: var(--text-1);
-  color: #ffffff;
-  font-size: 14px;
+  color: var(--on-accent);
+  font-size: var(--type-sm);
 }
 
 .message--error {
@@ -703,21 +757,21 @@ fieldset.field {
 }
 
 .sheet::backdrop {
-  background: rgba(0, 0, 0, 0.4);
+  background: var(--scrim);
 }
 
 .sheet__body {
-  padding: 10px 20px calc(24px + env(safe-area-inset-bottom));
+  padding: var(--space-sm) var(--space-xl) calc(var(--space-2xl) + env(safe-area-inset-bottom));
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: var(--space-lg);
 }
 
 .sheet__grip {
   align-self: center;
   width: 36px;
   height: 4px;
-  border-radius: 2px;
+  border-radius: var(--radius-sm);
   background: var(--rule-strong);
 }
 
@@ -726,16 +780,6 @@ fieldset.field {
   margin: 0 auto;
   background: var(--card);
   min-height: 100dvh;
-}
-
-.htmx-request .spinner,
-.htmx-request.spinner {
-  opacity: 1;
-}
-
-.spinner {
-  opacity: 0;
-  transition: opacity 0.2s;
 }
 
 /* --- Who's where board -------------------------------------------------- */
@@ -748,7 +792,7 @@ fieldset.field {
 .board table {
   border-collapse: collapse;
   width: 100%;
-  font: 500 10.5px var(--font-mono);
+  font: 500 var(--type-2xs) var(--font-mono);
 }
 
 .board th,
@@ -768,22 +812,22 @@ fieldset.field {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 1px;
-  padding: 6px 0;
+  gap: var(--space-2xs);
+  padding: var(--space-sm) 0;
   text-decoration: none;
-  color: var(--text-3);
+  color: var(--text-2);
   letter-spacing: 0.04em;
   text-transform: uppercase;
 }
 
 .board thead a span + span {
-  font-size: 13px;
+  font-size: var(--type-sm);
   color: var(--text-1);
 }
 
 .board thead .is-today a span + span {
-  padding: 0 6px;
-  border-radius: 999px;
+  padding: 0 var(--space-sm);
+  border-radius: var(--radius-full);
   background: var(--text-1);
   color: var(--card);
 }
@@ -794,9 +838,9 @@ fieldset.field {
   z-index: 1;
   background: var(--card);
   text-align: left;
-  padding: 0 6px 0 12px;
+  padding: 0 var(--space-sm) 0 var(--space-md);
   height: 44px;
-  font: 400 14px var(--font-sans);
+  font: 400 var(--type-sm) var(--font-sans);
   white-space: nowrap;
   max-width: 80px;
   overflow: hidden;
@@ -805,7 +849,7 @@ fieldset.field {
 
 .board__me .board__name,
 .board__me td {
-  background: #fafaf8;
+  background: var(--sunk);
 }
 
 .board__me .board__name {
@@ -826,13 +870,13 @@ fieldset.field {
   margin: 0;
   display: grid;
   grid-template-columns: 52px 1fr;
-  gap: 6px 8px;
-  font-size: 13px;
+  gap: var(--space-sm) var(--space-sm);
+  font-size: var(--type-sm);
   color: var(--text-2);
 }
 
 .legend dt {
-  font: 500 11px var(--font-mono);
+  font: 500 var(--type-xs) var(--font-mono);
   color: var(--text-1);
 }
 
@@ -844,7 +888,7 @@ fieldset.field {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-size: 14px;
+  font-size: var(--type-sm);
 }
 
 /* --- Map ---------------------------------------------------------------- */
@@ -870,7 +914,7 @@ fieldset.field {
   z-index: 5;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--space-sm);
   pointer-events: none;
 }
 
@@ -885,27 +929,27 @@ fieldset.field {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 8px;
+  gap: var(--space-sm);
 }
 
 .float {
   display: flex;
   align-items: center;
-  gap: 2px;
+  gap: var(--space-2xs);
   height: 44px;
-  padding: 0 4px;
-  border-radius: 22px;
-  background: rgba(255, 255, 255, 0.9);
+  padding: 0 var(--space-xs);
+  border-radius: var(--radius-full);
+  background: var(--glass);
   backdrop-filter: blur(12px);
   border: 0.5px solid var(--rule);
   box-shadow: var(--shadow-float);
 }
 
 .float__label {
-  font: 600 11px var(--font-mono);
+  font: 600 var(--type-xs) var(--font-mono);
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  padding: 0 4px;
+  padding: 0 var(--space-xs);
   white-space: nowrap;
 }
 
@@ -922,11 +966,11 @@ fieldset.field {
 .float__label--button {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--space-sm);
   height: 36px;
-  padding: 0 8px;
+  padding: 0 var(--space-sm);
   border: 0;
-  border-radius: 18px;
+  border-radius: var(--radius-full);
   background: transparent;
   color: var(--text-1);
   cursor: pointer;
@@ -944,7 +988,7 @@ fieldset.field {
 }
 
 .icon-button--off {
-  color: var(--text-3);
+  color: var(--text-2);
   opacity: 0.35;
   cursor: default;
 }
@@ -958,11 +1002,11 @@ fieldset.field {
   z-index: 20;
   width: 304px;
   max-width: calc(100vw - 24px);
-  padding: 12px;
+  padding: var(--space-md);
   border-radius: var(--radius-card);
   background: var(--card);
   border: 0.5px solid var(--rule-strong);
-  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.16);
+  box-shadow: var(--shadow-overlay);
 }
 
 .calendar[hidden] {
@@ -973,11 +1017,11 @@ fieldset.field {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 4px;
+  margin-bottom: var(--space-xs);
 }
 
 .calendar__title {
-  font-size: 15px;
+  font-size: var(--type-base);
   font-weight: 600;
 }
 
@@ -998,15 +1042,15 @@ fieldset.field {
 }
 
 .calendar__weekday {
-  padding: 6px 0;
-  font: 500 10px var(--font-mono);
+  padding: var(--space-sm) 0;
+  font: 500 var(--type-2xs) var(--font-mono);
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: var(--text-3);
+  color: var(--text-2);
 }
 
 .calendar__grid td {
-  padding: 1px;
+  padding: var(--space-2xs);
   text-align: center;
 }
 
@@ -1016,10 +1060,10 @@ fieldset.field {
   aspect-ratio: 1;
   max-height: 40px;
   border: 0;
-  border-radius: 50%;
+  border-radius: var(--radius-full);
   background: transparent;
   color: var(--text-1);
-  font: 500 14px var(--font-sans);
+  font: 500 var(--type-sm) var(--font-sans);
   font-variant-numeric: tabular-nums;
   cursor: pointer;
 }
@@ -1029,7 +1073,7 @@ fieldset.field {
 }
 
 .calendar__day:disabled {
-  color: var(--text-3);
+  color: var(--text-2);
   opacity: 0.4;
   cursor: default;
 }
@@ -1049,7 +1093,7 @@ fieldset.field {
   display: inline-block;
   width: 5px;
   height: 5px;
-  border-radius: 50%;
+  border-radius: var(--radius-full);
   background: var(--accent);
 }
 
@@ -1068,39 +1112,39 @@ fieldset.field {
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  gap: 8px;
-  margin-top: 8px;
+  gap: var(--space-sm);
+  margin-top: var(--space-sm);
 }
 
 .calendar .calendar__today {
   min-height: 36px;
-  padding: 0 14px;
-  font-size: 14px;
+  padding: 0 var(--space-lg);
+  font-size: var(--type-sm);
 }
 
 .chips {
   display: flex;
-  gap: 6px;
+  gap: var(--space-sm);
   overflow-x: auto;
 }
 
 .chip {
   height: 32px;
-  padding: 0 12px;
+  padding: 0 var(--space-md);
   display: inline-flex;
   align-items: center;
-  border-radius: 16px;
-  background: rgba(255, 255, 255, 0.9);
+  border-radius: var(--radius-full);
+  background: var(--glass);
   border: 0.5px solid var(--rule-strong);
   box-shadow: var(--shadow-float);
-  font: 500 13px var(--font-sans);
+  font: 500 var(--type-sm) var(--font-sans);
   text-decoration: none;
   white-space: nowrap;
 }
 
 .chip[aria-current="true"] {
   background: var(--text-1);
-  color: #ffffff;
+  color: var(--on-accent);
 }
 
 /* The chip's key to its pins: only passes with their own pin style have one. */
@@ -1112,10 +1156,10 @@ fieldset.field {
   display: inline-block;
   width: 9px;
   height: 9px;
-  margin-right: 6px;
-  border-radius: 2px;
+  margin-right: var(--space-sm);
+  border-radius: var(--radius-sm);
   background: var(--pass-magic);
-  box-shadow: 0 0 0 1px #ffffff;
+  box-shadow: 0 0 0 1px var(--card);
 }
 
 /* Resort search: a field over the map with suggestions under it. */
@@ -1130,7 +1174,7 @@ fieldset.field {
   top: 12px;
   width: 20px;
   height: 20px;
-  color: var(--text-3);
+  color: var(--text-2);
   pointer-events: none;
 }
 
@@ -1143,13 +1187,13 @@ fieldset.field {
 .map-search__input {
   width: 100%;
   height: 44px;
-  padding: 0 14px 0 42px;
-  border-radius: 22px;
+  padding: 0 var(--space-lg) 0 calc(var(--space-2xl) + var(--space-lg));
+  border-radius: var(--radius-full);
   border: 0.5px solid var(--rule);
-  background: rgba(255, 255, 255, 0.94);
+  background: var(--glass);
   backdrop-filter: blur(12px);
   box-shadow: var(--shadow-float);
-  font: 400 16px var(--font-sans);
+  font: 400 var(--type-md) var(--font-sans);
   color: var(--text-1);
 }
 
@@ -1167,21 +1211,21 @@ fieldset.field {
   max-height: min(50vh, 360px);
   overflow-y: auto;
   margin: 0;
-  padding: 4px 0;
+  padding: var(--space-xs) 0;
   list-style: none;
   background: var(--card);
   border: 1px solid var(--rule);
   border-radius: var(--radius-card);
-  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.14);
+  box-shadow: var(--shadow-overlay);
 }
 
 .map-search__option {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  gap: var(--space-md);
   min-height: 44px;
-  padding: 0 14px;
+  padding: 0 var(--space-lg);
   cursor: pointer;
 }
 
@@ -1190,28 +1234,28 @@ fieldset.field {
 }
 
 .map-search__name {
-  font-size: 15px;
+  font-size: var(--type-base);
 }
 
 .map-search__canton {
-  font: 500 11px var(--font-mono);
-  color: var(--text-3);
+  font: 500 var(--type-xs) var(--font-mono);
+  color: var(--text-2);
 }
 
 .map-search__empty {
-  padding: 12px 14px;
-  font-size: 14px;
-  color: var(--text-3);
+  padding: var(--space-md) var(--space-lg);
+  font-size: var(--type-sm);
+  color: var(--text-2);
 }
 
 .map-hint {
   align-self: flex-start;
   max-width: 300px;
-  padding: 10px 12px;
+  padding: var(--space-sm) var(--space-md);
   border-radius: var(--radius-control);
-  background: rgba(255, 255, 255, 0.94);
+  background: var(--glass);
   box-shadow: var(--shadow-float);
-  font-size: 13px;
+  font-size: var(--type-sm);
 }
 
 /* Resort pins: HTML markers so they draw without a glyph server. */
@@ -1219,7 +1263,7 @@ fieldset.field {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 3px;
+  gap: var(--space-xs);
   cursor: pointer;
   background: none;
   border: 0;
@@ -1230,17 +1274,17 @@ fieldset.field {
   position: relative;
   width: 10px;
   height: 10px;
-  border-radius: 50%;
-  background: #ffffff;
-  border: 2px solid var(--text-3);
+  border-radius: var(--radius-full);
+  background: var(--card);
+  border: 2px solid var(--text-2);
 }
 
 .pin__name {
   display: none;
-  font: 400 10px var(--font-mono);
-  color: var(--text-3);
+  font: 400 var(--type-2xs) var(--font-mono);
+  color: var(--text-2);
   white-space: nowrap;
-  text-shadow: 0 0 3px #fff, 0 0 3px #fff;
+  text-shadow: var(--shadow-halo);
 }
 
 .pin--friends .pin__dot {
@@ -1256,7 +1300,7 @@ fieldset.field {
 
 .pin--friends .pin__name {
   font-weight: 600;
-  font-size: 11px;
+  font-size: var(--type-xs);
   color: var(--text-1);
 }
 
@@ -1266,26 +1310,26 @@ fieldset.field {
   left: 9px;
   min-width: 20px;
   height: 20px;
-  padding: 0 6px;
-  border-radius: 10px;
+  padding: 0 var(--space-sm);
+  border-radius: var(--radius-full);
   background: var(--text-1);
-  color: #ffffff;
-  font: 500 11px/20px var(--font-mono);
+  color: var(--on-accent);
+  font: 500 var(--type-xs)/20px var(--font-mono);
   text-align: center;
 }
 
 /* Magic Pass resorts: square and violet, so they read apart from the rest
    at a glance. Square rather than only a colour, for colour-blind eyes. */
 .pin--pass-magic-pass .pin__dot {
-  border-radius: 3px;
-  border-color: #ffffff;
+  border-radius: var(--radius-sm);
+  border-color: var(--card);
   background: var(--pass-magic);
   box-shadow: 0 0 0 1px var(--pass-magic);
 }
 
 .pin--pass-magic-pass.pin--friends .pin__dot {
   border-color: var(--pass-magic);
-  background: #ffffff;
+  background: var(--card);
   box-shadow: none;
 }
 
@@ -1302,7 +1346,7 @@ fieldset.field {
 }
 
 .pin--selected .pin__dot {
-  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.3);
+  box-shadow: 0 0 0 2px var(--card), 0 0 0 4px var(--accent);
 }
 
 .pin--mine .pin__dot {
@@ -1313,8 +1357,8 @@ fieldset.field {
   display: flex;
   justify-content: space-between;
   align-items: baseline;
-  gap: 12px;
-  padding: 8px 0;
+  gap: var(--space-md);
+  padding: var(--space-sm) 0;
   border-bottom: 1px solid var(--rule);
 }
 
@@ -1327,23 +1371,23 @@ fieldset.field {
 .hero {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  padding-top: 12px;
+  gap: var(--space-md);
+  padding-top: var(--space-md);
 }
 
 .steps {
   margin: 0;
-  padding: 0 0 0 20px;
+  padding: 0 0 0 var(--space-xl);
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--space-sm);
 }
 
 /* --- Wider screens ------------------------------------------------------ */
 
 @media (min-width: 720px) {
   .page {
-    padding-top: 32px;
+    padding-top: var(--space-3xl);
   }
 
   .sheet {
@@ -1355,7 +1399,7 @@ fieldset.field {
 .stack {
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: var(--space-lg);
 }
 
 [data-resort-picker][hidden] {
@@ -1368,30 +1412,24 @@ fieldset.field {
 
 /* --- My days: the month ------------------------------------------------ */
 
-.float__label--month {
-  padding: 0 10px;
-  min-width: 128px;
-  text-align: center;
-}
-
 .month {
-  padding: 8px 6px 6px;
+  padding: var(--space-sm) var(--space-sm) var(--space-sm);
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: var(--space-xs);
 }
 
 .month__week {
   display: grid;
   grid-template-columns: repeat(7, minmax(0, 1fr));
-  gap: 4px;
+  gap: var(--space-xs);
 }
 
 .month__weekday {
-  font: 600 11px var(--font-sans);
-  color: var(--text-3);
+  font: 600 var(--type-xs) var(--font-sans);
+  color: var(--text-2);
   text-align: center;
-  padding-bottom: 2px;
+  padding-bottom: var(--space-2xs);
 }
 
 /* One day: the date, whether you're skiing, and how many friends are with you. */
@@ -1403,7 +1441,7 @@ fieldset.field {
   /* Square at any width: the grid sets the width, the ratio the height. */
   aspect-ratio: 1;
   min-width: 0;
-  padding: 4px 4px 5px;
+  padding: var(--space-xs) var(--space-xs) var(--space-xs);
   border-radius: var(--radius-control);
   background: var(--sunk);
   color: var(--text-1);
@@ -1446,7 +1484,7 @@ a.mday:focus-visible {
 
 /* Your resort for the day, as on the board. */
 .mday__resort {
-  font: 500 9px var(--font-mono);
+  font: 500 var(--type-2xs) var(--font-mono);
   letter-spacing: 0.02em;
   overflow: hidden;
   text-overflow: clip;
@@ -1454,7 +1492,7 @@ a.mday:focus-visible {
 }
 
 .mday__date {
-  font: 600 15px var(--font-sans);
+  font: 600 var(--type-base) var(--font-sans);
 }
 
 /* The day the panel below is showing. */
@@ -1471,7 +1509,7 @@ a.mday:focus-visible {
    for the selected day. */
 .mday--in {
   background: var(--accent);
-  color: #fff;
+  color: var(--on-accent);
 }
 
 /* Friends with you (or, on a pale day, at the resort most of the picked
@@ -1488,7 +1526,7 @@ a.mday:focus-visible {
 }
 
 .mday--in .mday__friends {
-  color: #fff;
+  color: var(--on-accent);
 }
 
 /* With a group picked, a day you haven't said that its people have: pale
@@ -1506,15 +1544,15 @@ a.mday:focus-visible {
   display: inline-block;
   width: 14px;
   height: 14px;
-  border-radius: 4px;
+  border-radius: var(--radius-tag);
   background: var(--accent);
 }
 
 /* --- Calendar: the group chips ----------------------------------------- */
 
 .month-groups {
-  margin: 0 -16px;
-  padding: 2px 16px 4px;
+  margin: 0 calc(-1 * var(--space-lg));
+  padding: var(--space-2xs) var(--space-lg) var(--space-xs);
   scrollbar-width: none;
 }
 
@@ -1523,12 +1561,12 @@ a.mday:focus-visible {
   flex: none;
   color: var(--text-1);
   height: 36px;
-  padding: 0 16px;
-  font-size: 14px;
+  padding: 0 var(--space-lg);
+  font-size: var(--type-sm);
 }
 
 .month-groups .chip[aria-current="true"] {
-  color: #ffffff;
+  color: var(--on-accent);
 }
 
 /* --- Calendar: selecting several days ------------------------------------ */
@@ -1545,19 +1583,19 @@ a.mday:focus-visible {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  gap: var(--space-md);
 }
 
 .month-head__nav {
   display: flex;
-  gap: 4px;
+  gap: var(--space-xs);
 }
 
 .day-panel {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  padding-top: 16px;
+  gap: var(--space-sm);
+  padding-top: var(--space-lg);
   border-top: 1px solid var(--rule-strong);
 }
 
@@ -1565,14 +1603,14 @@ a.mday:focus-visible {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  gap: var(--space-md);
 }
 
 .day-panel__title {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  font-size: 20px;
+  gap: var(--space-sm);
+  font-size: var(--type-lg);
   line-height: 28px;
   font-weight: 600;
 }
@@ -1581,7 +1619,7 @@ a.mday:focus-visible {
 .day-panel__mine {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--space-sm);
   font-weight: 500;
 }
 
@@ -1589,7 +1627,7 @@ a.mday:focus-visible {
 .day-panel__here {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--space-sm);
   font-weight: 600;
   color: var(--accent);
 }
@@ -1603,17 +1641,17 @@ a.mday:focus-visible {
 .day-panel__others {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: var(--space-sm);
 }
 
 .day-panel__friends {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: var(--space-xs);
   margin: 0;
   padding: 0;
   list-style: none;
-  font-size: 14px;
+  font-size: var(--type-sm);
 }
 
 .day-panel__resort {
@@ -1628,15 +1666,29 @@ a.mday:focus-visible {
   bottom: 4px;
   width: 14px;
   height: 14px;
-  border-radius: 50%;
+  border-radius: var(--radius-full);
   border: 1.5px solid var(--rule-strong);
   background: var(--card);
 }
 
 .month--selecting a.mday.mday--picked::after {
   border-color: var(--card);
-  background: var(--accent)
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M4 8.5l2.5 2.5L12 5.5' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")
+  background: var(--accent);
+}
+
+/* The tick in a picked day's circle: a mask painted with the token. */
+.month--selecting a.mday.mday--picked::before {
+  content: "";
+  position: absolute;
+  z-index: 1;
+  right: 4px;
+  bottom: 4px;
+  width: 14px;
+  height: 14px;
+  background: var(--on-accent);
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M4 8.5l2.5 2.5L12 5.5' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")
+    center / 12px no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M4 8.5l2.5 2.5L12 5.5' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")
     center / 12px no-repeat;
 }
 
@@ -1662,11 +1714,11 @@ a.mday.mday--in.mday--picked:hover {
   z-index: 25;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--space-sm);
   max-width: 560px;
   margin: 0 auto;
-  padding: 8px;
-  border-radius: calc(var(--radius-control) + 8px);
+  padding: var(--space-sm);
+  border-radius: calc(var(--radius-control) + var(--space-sm));
   background: var(--card);
   border: 0.5px solid var(--rule);
   box-shadow: var(--shadow-float);
@@ -1679,17 +1731,12 @@ a.mday.mday--in.mday--picked:hover {
 .select-bar__count {
   flex: 1;
   text-align: center;
-  font: 600 13px var(--font-mono);
-}
-
-.select-bar .button:disabled {
-  opacity: 0.35;
-  cursor: default;
+  font: 600 var(--type-sm) var(--font-mono);
 }
 
 /* Room under the page so the bar never covers the last week. */
 .has-select-bar .page {
-  padding-bottom: calc(var(--tabbar-height) + 104px);
+  padding-bottom: calc(var(--tabbar-height) + (2 * var(--space-4xl) + var(--space-sm)));
 }
 
 /* --- Row menu ------------------------------------------------------------ */
@@ -1715,7 +1762,7 @@ a.mday.mday--in.mday--picked:hover {
   top: calc(100% + 4px);
   z-index: 5;
   min-width: 180px;
-  padding: 4px;
+  padding: var(--space-xs);
   background: var(--card);
   border: 1px solid var(--rule-strong);
   border-radius: var(--radius-control);
@@ -1725,9 +1772,9 @@ a.mday.mday--in.mday--picked:hover {
 .row-menu__item {
   display: block;
   width: 100%;
-  padding: 10px 12px;
+  padding: var(--space-sm) var(--space-md);
   border: 0;
-  border-radius: 6px;
+  border-radius: var(--radius-tag);
   background: none;
   text-align: left;
   cursor: pointer;
@@ -1759,11 +1806,11 @@ a.mday.mday--in.mday--picked:hover {
 }
 
 .stack--tight {
-  gap: 8px;
+  gap: var(--space-sm);
 }
 
 .lede--large {
-  font-size: 16px;
+  font-size: var(--type-md);
 }
 
 .centred {
@@ -1776,7 +1823,7 @@ a.mday.mday--in.mday--picked:hover {
 
 .invite-link {
   display: block;
-  padding: 10px 12px;
+  padding: var(--space-sm) var(--space-md);
   background: var(--sunk);
   border-radius: var(--radius-control);
   overflow: hidden;
@@ -1793,12 +1840,12 @@ a.mday.mday--in.mday--picked:hover {
 .site-footer {
   display: flex;
   flex-wrap: wrap;
-  gap: 16px;
+  gap: var(--space-lg);
   max-width: var(--column);
   margin: 0 auto;
-  padding: 16px;
-  padding-bottom: max(16px, env(safe-area-inset-bottom));
-  font-size: 13px;
+  padding: var(--space-lg);
+  padding-bottom: max(var(--space-lg), env(safe-area-inset-bottom));
+  font-size: var(--type-sm);
 }
 
 .site-footer a {
@@ -1806,33 +1853,33 @@ a.mday.mday--in.mday--picked:hover {
 }
 
 .prose h1 {
-  font-size: 22px;
+  font-size: var(--type-lg);
   line-height: 28px;
   margin: 0;
 }
 
 .prose h2 {
-  font-size: 16px;
-  margin: 24px 0 0;
+  font-size: var(--type-md);
+  margin: var(--space-2xl) 0 0;
 }
 
 .prose p,
 .prose ul {
-  margin: 8px 0 0;
+  margin: var(--space-sm) 0 0;
 }
 
 .meta {
   color: var(--text-2);
-  font-size: 13px;
+  font-size: var(--type-sm);
 }
 
 .notice {
-  margin: 0 0 16px;
-  padding: 8px 12px;
+  margin: 0 0 var(--space-lg);
+  padding: var(--space-sm) var(--space-md);
   border-radius: var(--radius-control);
-  background: rgba(217, 119, 6, 0.12);
+  background: var(--amber-soft);
   color: var(--text-1);
-  font-size: 13px;
+  font-size: var(--type-sm);
 }
 
 /* --- Offline and the outbox (static/js/pwa.js) --------------------------- */
@@ -1841,17 +1888,17 @@ a.mday.mday--in.mday--picked:hover {
   position: sticky;
   top: var(--topbar-height);
   z-index: 5;
-  padding: 8px 16px;
-  background: rgba(217, 119, 6, 0.12);
+  padding: var(--space-sm) var(--space-lg);
+  background: var(--amber-soft);
   color: var(--text-1);
-  font-size: 13px;
+  font-size: var(--type-sm);
   text-align: center;
 }
 
 .outbox-status {
   margin-left: auto;
-  margin-right: 8px;
-  font-size: 13px;
+  margin-right: var(--space-sm);
+  font-size: var(--type-sm);
   color: var(--text-2);
 }
 
@@ -1890,7 +1937,7 @@ a.mday.mday--in.mday--picked:hover {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 24px;
+  gap: var(--space-2xl);
   background: var(--ground);
   transition: opacity 300ms ease-out;
   animation: launch-failsafe 0s linear 10s forwards;
@@ -1901,16 +1948,12 @@ a.mday.mday--in.mday--picked:hover {
   pointer-events: none;
 }
 
-.launch-shell__icon {
-  border-radius: 22%;
-}
-
 .launch-shell__spinner {
   width: 28px;
   height: 28px;
   border: 3px solid var(--rule-strong);
   border-top-color: var(--text-1);
-  border-radius: 50%;
+  border-radius: var(--radius-full);
   animation: spin 800ms linear infinite;
 }
 
@@ -1939,11 +1982,6 @@ a.mday.mday--in.mday--picked:hover {
 
 /* --- Onboarding tour (static/js/tour.js, docs/onboarding-tour.md) --------- */
 
-:root {
-  --tour-bar-height: 40px;
-  --tour-shade: rgba(20, 18, 14, 0.62);
-}
-
 /* The demo bar: amber, just above the tab bar, never dimmed. */
 .tour-bar {
   position: fixed;
@@ -1955,18 +1993,18 @@ a.mday.mday--in.mday--picked:hover {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 12px;
-  padding: 0 16px;
+  gap: var(--space-md);
+  padding: 0 var(--space-lg);
   background: var(--amber);
   /* Dark on amber: white would miss AA contrast at this size. */
   color: var(--text-1);
-  font-size: 13px;
+  font-size: var(--type-sm);
 }
 
 .tour-bar__end {
-  padding: 4px 10px;
-  border: 1px solid rgba(0, 0, 0, 0.4);
-  border-radius: 999px;
+  padding: var(--space-xs) var(--space-sm);
+  border: 1px solid currentColor;
+  border-radius: var(--radius-full);
   background: transparent;
   color: inherit;
   font: inherit;
@@ -1975,7 +2013,7 @@ a.mday.mday--in.mday--picked:hover {
 }
 
 body:has(.tour-bar) .page {
-  padding-bottom: calc(var(--tabbar-height) + var(--tour-bar-height) + 32px);
+  padding-bottom: calc(var(--tabbar-height) + var(--tour-bar-height) + var(--space-3xl));
 }
 
 body:has(.tour-bar) .map-page {
@@ -1996,15 +2034,15 @@ body:has(.tour-bar) .select-bar {
 
 .tour-shade {
   position: fixed;
-  background: var(--tour-shade);
+  background: var(--scrim);
   pointer-events: auto;
 }
 
 .tour-ring {
   position: fixed;
-  border: 2px solid #fff;
+  border: 2px solid var(--card);
   border-radius: var(--radius-control);
-  box-shadow: 0 0 0 4px rgba(217, 119, 6, 0.55);
+  box-shadow: 0 0 0 4px var(--amber);
   pointer-events: none;
 }
 
@@ -2018,14 +2056,14 @@ body:has(.tour-bar) .select-bar {
   right: 16px;
   max-width: 420px;
   margin: 0 auto;
-  padding: 16px;
+  padding: var(--space-lg);
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--space-sm);
   border-radius: var(--radius-card);
   background: var(--card);
   color: var(--text-1);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.28);
+  box-shadow: var(--shadow-overlay);
   pointer-events: auto;
 }
 
@@ -2042,7 +2080,7 @@ body:has(.tour-bar) .select-bar {
 
 .tour-card__text {
   margin: 0;
-  font-size: 15px;
+  font-size: var(--type-base);
   line-height: 1.45;
 }
 
@@ -2054,8 +2092,8 @@ body:has(.tour-bar) .select-bar {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 8px;
-  margin-top: 4px;
+  gap: var(--space-sm);
+  margin-top: var(--space-xs);
 }
 
 .tour-card__actions .button {
@@ -2064,12 +2102,12 @@ body:has(.tour-bar) .select-bar {
 
 /* Chapter 7 over the real My days: a card on a plain dimmed page. */
 .tour-layer--handoff {
-  background: var(--tour-shade);
+  background: var(--scrim);
   pointer-events: auto;
 }
 
 .tour-welcome {
-  margin-top: 8px;
+  margin-top: var(--space-sm);
 }
 
 /* A day saved or cleared on this device, waiting to send (static/js/plans.js):
@@ -2078,7 +2116,7 @@ body:has(.tour-bar) .select-bar {
   background-image: repeating-linear-gradient(
     135deg,
     transparent 0 5px,
-    rgb(255 255 255 / 35%) 5px 10px
+    var(--stripe) 5px 10px
   );
 }
 
@@ -2089,3 +2127,73 @@ body:has(.tour-bar) .select-bar {
 .mday--failed {
   background-color: var(--danger);
 }
+
+/* --- The design page (apps/design, DESIGN.md) ---------------------------- */
+
+/* Token samples, painted by static/js/design.js. */
+.ds-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(112px, 1fr));
+  gap: var(--space-md);
+  margin: 0;
+  list-style: none;
+}
+
+.ds-token {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  min-width: 0;
+  font-size: var(--type-xs);
+  overflow-wrap: anywhere;
+}
+
+.ds-swatch {
+  height: 48px;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-control);
+}
+
+.ds-corner {
+  width: 56px;
+  height: 56px;
+  background: var(--sunk);
+  border: 1px solid var(--rule-strong);
+}
+
+.ds-depth {
+  width: 88px;
+  height: 56px;
+  background: var(--card);
+  border-radius: var(--radius-card);
+}
+
+.ds-bar {
+  display: block;
+  height: var(--space-md);
+  background: var(--accent);
+}
+
+.ds-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+/* The map's controls on a patch of map ground. */
+.ds-stage {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  padding: var(--space-md);
+  border-radius: var(--radius-card);
+  background: var(--map-ground);
+}
+
+/* A fixed or floating component, shown in the page's flow. */
+.ds-static {
+  position: static;
+  transform: none;
+}
+

@@ -161,6 +161,7 @@ INSTALLED_APPS = [
     "apps.resorts",
     "apps.groups",
     "apps.tour",
+    "apps.design",
     # Before mcp_auth so the project's own templates win.
     "apps.mcp",
     "mcp_auth",
