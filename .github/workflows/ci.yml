@@ -24,7 +24,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        env: [fmt, lint, types, checks, test, js, audit, sast]
+        env: [fmt, lint, types, checks, test, js, audit, sast, e2e]
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-python@v7

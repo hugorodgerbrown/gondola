@@ -3,7 +3,7 @@
 {% block content %}
   <div class="heading">
     <span class="eyebrow">Who's where · {{ board.start|date:"j M" }}–{{ board.end|date:"j M" }}</span>
-    <h1 class="title"><a href="{% url 'planning:group_detail' board.group.uuid %}" style="text-decoration:none">{{ board.group.name }}</a></h1>
+    <h1 class="title"><a href="{% url 'planning:group_detail' board.group.uuid %}" class="title__link">{{ board.group.name }}</a></h1>
   </div>
 
   <div class="card board" tabindex="0" aria-label="Who's where, scrolls sideways">

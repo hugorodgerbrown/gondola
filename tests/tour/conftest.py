@@ -27,5 +27,5 @@ def tourist(db: None) -> User:
 def touring(client: Client, tourist: User, resorts: dict[str, Resort]) -> Client:
     """Return a client signed in as ``tourist``, part way into the tour."""
     client.force_login(tourist)
-    client.post("/tour/start/", {"next": "/map/"})
+    client.post("/app/tour/start/", {"next": "/app/map/"})
     return client

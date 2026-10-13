@@ -310,7 +310,7 @@ def test_past_day_is_not_plannable(sam: Client) -> None:
 
 
 def test_impossible_date_is_404(sam: Client) -> None:
-    assert sam.get("/days/2027-02-30/").status_code == 404
+    assert sam.get("/app/days/2027-02-30/").status_code == 404
 
 
 def several(*days: str) -> str:
@@ -421,7 +421,7 @@ def test_several_days_refuses_bad_selections(sam: Client, crew: Crew, query: str
 def test_calendar_can_select(sam: Client, crew: Crew) -> None:
     page = sam.get(reverse("planning:calendar"))
     assert b"data-select-bar" in page.content
-    assert b'data-select-days="/days/several/"' in page.content
+    assert b'data-select-days="/app/days/several/"' in page.content
     assert b"js/day_select.js" in page.content
     assert b'data-select-max="62"' in page.content
     assert f'data-select-owner="{crew.sam.uuid}"'.encode() in page.content
@@ -483,7 +483,7 @@ def test_resort_sheet_and_plan_here(sam: Client, crew: Crew) -> None:
     assert b"meet-up" not in sheet.content
     plan_url = reverse("planning:plan_here", kwargs={"resort_uuid": crew.verbier.uuid})
     response = sam.post(plan_url, {"date": crew.day.isoformat()})
-    assert response["Location"] == f"/map/?date={crew.day.isoformat()}"
+    assert response["Location"] == f"/app/map/?date={crew.day.isoformat()}"
     assert PlanDay.objects.get(user=crew.sam).resort == crew.verbier
     again = sam.get(url, {"date": crew.day.isoformat()}, headers=HTMX)
     assert b"Planned" in again.content and b"ll be here" not in again.content

@@ -10,4 +10,4 @@ mcp_can_connect: apps.mcp.policy.staff_only
 project_name: Gondola
 project_slug: gondola
 render_region: frankfurt
-theme_colour: '#2563eb'
+theme_colour: '#f2f0ec'

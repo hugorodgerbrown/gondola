@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+{% extends "public_base.html" %}
 {% block title %}Join {{ group.name }} · {{ SITE_NAME }}{% endblock %}
 {% block description %}{{ group.owner }} invited you to {{ group.name }}: see who's skiing where.{% endblock %}
 {% block og %}
@@ -10,7 +10,7 @@
   <div class="heading hero">
     <span class="eyebrow">Group invite</span>
     <h1 class="title title--large">Join {{ group.name }}</h1>
-    <p class="lede" style="font-size:16px">{{ group.owner }} invited you. Members say which resort they'll be in each day, so the group can see who's where over the coming weeks.</p>
+    <p class="lede lede--large">{{ group.owner }} invited you. Members say which resort they'll be in each day, so the group can see who's where over the coming weeks.</p>
   </div>
   <section class="card card--padded">
     <span class="eyebrow">When you join</span>
@@ -26,7 +26,7 @@
       </form>
     {% else %}
       <a class="button button--block" href="{% url 'accounts:sign_in' %}?next={{ request.path|urlencode }}">Sign in to join</a>
-      <span class="small muted" style="text-align:center">New here? Signing in creates your account with just your email.</span>
+      <span class="small muted centred">New here? Signing in creates your account with just your email.</span>
     {% endif %}
   </section>
 {% endblock %}

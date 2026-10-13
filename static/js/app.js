@@ -3,13 +3,11 @@
  *
  * Opens the bottom sheet when HTMX swaps a fragment into it, closes it on
  * a close button or a tap on the backdrop, and wires share buttons to the
- * phone's share sheet (falling back to copying the link). Before a sign-out
- * (or account deletion) form posts, drops the pages the service worker
- * cached, so the next person on this device can't open them offline. The
- * signed-out front page drops them again, which covers a sign-out posted
- * from a page loaded before this script had the handler. ``onSwipe`` turns
+ * phone's share sheet (falling back to copying the link). ``onSwipe`` turns
  * a sideways swipe into "previous" or "next", for the month calendars.
- * An open "…" row menu closes on a tap anywhere else.
+ * An open "…" row menu closes on a tap anywhere else. The service worker,
+ * the offline banner and clearing cached pages at sign-out are pwa.js's;
+ * this file only retires Gondola's first worker (``retireRootWorker``).
  */
 (function () {
   "use strict";
@@ -106,40 +104,6 @@
     }
   });
 
-  async function forgetPages() {
-    if (!window.caches) {
-      return;
-    }
-    const names = await caches.keys();
-    await Promise.all(names.filter(function (name) {
-      return name.startsWith("pages-");
-    }).map(function (name) {
-      return caches.delete(name);
-    }));
-  }
-
-  document.addEventListener("submit", function (event) {
-    const form = event.target;
-    if (!(form instanceof HTMLFormElement) || !form.hasAttribute("data-sign-out")) {
-      return;
-    }
-    if (form.dataset.cleared) {
-      return;
-    }
-    event.preventDefault();
-    function submit() {
-      form.dataset.cleared = "1";
-      form.submit();
-    }
-    // Sign out whether or not the cleanup worked.
-    forgetPages().then(submit, submit);
-  });
-
-  // Only with signal: offline, this page may be an old copy from the cache.
-  if (document.querySelector("[data-forget-pages]") && navigator.onLine) {
-    forgetPages().catch(function () {});
-  }
-
   // A sideways swipe on ``element``: onNext for right-to-left, onPrevious
   // for left-to-right. Mostly-vertical moves are left to scrolling, and the
   // click a mouse drag would end in is swallowed.
@@ -194,9 +158,26 @@
     );
   });
 
-  if ("serviceWorker" in navigator) {
-    window.addEventListener("load", function () {
-      navigator.serviceWorker.register("/sw.js").catch(function () {});
-    });
+  // Gondola's first service worker was registered at /sw.js for the whole
+  // site, with its own caches. A phone that installed it still has both:
+  // unregister it and drop them, so it can never again answer for a page,
+  // signed out or not. The app's worker is /app/sw.js, scoped to /app/.
+  var ROOT_CACHES = ["static-v1", "pages-v1"];
+  function retireRootWorker() {
+    var jobs = [];
+    if (navigator.serviceWorker && navigator.serviceWorker.getRegistrations) {
+      jobs.push(navigator.serviceWorker.getRegistrations().then(function (registrations) {
+        var root = location.origin + "/";
+        return Promise.all(registrations.filter(function (registration) {
+          return registration.scope === root;
+        }).map(function (registration) { return registration.unregister(); }));
+      }));
+    }
+    if (window.caches) {
+      jobs.push(Promise.all(ROOT_CACHES.map(function (name) { return caches.delete(name); })));
+    }
+    return Promise.all(jobs).catch(function () { /* nothing to retire */ });
   }
+  window.retireRootWorker = retireRootWorker;
+  retireRootWorker();
 })();

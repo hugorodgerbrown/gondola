@@ -29,6 +29,7 @@ from apps.groups.services.plans import (
     today,
     update_plans,
 )
+from apps.public.pages import page_as_markdown
 from apps.resorts.models import Resort
 from apps.resorts.search import fold, search_resorts
 
@@ -51,6 +52,9 @@ class Tool:
     input_schema: dict[str, Any]
     func: Callable[[Any, dict[str, Any]], dict[str, Any]]
     read_only: bool = True
+    # The result's "markdown" is the text content, so the caller gets the
+    # document itself rather than JSON around it.
+    markdown: bool = False
 
     def describe(self) -> dict[str, Any]:
         """Return the tool as tools/list lists it."""
@@ -310,6 +314,24 @@ DAYS = {
 }
 RESORT = {"type": "string", "description": "A resort's name or code, e.g. Verbier."}
 
+
+def privacy_policy(user: User, args: dict[str, Any]) -> dict[str, str]:
+    """Return the privacy notice: what is kept about the user, and why."""
+    return page_as_markdown("privacy")
+
+
+def terms_of_service(user: User, args: dict[str, Any]) -> dict[str, str]:
+    """Return the terms of service."""
+    return page_as_markdown("terms")
+
+
+def help_page(user: User, args: dict[str, Any]) -> dict[str, str]:
+    """Return the help: signing in, passkeys, groups, days, installing, offline."""
+    return page_as_markdown("help")
+
+
+NO_ARGUMENTS: dict[str, Any] = {"type": "object", "properties": {}}
+
 TOOLS: dict[str, Tool] = {
     t.name: t
     for t in [
@@ -399,6 +421,33 @@ TOOLS: dict[str, Tool] = {
                 "required": ["person"],
             },
             func=where_is,
+        ),
+        Tool(
+            name="privacy_policy",
+            description=(
+                "The privacy notice: what Gondola keeps about the user and why. "
+                "Use it for any question about privacy or personal data."
+            ),
+            input_schema=NO_ARGUMENTS,
+            func=privacy_policy,
+            markdown=True,
+        ),
+        Tool(
+            name="terms_of_service",
+            description="The terms of service for using Gondola.",
+            input_schema=NO_ARGUMENTS,
+            func=terms_of_service,
+            markdown=True,
+        ),
+        Tool(
+            name="help",
+            description=(
+                "How to use Gondola: signing in, passkeys, groups, saying days, "
+                "installing it and using it offline."
+            ),
+            input_schema=NO_ARGUMENTS,
+            func=help_page,
+            markdown=True,
         ),
     ]
 }

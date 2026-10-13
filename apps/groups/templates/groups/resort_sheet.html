@@ -21,7 +21,7 @@
   {% endif %}
 
   {% if plannable %}
-    <div class="stack" style="gap:8px" data-tour="resort-actions">
+    <div class="stack stack--tight" data-tour="resort-actions">
       {% if not info.my_plan or info.my_plan.resort_id != resort.pk %}
         <form method="post" action="{% url 'planning:plan_here' resort.uuid %}" hx-post="{% url 'planning:plan_here' resort.uuid %}">
           {% csrf_token %}

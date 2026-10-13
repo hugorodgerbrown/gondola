@@ -12,11 +12,11 @@ pytestmark = pytest.mark.django_db
 
 
 def test_new_email_creates_account_once() -> None:
-    token = services.make_sign_in_token("New@Example.com", "/days/")
+    token = services.make_sign_in_token("New@Example.com", "/app/days/")
     result = services.read_sign_in_token(token)
     assert result.created
     assert result.user.email == "new@example.com"
-    assert result.next_url == "/days/"
+    assert result.next_url == "/app/days/"
     assert not result.user.has_usable_password()
 
 
@@ -50,9 +50,9 @@ def test_inactive_account_is_refused() -> None:
 
 def test_safe_next_keeps_local_paths_only() -> None:
     request = RequestFactory().get("/")
-    assert services.safe_next("/groups/", request) == "/groups/"
-    assert services.safe_next("https://evil.example/", request) == "/map/"
-    assert services.safe_next(None, request) == "/map/"
+    assert services.safe_next("/app/groups/", request) == "/app/groups/"
+    assert services.safe_next("https://evil.example/", request) == "/app/map/"
+    assert services.safe_next(None, request) == "/app/map/"
 
 
 def test_sign_in_is_rate_limited() -> None:
