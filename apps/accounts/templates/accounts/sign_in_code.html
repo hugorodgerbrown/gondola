@@ -7,6 +7,8 @@
     <h1 class="title">Check your email</h1>
     <p class="lede">We sent a link and a code to {% if email %}<strong>{{ email }}</strong>{% else %}your address{% endif %}. Open the link, or type the code here. Both work once, for {{ minutes }} minutes.</p>
   </div>
+  {# One field without JavaScript; code_input.js turns it into six digit boxes. #}
+  {# nosemgrep: python.django.security.django-no-csrf-token.django-no-csrf-token -- it has one #}
   <form method="post" action="{% url 'accounts:sign_in_code' %}" class="card card--padded" novalidate>
     {% csrf_token %}
     {% if form.errors %}
@@ -14,10 +16,8 @@
     {% endif %}
     <div class="field">
       <label for="sign-in-code">Code</label>
-      {# One field without JavaScript; code_input.js turns it into six digit boxes. #}
-      <input id="sign-in-code" class="input input--code" type="text" name="code" inputmode="numeric"
-             pattern="[0-9 ]*" autocomplete="one-time-code" maxlength="20" required autofocus
-             data-code-input data-code-length="6">
+      <input id="sign-in-code" class="input input--code" type="text" name="code" inputmode="numeric" data-code-input
+             pattern="[0-9 ]*" autocomplete="one-time-code" maxlength="20" required autofocus data-code-length="6">
     </div>
     <button type="submit" class="button button--block">Sign in</button>
   </form>
