@@ -49,8 +49,9 @@ apps/core/       BaseModel, IdempotencyMiddleware + IdempotencyRecord,
                  decorators (require_htmx, login_required_json), rate
                  limits, tokens, analytics (fivebar goals), livez,
                  healthz and the CSRF failure page
-apps/public/     the public pages: /, /terms/, /privacy/, /help/; each body
-                 is one _<name>_body.html, also served as Markdown
+apps/public/     the public pages: /, /terms/, /privacy/, /help/; the terms,
+                 privacy and help bodies are each one _<name>_body.html,
+                 also served as Markdown (the MCP tools)
 apps/pwa/        /app/manifest.webmanifest, /app/sw.js, /app/offline/;
                  conf.py holds the app's identity, SCOPE and the precache list
 apps/accounts/   Gondola's own User (docs/decisions/), sign-in by emailed
@@ -65,8 +66,8 @@ templates/       base.html (the app, /app/), public_base.html, includes
 static/js/       plain JavaScript, classic scripts, no build step
 static/css/      app.css: the design system, tokens on :root and
                  components below (DESIGN.md)
-docs/            pwa, security, performance, testing, onboarding-tour,
-                 decisions/
+docs/            accounts, pwa, security, performance, testing,
+                 onboarding-tour, decisions/
 .claude/skills/  writing the Titan docs kept in Linear (research, user
                  testing script, blog post), each with a length setting
 ```

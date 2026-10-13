@@ -11,10 +11,11 @@ What is on by default, and what checks it.
 | No passwords for people: sign-in by a single-use emailed link or code, or a passkey; staff passwords are validated | `apps/accounts/` | `tests/accounts/` |
 | Sign-in links and codes are stored only as hashes, expire in 30 minutes, work once, and only the newest email's work; a code works only in the browser that asked for it, for five tries | `apps/accounts/sign_in.py` | `tests/accounts/test_sign_in.py`, `test_views.py` |
 | Rate limits on sign-in emails, codes and passkey challenges | `apps/core/ratelimit.py` | `tests/accounts/test_views.py`, `test_passkeys.py` |
-| Passkeys require user verification; challenges are single-use | `apps/accounts/passkeys.py` | `tests/accounts/test_passkeys.py`, `tests/e2e/test_passkey.py` |
+| Passkeys require user verification; challenges are single-use | `apps/accounts/passkeys.py` | `tests/accounts/test_passkeys.py`, `tests/js/test_passkeys.js` |
 | Post-sign-in redirects stay on this site | `apps/core/redirects.py: safe_next` | `tests/core/test_redirects.py` |
 | The admin has no password form: staff sign in like everyone else | `admin_login` | `tests/accounts/test_views.py` |
-| Signing out drops cached pages on the device | `pwa.js` (`data-sign-out`) | by hand |
+| Signing out drops cached pages on the device, including one cached mid-sign-out; unsent writes stay, sent only as the user who made them | `pwa.js` (`data-sign-out`), `sw_worker.js`, `outbox.js` | `tests/js/test_sw_worker.js`, `tests/js/test_outbox.js`; the form's clean-up by hand |
+| The design page is staff only: signed out goes to sign-in, signed in without staff gets a 404 | `apps/design/views.py` | `tests/design/` |
 | Each keyed write runs at most once, per user, per body | `apps/core/idempotency.py` | `tests/core/test_idempotency.py` |
 | Signed-out writes get 401, never a redirect | `login_required_json` | `tests/core/test_decorators.py` |
 | Python security lint (bandit rules) | ruff `S` | `tox -e lint` |
