@@ -2,7 +2,6 @@
 {% load static %}
 {% block title %}Map · {{ day|date:"D j M" }} · {{ SITE_NAME }}{% endblock %}
 {% block head %}<link rel="stylesheet" href="{% static 'vendor/maplibre-gl-4.7.1.css' %}">{% endblock %}
-{% block topbar %}{% endblock %}
 {% block main %}
   <main class="map-page">
     <div class="map-canvas" id="map" data-resort-map
@@ -27,7 +26,6 @@
           </span>
           <a class="icon-button" data-day-link="1" href="?date={{ next_day|date:'Y-m-d' }}{% if pass_slug %}&pass={{ pass_slug }}{% endif %}" aria-label="Next day">{% include "includes/icons/chevron-right.html" %}</a>
         </nav>
-        <a class="icon-button icon-button--boxed" style="border-radius:50%" href="{% url 'accounts:settings' %}" aria-label="Your account">{% include "includes/icons/user.html" %}</a>
       </div>
       <div class="map-search" data-map-search>
         <label class="visually-hidden" for="map-search-input">Find a resort</label>
