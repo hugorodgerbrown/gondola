@@ -106,8 +106,9 @@ Never run a bare `pytest`; use `uv run`. Dependencies: `uv add` /
 - The MCP endpoint is `/mcp` (`apps/mcp`, from the Titan template); auth
   is the shared `mcp-auth` app, pinned to a tag. A tool runs as the
   token's user and reaches people only through their groups (`friend_ids`,
-  `Group.objects.for_user`). Any active account may connect
-  (`mcp_auth.policy.active_user`).
+  `Group.objects.for_user`), and then only as counts: no tool returns a
+  friend's name (docs/decisions/mcp-never-names-friends.md). Any active
+  account may connect (`mcp_auth.policy.active_user`).
 - Product analytics are fivebar goals: queue one with
   `apps.core.analytics.record`, or `data-tally` on a clicked element.
 

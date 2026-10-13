@@ -1,10 +1,14 @@
 """apps/mcp/tools.py — The MCP tools. Each is a function of (user, arguments).
 
-Every tool runs as the token's user and sees exactly what the app shows
-them: their own days, and the days of everyone they share a group with
+Every tool runs as the token's user. It sees their own days in full, but
+nobody else is ever named: about the people they share a group with
 (``friend_ids``, which goes through ``Group.objects.for_user`` so demo
-groups never show). Writes only ever touch the user's own days, through
-``update_plans`` and ``clear_plans`` like the calendar.
+groups never show) a tool answers only with counts, how many will be in
+each resort on each day. What an assistant reads leaves Gondola for the
+company that runs it, and group-mates agreed to share their days with the
+group, not with that company (docs/decisions/mcp-never-names-friends.md).
+Writes only ever touch the user's own days, through ``update_plans`` and
+``clear_plans`` like the calendar.
 
 Add a tool by writing a function and listing it in TOOLS with its JSON
 Schema. Raise ToolError for a mistake the model should see and correct.
@@ -19,9 +23,11 @@ from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 from typing import Any
 
+from django.db.models import Count
+
 from apps.accounts.models import User
 from apps.groups.models import Group, PlanDay
-from apps.groups.services.people import friend_ids, members_of
+from apps.groups.services.people import friend_ids
 from apps.groups.services.plans import (
     PLAN_HORIZON_DAYS,
     clear_plans,
@@ -216,16 +222,13 @@ def clear_days(user: User, args: dict[str, Any]) -> dict[str, Any]:
 
 
 def my_groups(user: User, args: dict[str, Any]) -> dict[str, Any]:
-    """Return the user's groups and who is in each."""
-    groups = Group.objects.for_user(user).select_related("owner").order_by("name")
+    """Return the user's groups: each one's name, size and whether they own it."""
+    # Count from a fresh query: for_user's own join to memberships would count only the user.
+    mine = Group.objects.for_user(user).values("pk")
+    groups = Group.objects.filter(pk__in=mine).annotate(size=Count("memberships")).order_by("name")
     return {
         "groups": [
-            {
-                "name": g.name,
-                "owner": g.owner.to_string(),
-                "members": [m.to_string() for m in members_of(g)],
-            }
-            for g in groups
+            {"name": g.name, "members": g.size, "yours": g.owner_id == user.pk} for g in groups
         ]
     }
 
@@ -251,54 +254,50 @@ def _people(user: User, args: dict[str, Any]) -> set[int]:
     return friend_ids(user) | {user.pk}
 
 
+@dataclass
+class _Spot:
+    """One resort on one day: how many friends will be there, and whether the user will."""
+
+    friends: int = 0
+    you: bool = False
+
+
 def whos_where(user: User, args: dict[str, Any]) -> dict[str, Any]:
-    """Return, day by day, which resort each of the user's people will be in."""
+    """Return, day by day, how many friends will be in each resort, and where the user is.
+
+    Counts only: no friend is named, so nothing identifies anyone but the user.
+    """
     days = _dates(args, limit=MAX_BOARD_DAYS, default=1)
     plans = PlanDay.objects.filter(user_id__in=_people(user, args), date__in=days).select_related(
-        "user", "resort"
+        "resort"
     )
     if "resort" in args:
         plans = plans.filter(resort=_resort(_text(args, "resort")))
-    board: dict[datetime.date, dict[Resort, list[str]]] = defaultdict(lambda: defaultdict(list))
+    board: dict[datetime.date, dict[Resort, _Spot]] = defaultdict(lambda: defaultdict(_Spot))
     for plan in plans.order_by("date", "resort__name"):
-        name = "you" if plan.user_id == user.pk else plan.user.to_string()
-        board[plan.date][plan.resort].append(name)
+        spot = board[plan.date][plan.resort]
+        if plan.user_id == user.pk:
+            spot.you = True
+        else:
+            spot.friends += 1
     return {
         "days": [
             {
                 "date": day.isoformat(),
                 "weekday": f"{day:%A}",
                 "resorts": [
-                    {"resort": r.name, "code": r.display_code, "people": people}
-                    for r, people in board[day].items()
+                    {
+                        "resort": r.name,
+                        "code": r.display_code,
+                        "friends": spot.friends,
+                        "you": spot.you,
+                    }
+                    for r, spot in board[day].items()
                 ],
             }
             for day in days
             if day in board
         ]
-    }
-
-
-def _friend(user: User, query: str) -> User:
-    """Return the one person in the user's groups that ``query`` names."""
-    folded = fold(query)
-    people = list(User.objects.filter(pk__in=friend_ids(user)))
-    exact = [p for p in people if fold(p.to_string()) == folded]
-    matches = exact or [p for p in people if folded in fold(p.to_string())]
-    if len(matches) == 1:
-        return matches[0]
-    if not matches:
-        raise ToolError(f"No one in your groups is called {query!r}.")
-    names = ", ".join(p.to_string() for p in matches)
-    raise ToolError(f"{query!r} could be {names}. Say which.")
-
-
-def where_is(user: User, args: dict[str, Any]) -> dict[str, Any]:
-    """Return where one person in the user's groups will be, from today on."""
-    friend = _friend(user, _text(args, "person"))
-    return {
-        "person": friend.to_string(),
-        "days": [_day(p) for p in _own_days(friend, args)],
     }
 
 
@@ -384,15 +383,19 @@ TOOLS: dict[str, Tool] = {
         ),
         Tool(
             name="my_groups",
-            description="The user's groups, each with its owner and members.",
+            description=(
+                "The user's groups: each one's name, how many members it has, "
+                "and whether the user owns it. Members are never named."
+            ),
             input_schema={"type": "object", "properties": {}},
             func=my_groups,
         ),
         Tool(
             name="whos_where",
             description=(
-                f"Who will be in which resort, day by day, among the user and "
-                f"everyone in their groups ('you' is the user). Today unless "
+                f"How many of the user's friends (everyone in their groups) will "
+                f"be in each resort, day by day, and where the user will be "
+                f"(you: true). Friends are counted, never named. Today unless "
                 f"dates or from/to are given; at most {MAX_BOARD_DAYS} days. "
                 f"Narrow it to one group or one resort."
             ),
@@ -405,22 +408,6 @@ TOOLS: dict[str, Tool] = {
                 },
             },
             func=whos_where,
-        ),
-        Tool(
-            name="where_is",
-            description=(
-                "Where one person in the user's groups will be: their said days, "
-                "from today on unless dates or from/to are given."
-            ),
-            input_schema={
-                "type": "object",
-                "properties": {
-                    **DAYS,
-                    "person": {"type": "string", "description": "Their name."},
-                },
-                "required": ["person"],
-            },
-            func=where_is,
         ),
         Tool(
             name="privacy_policy",

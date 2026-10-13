@@ -24,6 +24,7 @@ What is on by default, and what checks it.
 | Secrets in commits | gitleaks | pre-commit and CI |
 | Dependency updates | Dependabot (uv, npm, actions) | weekly PRs |
 | MCP: OAuth 2.1, PKCE, audience-bound tokens; any active account, acting only as itself through its groups | `mcp-auth`, `apps/mcp/` | `tests/mcp/` |
+| MCP never names a friend: other people come back as counts only | `apps/mcp/tools.py` | `tests/mcp/test_tools.py` |
 | Group-mates only: a person's friends are found through `Group.objects.for_user`, which hides demo groups | `apps/groups/` | `tests/groups/`, `tests/tour/` |
 
 ## Invariants
