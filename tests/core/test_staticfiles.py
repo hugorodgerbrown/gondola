@@ -1,5 +1,4 @@
-"""
-tests/core/test_staticfiles.py — collectstatic with the production storage.
+"""tests/core/test_staticfiles.py — collectstatic with the production storage.
 
 Development serves static files unhashed, so a broken reference inside a
 vendored file (such as a source map comment pointing at a file we don't
@@ -14,9 +13,7 @@ from django.test import override_settings
 
 PRODUCTION_STORAGES = {
     "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
-    "staticfiles": {
-        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage"
-    },
+    "staticfiles": {"BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage"},
 }
 
 

@@ -1,5 +1,4 @@
-"""
-apps/accounts/forms.py — Forms for signing in, the profile and the admin.
+"""apps/accounts/forms.py — Forms for signing in, the profile and the admin.
 
 Django's stock user forms name a ``username`` field this model doesn't
 have, so the admin needs the two subclasses at the bottom.
@@ -46,9 +45,7 @@ class ProfileForm(forms.ModelForm):
             "evening_email_enabled": "Email me the evening before I ski",
         }
         widgets = {
-            "display_name": forms.TextInput(
-                attrs={"class": "input", "autocomplete": "given-name"}
-            ),
+            "display_name": forms.TextInput(attrs={"class": "input", "autocomplete": "given-name"}),
         }
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:

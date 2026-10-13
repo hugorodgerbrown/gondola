@@ -70,14 +70,10 @@ def test_month_day_summary_for_quiet_days(crew: Crew) -> None:
 
 def test_month_day_plan_words(crew: Crew) -> None:
     plan = plans.set_plan(crew.sam, crew.day, crew.verbier)
-    day = month.MonthDay(
-        date=crew.day, in_month=True, is_today=False, plannable=True, plan=plan
-    )
+    day = month.MonthDay(date=crew.day, in_month=True, is_today=False, plannable=True, plan=plan)
     assert day.plan_words == "In Verbier"
     assert (
-        month.MonthDay(
-            date=crew.day, in_month=True, is_today=False, plannable=True
-        ).plan_words
+        month.MonthDay(date=crew.day, in_month=True, is_today=False, plannable=True).plan_words
         == ""
     )
 

@@ -7,12 +7,8 @@ against a stand-in for the historical model.
 import importlib
 from unittest import mock
 
-skiing_yes_or_no = importlib.import_module(
-    "apps.groups.migrations.0006_planday_skiing_yes_or_no"
-)
-no_private_days = importlib.import_module(
-    "apps.groups.migrations.0007_remove_planday_is_private"
-)
+skiing_yes_or_no = importlib.import_module("apps.groups.migrations.0006_planday_skiing_yes_or_no")
+no_private_days = importlib.import_module("apps.groups.migrations.0007_remove_planday_is_private")
 in_town = importlib.import_module("apps.groups.migrations.0009_planday_in_town")
 
 
@@ -24,9 +20,7 @@ def test_not_sure_days_become_around_or_are_cleared() -> None:
     there, nowhere = unsure.return_value.filter.call_args_list
     assert there == mock.call(resort__isnull=False)
     assert nowhere == mock.call(resort__isnull=True)
-    unsure.return_value.filter.return_value.update.assert_called_once_with(
-        skiing="not_skiing"
-    )
+    unsure.return_value.filter.return_value.update.assert_called_once_with(skiing="not_skiing")
     unsure.return_value.filter.return_value.delete.assert_called_once_with()
 
 

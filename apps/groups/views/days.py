@@ -1,5 +1,4 @@
-"""
-apps/groups/views/days.py — the calendar, and the sheet for one day.
+"""apps/groups/views/days.py — the calendar, and the sheet for one day.
 
 The calendar is about you: a month, this month by default; arrows step a
 month (``?from=``, any day in it) as far as plans can be made. A day shows
@@ -228,9 +227,7 @@ def _sheet(
     user = current_user(request)
     plans = {
         plan.date: plan
-        for plan in PlanDay.objects.filter(user=user, date__in=days).select_related(
-            "resort"
-        )
+        for plan in PlanDay.objects.filter(user=user, date__in=days).select_related("resort")
     }
     initial, mixed = _initial(days, plans)
     # Bound on any POST, even an empty one, so a missing resort is an error.
@@ -260,9 +257,7 @@ def _sheet(
             "friends": friends,
             # The days' own resorts that no friend has picked, to keep them
             # one tap away.
-            "elsewhere": sorted(
-                (r for r in picks if r.pk not in listed), key=lambda r: r.name
-            ),
+            "elsewhere": sorted((r for r in picks if r.pk not in listed), key=lambda r: r.name),
             "selected": selected,
             "groups_count": Group.objects.for_user(user).count(),
             "back": _request_back(request),

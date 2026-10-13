@@ -18,7 +18,7 @@ def test_search_ranks_and_ignores_accents() -> None:
     ResortFactory.create(name="Champex", code="CHA")
     ResortFactory.create(name="Grimentz")
     assert [r.name for r in search_resorts("champ")] == ["Champex", "Champéry"]
-    assert [r.name for r in search_resorts("CHAM")][0] == "Champéry"
+    assert search_resorts("CHAM")[0].name == "Champéry"
     assert [r.name for r in search_resorts("diab")] == ["Les Diablerets"]
     assert [r.name for r in search_resorts("ment")] == ["Grimentz"]
     assert search_resorts("  ") == []

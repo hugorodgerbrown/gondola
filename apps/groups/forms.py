@@ -1,5 +1,4 @@
-"""
-apps/groups/forms.py — Forms for days and groups.
+"""apps/groups/forms.py — Forms for days and groups.
 
 Resorts arrive as their public uuid (never the database id), from radio
 buttons in the day sheet. Every day needs a resort.
@@ -42,7 +41,5 @@ class GroupForm(forms.ModelForm):
         fields = ("name",)
         labels = {"name": "Group name"}
         widgets = {
-            "name": forms.TextInput(
-                attrs={"class": "input", "placeholder": "e.g. Thursday crew"}
-            )
+            "name": forms.TextInput(attrs={"class": "input", "placeholder": "e.g. Thursday crew"})
         }

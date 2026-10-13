@@ -10,6 +10,7 @@
     <div class="tour-card__actions">
       <button type="button" class="button button--secondary" data-tour-close>Later</button>
       {% if handoff.go_url %}
+        {# nosemgrep: generic.html-templates.security.var-in-href.var-in-href -- an invite path or a reverse()d URL #}
         <a class="button" href="{{ handoff.go_url }}">Let's go</a>
       {% else %}
         <button type="button" class="button" data-tour-close>Let's go</button>

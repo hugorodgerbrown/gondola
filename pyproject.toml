@@ -1,54 +1,55 @@
 [project]
 name = "gondola"
 version = "0.1.0"
-description = "Plan who is skiing at which resort on which day, and meet up."
-authors = [{ name = "Hugo Rodger-Brown" }]
-requires-python = ">=3.14,<4"
-readme = "README.md"
-classifiers = [
-    "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.14",
-]
+description = "Plan who is skiing at which resort on which day."
+authors = [{ name = "Hugo Rodger-Brown", email = "hugo@rodger-brown.com" }]
+requires-python = ">=3.14,<3.15"
 dependencies = [
-    "Django>=6.0.7,<7",
-    "python-decouple>=3.8,<4",
     "dj-database-url>=3.1.2,<4",
-    "psycopg[binary]>=3.3.4,<4",
-    "whitenoise>=6.12.0,<7",
-    "gunicorn>=26.0.0,<27",
-    "webauthn>=3.0.0,<4",
+    "django>=6.1.1,<6.2",
+    "gunicorn>=26.2.0,<27",
     "mcp-auth",
+    "psycopg[binary]>=3.3.6,<4",
+    "python-decouple>=3.8,<4",
+    "webauthn>=3.0.0,<4",
+    "whitenoise>=6.12.0,<7",
 ]
 
+# One group per tox env, so each env installs only what it needs. `dev`
+# composes them all for a local `uv sync`.
 [dependency-groups]
-# Purpose-scoped groups map 1:1 to tox envs (each env syncs only its own
-# group via tox-uv). `dev` composes them all for a local `uv sync`.
 test = [
-    "coverage>=7,<8",
-    "pytest>=9.0.3,<10",
-    "pytest-cov>=7.1.0,<8",
-    "pytest-django>=4.12.0,<5",
     "factory-boy>=3.3.3,<4",
     "freezegun>=1.5.5,<2",
-]
-type = [
-    "mypy>=2.3.0,<2.5",
-    "django-stubs>=6.0.2,<7",
-    # mypy also checks tests/, so it needs the test-authoring packages.
-    {include-group = "test"},
+    "pytest>=9.1.1,<10",
+    "pytest-cov>=7.1.0,<8",
+    "pytest-django>=4.14.0,<5",
+    "pytest-xdist>=3.8.0,<4",
 ]
 lint = [
-    # Pinned EXACT so `uv lock --upgrade` can't float ruff ahead of the
-    # pre-commit pin. Bump this and .pre-commit-config.yaml's rev together.
+    # Exact pin, bumped in step with .pre-commit-config.yaml so the hook and
+    # CI never disagree.
     "ruff==0.16.10",
+]
+types = [
+    "django-stubs>=6.0.2,<7",
+    "mypy>=2.3.0,<2.5",
+    # mypy checks tests/ too (browser journeys included), so it needs their packages.
+    {include-group = "e2e"},
+]
+e2e = [
+    "playwright>=1.62.0,<1.64",
+    "pytest-playwright>=0.7,<0.10",
+    {include-group = "test"},
 ]
 dev = [
     "pre-commit>=4.6.1,<5",
     "tox>=4.52.1,<5",
     "tox-uv>=1.0,<2",
     {include-group = "test"},
-    {include-group = "type"},
     {include-group = "lint"},
+    {include-group = "types"},
+    {include-group = "e2e"},
 ]
 
 [tool.uv]
@@ -59,92 +60,78 @@ default-groups = ["dev"]
 # The shared Titan MCP auth app, pinned to a release tag.
 mcp-auth = { git = "https://github.com/hugorodgerbrown/mcp-auth", tag = "v0.1.2" }
 
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "config.settings"
+pythonpath = ["."]
+testpaths = ["tests"]
+addopts = "--ignore=tests/e2e --ignore=tests/js"
+filterwarnings = ["ignore:No directory at:UserWarning"]
+
+[tool.ruff]
+target-version = "py314"
+line-length = 100
+extend-exclude = ["*/migrations/*"]
+
+[tool.ruff.lint]
+select = [
+    "E", "F", "I", "B", "UP", "DJ",
+    "S",    # flake8-bandit: security
+    "SIM",  # simplifications
+    "C4",   # comprehensions
+    "PT",   # pytest style
+    "PIE",
+    "RET",
+    "RUF",
+    "T20",  # stray print()
+    "DTZ",  # naive datetimes
+    "D",    # a docstring on every module, class and function
+]
+ignore = [
+    "RUF012",  # Django's Meta and admin options are mutable class attributes by design.
+    "D105", "D107",  # dunder methods and __init__ are documented by their class
+    "RUF001",  # Gondola's copy uses typographic dashes (1 – 9 December) on purpose.
+]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = [
+    "S101", "S105", "S106",
+    # Gondola's tests are named for what they check; no docstring each.
+    "D1",
+    "PT018",  # assert a and b: one line reads better for a pair of facts
+]
+"**/migrations/*" = ["D"]
+# The template writes its free-form answers (name, description) here verbatim.
+"apps/pwa/conf.py" = ["E501"]
+
 [tool.mypy]
-plugins = ["mypy_django_plugin.main"]
 python_version = "3.14"
-strict = false
+plugins = ["mypy_django_plugin.main"]
 strict_optional = true
-ignore_missing_imports = true
-follow_imports = "silent"
 warn_return_any = true
 warn_unused_configs = true
 warn_redundant_casts = true
 warn_unused_ignores = true
 warn_unreachable = true
 disallow_untyped_defs = true
+disallow_incomplete_defs = true
+exclude = ["/migrations/", "^\\.venv/", "^node_modules/"]
 
 [[tool.mypy.overrides]]
-module = ["*.migrations.*", "*.settings.*"]
-ignore_errors = true
+module = ["decouple", "factory", "factory.*", "oauth2_provider.*"]
+ignore_missing_imports = true
 
 [tool.django-stubs]
-django_settings_module = "config.settings.development"
-
-[tool.pytest.ini_options]
-DJANGO_SETTINGS_MODULE = "config.settings.development"
-pythonpath = ["."]
-testpaths = ["tests"]
-django_debug_mode = "keep"
+django_settings_module = "config.settings"
 
 [tool.coverage.run]
-branch = true
-omit = [
-    "*/migrations/*",
-    "config/*",
-    "manage.py",
-]
+source = ["apps", "config"]
+omit = ["*/migrations/*", "config/asgi.py", "config/wsgi.py"]
 
 [tool.coverage.report]
 fail_under = 90
+skip_empty = true
 show_missing = true
-exclude_lines = [
-    "pragma: no cover",
-    "if TYPE_CHECKING:",
-    "if __name__ == .__main__.",
-]
-
-[tool.ruff]
-line-length = 88
-extend-exclude = ["*.md"]
-
-[tool.ruff.lint]
-select = [
-    "A",   # flake8 builtins
-    "C9",  # mccabe
-    "D",   # pydocstyle
-    "E",   # pycodestyle (errors)
-    "F",   # Pyflakes
-    "I",   # isort
-    "S",   # flake8-bandit
-    "T2",  # flake8-print
-    "W",   # pycodestyle (warnings)
-]
-ignore = [
-    "D203",  # 1 blank line required before class docstring
-    "D212",  # Multi-line docstring summary should start at the first line
-    "D213",  # Multi-line docstring summary should start at the second line
-]
-
-[tool.ruff.lint.isort]
-combine-as-imports = true
-
-[tool.ruff.lint.mccabe]
-max-complexity = 8
-
-[tool.ruff.lint.per-file-ignores]
-"__init__.py" = ["D"]
-"*tests/*" = [
-    "D1",    # Missing docstrings
-    "D205",  # 1 blank line required between summary line and description
-    "D400",  # First line should end with a period
-    "D401",  # First line should be in imperative mood
-    "D415",  # First line should end with a period, question mark, or exclamation point
-    "E501",  # Line too long
-    "S101",  # Use of assert detected
-    "S105",  # Possible hardcoded password
-    "S106",  # Possible hardcoded password
-]
-"*/migrations/*" = [
-    "D1",    # Missing docstrings
-    "E501",  # Line too long
-]
+exclude_also = ["if TYPE_CHECKING:"]

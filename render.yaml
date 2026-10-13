@@ -1,42 +1,45 @@
-# render.yaml — Render blueprint: one web service, named after the app as
-# titan (the Titan provisioner in django-titan-template) expects.
-#
-# It uses the existing shared-db Postgres instance rather than a database of
-# its own, and there are no scheduled jobs for now (so no <app>-purge cron
-# job): run `send_evening_emails --commit` by hand (Render shell) when wanted.
+# Render Blueprint: one web service, named after the app as titan (the Titan
+# provisioner in django-titan-template) expects.
 #
 # Settings come from two env groups that titan makes and fills; they are
 # referenced here, not declared, so a Blueprint sync never overwrites them:
 #
-# - titan: shared by every Titan app (DJANGO_DEBUG, PYTHON_VERSION, hosts
-#   and CSRF origins under ultraniche.ai, the SMTP relay).
-# - gondola: this app's own (DATABASE_URL, DJANGO_SECRET_KEY, the mail key
-#   and sender, SITE_URL).
+# - titan: shared by every Titan app (debug off, the Python version, hosts
+#   and origins under the parent domain, the SMTP relay).
+# - gondola: this app's own (DATABASE_URL, DJANGO_SECRET_KEY, the mail
+#   key and sender, SITE_URL and FIVEBAR_DOMAIN).
 #
 # A value set on the service itself wins over both groups, so an override
 # for this app goes there. Nothing secret lives in this file.
-
+#
+# Unlike the template there is no daily clean-up job: expired idempotency
+# records are purged on each deploy instead. Run `send_evening_emails
+# --commit` by hand (Render shell) when wanted.
+#
+# uv is pinned: the build runs with the service's secrets in its environment,
+# so it installs a known version, and uv then installs exactly what uv.lock lists.
 services:
   - type: web
     name: gondola
     runtime: python
-    plan: starter
     region: frankfurt
+    plan: starter
     buildCommand: >-
-      pip install uv &&
-      uv sync --frozen --no-dev &&
+      pip install uv==0.12.22 && uv sync --locked --no-dev &&
       uv run --no-sync python manage.py collectstatic --noinput
+    # Runs before each deploy goes live; a failed migration stops the deploy.
     preDeployCommand: >-
       uv run --no-sync python manage.py migrate --noinput &&
-      uv run --no-sync python manage.py import_resorts --commit
-    startCommand: uv run --no-sync gunicorn config.wsgi:application --bind 0.0.0.0:$PORT
+      uv run --no-sync python manage.py import_resorts --commit &&
+      uv run --no-sync python manage.py purge_idempotency_records --commit
+    startCommand: uv run --no-sync gunicorn config.wsgi --bind 0.0.0.0:$PORT --access-logfile -
     # Answers 200 while the process is up; no sign-in, no database query.
     # (/healthz also reads the database; titan checks it after a deploy.)
     healthCheckPath: /livez
     envVars:
       - fromGroup: titan
       - fromGroup: gondola
-      # manage.py defaults to development settings; the pre-deploy commands
-      # run through it.
+      # One settings module now (config/settings.py). Set here so a Blueprint
+      # sync replaces the old config.settings.production value.
       - key: DJANGO_SETTINGS_MODULE
-        value: config.settings.production
+        value: config.settings

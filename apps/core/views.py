@@ -1,5 +1,4 @@
-"""
-apps/core/views.py — The front page and the installable-app plumbing.
+"""apps/core/views.py — The front page and the installable-app plumbing.
 
 * ``home`` explains the app to a signed-out visitor and sends a signed-in
   one to the map.
@@ -9,6 +8,8 @@ apps/core/views.py — The front page and the installable-app plumbing.
   page asked for was never cached.
 * ``livez`` and ``healthz`` are the health checks: Render's (the process is
   up) and the one titan and uptime monitors use (the database answers).
+* ``csrf_failure`` is Django's CSRF failure page, marked so a keyed write
+  it refused can be retried (``apps.core.idempotency``).
 """
 
 from __future__ import annotations
@@ -22,6 +23,7 @@ from django.db import DatabaseError
 from django.http import HttpRequest, HttpResponse, JsonResponse
 from django.shortcuts import redirect, render
 from django.templatetags.static import static
+from django.views.csrf import csrf_failure as default_csrf_failure
 from django.views.decorators.cache import cache_control, never_cache
 from django.views.decorators.http import require_GET
 
@@ -127,3 +129,16 @@ def healthz(request: HttpRequest) -> HttpResponse:
         logger.exception("healthz: database read failed")
         return HttpResponse("error", status=503, content_type="text/plain")
     return HttpResponse("ok", content_type="text/plain")
+
+
+def csrf_failure(request: HttpRequest, reason: str = "") -> HttpResponse:
+    """Django's CSRF failure page, marked so the outbox can tell it apart.
+
+    A queued write can carry a CSRF token that went stale while it waited
+    (the user signed in again in another tab). ``X-CSRF-Failure`` keeps the
+    idempotency middleware from storing the 403, so the same write, sent
+    again with a fresh token, reaches the view instead of a replayed refusal.
+    """
+    response = default_csrf_failure(request, reason=reason)
+    response["X-CSRF-Failure"] = "1"
+    return response

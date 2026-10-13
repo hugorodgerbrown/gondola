@@ -38,9 +38,7 @@ def test_shipped_sheet_has_no_touring_spots() -> None:
 
 
 def test_dry_run_saves_nothing(tmp_path: Path) -> None:
-    result = _import(
-        tmp_path, f"{UUID_A}\tVerbier\tVS\t46.09\t7.22\t\t\n", commit=False
-    )
+    result = _import(tmp_path, f"{UUID_A}\tVerbier\tVS\t46.09\t7.22\t\t\n", commit=False)
     assert result.resorts_created == 1
     assert result.passes_created == 1
     assert not Resort.objects.exists()
@@ -57,9 +55,7 @@ def test_commit_creates_then_updates(tmp_path: Path) -> None:
     thyon = Resort.objects.get(name="Thyon")
     assert thyon.latitude is None
     assert str(thyon.uuid) == UUID_B
-    assert list(
-        Resort.objects.on_pass("magic-pass").values_list("name", flat=True)
-    ) == ["Verbier"]
+    assert list(Resort.objects.on_pass("magic-pass").values_list("name", flat=True)) == ["Verbier"]
 
     renamed = rows.replace("Thyon", "Thyon 2000")
     second = _import(tmp_path, renamed, commit=True)
@@ -87,9 +83,17 @@ def test_resort_spanning_two_cantons_keeps_both() -> None:
 
 
 def test_value_too_long_for_its_column_is_skipped(tmp_path: Path) -> None:
-    result = _import(
-        tmp_path, f"{UUID_A}\tVerbier\tVALAIS\t46.09\t7.22\t\t\n", commit=True
-    )
+    result = _import(tmp_path, f"{UUID_A}\tVerbier\tVALAIS\t46.09\t7.22\t\t\n", commit=True)
     assert result.resorts_created == 0
     assert "canton" in result.errors[0]
     assert not Resort.objects.exists()
+
+
+def test_only_web_addresses_become_links(tmp_path: Path) -> None:
+    rows = (
+        f"{UUID_A}\tVerbier\tVS\t46.09\t7.22\t\tjavascript:alert(1)\n"
+        f"{UUID_B}\tThyon\tVS\t\t\t\t http://thyon.ch \n"
+    )
+    _import(tmp_path, rows, commit=True)
+    assert Resort.objects.get(name="Verbier").website == ""
+    assert Resort.objects.get(name="Thyon").website == "http://thyon.ch"

@@ -29,9 +29,7 @@ def sam(client: Client, crew: Crew) -> Client:
 # --- sign-in is required ---------------------------------------------------------
 
 
-@pytest.mark.parametrize(
-    "name", ["planning:map", "planning:calendar", "planning:group_list"]
-)
+@pytest.mark.parametrize("name", ["planning:map", "planning:calendar", "planning:group_list"])
 def test_screens_need_sign_in(client: Client, name: str) -> None:
     response = client.get(reverse(name))
     assert response["Location"].startswith(reverse("accounts:sign_in"))
@@ -50,9 +48,7 @@ def test_calendar_is_this_month(sam: Client, crew: Crew) -> None:
     assert cal.previous is None
     # The month is the title; today is selected, blue, and counts the one
     # friend with you.
-    assert f'<h1 class="title title--large">{today:%B %Y}</h1>'.encode() in (
-        response.content
-    )
+    assert f'<h1 class="title title--large">{today:%B %Y}</h1>'.encode() in (response.content)
     assert response.context["selected"].date == today
     assert b"mday--in mday--selected" in response.content
     assert response.context["selected"].count == 1
@@ -65,10 +61,10 @@ def test_calendar_is_this_month(sam: Client, crew: Crew) -> None:
     assert response.context["here"].resort == crew.verbier
     assert response.context["elsewhere"] == []
     assert b"Edit plans" in response.content
-    assert (
-        f"{today:%A} {today.day} {today:%B}, today, Verbier, friends at resorts: Anna, 1 with you".encode()
-        in (response.content)
+    label = (
+        f"{today:%A} {today.day} {today:%B}, today, Verbier, friends at resorts: Anna, 1 with you"
     )
+    assert label.encode() in response.content
 
 
 def test_calendar_steps_a_month(sam: Client, crew: Crew) -> None:
@@ -96,9 +92,7 @@ def test_plain_forms_keep_the_month(sam: Client, crew: Crew) -> None:
     sheet = sam.get(day_url, {"from": first.isoformat()})
     assert f'name="from" value="{first.isoformat()}"'.encode() in sheet.content
     # Back to the month, with the day still selected in the panel.
-    back = (
-        f"{reverse('planning:calendar')}?from={first.isoformat()}&day={far.isoformat()}"
-    )
+    back = f"{reverse('planning:calendar')}?from={first.isoformat()}&day={far.isoformat()}"
     saved = sam.post(
         day_url,
         {"resort": str(crew.verbier.uuid), "from": first.isoformat()},
@@ -112,9 +106,7 @@ def test_plain_forms_keep_the_month(sam: Client, crew: Crew) -> None:
     assert sam.get(reverse("planning:calendar")).context["window_from"] is None
 
 
-def test_a_group_shows_its_people_on_days_you_have_not_said(
-    sam: Client, crew: Crew
-) -> None:
+def test_a_group_shows_its_people_on_days_you_have_not_said(sam: Client, crew: Crew) -> None:
     """My calendar hides pale days; a group shows its people there, pale."""
     far = plans.today() + datetime.timedelta(days=60)
     first = far.replace(day=1).isoformat()
@@ -252,9 +244,7 @@ def test_a_past_day_has_no_plans_button(sam: Client, crew: Crew) -> None:
 
 def test_calendar_without_groups(client: Client, crew: Crew) -> None:
     client.force_login(crew.outsider)
-    assert (
-        b"Nobody sees your days yet" in client.get(reverse("planning:calendar")).content
-    )
+    assert b"Nobody sees your days yet" in client.get(reverse("planning:calendar")).content
 
 
 def test_day_sheet_shows_friends_first(sam: Client, crew: Crew) -> None:
@@ -306,9 +296,7 @@ def test_day_sheet_save_and_clear(sam: Client, crew: Crew) -> None:
     url = reverse("planning:day", kwargs={"day": crew.day})
     response = sam.post(url, {"resort": str(crew.verbier.uuid)})
     # Back to the calendar with the day still in the panel.
-    assert response["Location"] == (
-        f"{reverse('planning:calendar')}?day={crew.day.isoformat()}"
-    )
+    assert response["Location"] == (f"{reverse('planning:calendar')}?day={crew.day.isoformat()}")
     assert PlanDay.objects.get(user=crew.sam).resort == crew.verbier
     assert b"Not sure" not in sam.get(url).content
     assert b"Clear this day" in sam.get(url).content
@@ -347,9 +335,7 @@ def test_several_days_sheet(sam: Client, crew: Crew) -> None:
     assert context["mixed"]
     assert b"Pick a resort to put them all there." in fragment.content
     assert b"Leave as it is" not in fragment.content
-    plans.update_plans(
-        crew.sam, [datetime.date.fromisoformat(day) for day in days], crew.verbier
-    )
+    plans.update_plans(crew.sam, [datetime.date.fromisoformat(day) for day in days], crew.verbier)
     alike = sam.get(several(*days), headers=HTMX)
     assert not alike.context["mixed"]
     assert alike.context["selected"] == str(crew.verbier.uuid)
@@ -375,9 +361,7 @@ def test_several_days_sheet(sam: Client, crew: Crew) -> None:
         ),
     ],
 )
-def test_several_days_titles(
-    sam: Client, crew: Crew, days: list[str], title: str
-) -> None:
+def test_several_days_titles(sam: Client, crew: Crew, days: list[str], title: str) -> None:
     assert sam.get(several(*days), headers=HTMX).context["title"] == title
 
 
@@ -413,9 +397,7 @@ def test_several_days_save_and_clear(sam: Client, crew: Crew) -> None:
     clear = reverse("planning:several_days_clear") + "?days=" + ",".join(days[:2])
     response = sam.post(clear, headers=HTMX)
     assert response["HX-Refresh"] == "true"
-    assert [p.date.isoformat() for p in PlanDay.objects.filter(user=crew.sam)] == [
-        days[2]
-    ]
+    assert [p.date.isoformat() for p in PlanDay.objects.filter(user=crew.sam)] == [days[2]]
 
 
 @freeze_time("2026-10-11 09:00:00+02:00")
@@ -428,14 +410,11 @@ def test_several_days_save_and_clear(sam: Client, crew: Crew) -> None:
         "?days=2026-10-10,2026-12-01",  # yesterday
         "?days="
         + ",".join(
-            (datetime.date(2026, 11, 1) + datetime.timedelta(days=n)).isoformat()
-            for n in range(63)
+            (datetime.date(2026, 11, 1) + datetime.timedelta(days=n)).isoformat() for n in range(63)
         ),
     ],
 )
-def test_several_days_refuses_bad_selections(
-    sam: Client, crew: Crew, query: str
-) -> None:
+def test_several_days_refuses_bad_selections(sam: Client, crew: Crew, query: str) -> None:
     assert sam.get(reverse("planning:several_days") + query).status_code == 404
 
 
@@ -460,9 +439,7 @@ def test_resort_search(sam: Client, crew: Crew) -> None:
 
 def test_map_page(sam: Client, crew: Crew) -> None:
     PassFactory.create(slug="magic-pass", name="Magic Pass")
-    response = sam.get(
-        reverse("planning:map"), {"date": "2027-01-16", "pass": "magic-pass"}
-    )
+    response = sam.get(reverse("planning:map"), {"date": "2027-01-16", "pass": "magic-pass"})
     assert response.context["day"] == datetime.date(2027, 1, 16)
     assert b"Magic Pass" in response.content
     assert b"map/resort/RESORT/" in response.content
@@ -502,9 +479,7 @@ def test_resort_sheet_and_plan_here(sam: Client, crew: Crew) -> None:
     assert b"Anna" in sheet.content
     assert b"I'll be here" in sheet.content
     plans.set_plan(crew.ben, crew.day, crew.verbier)
-    assert b"Around" not in (
-        sam.get(url, {"date": crew.day.isoformat()}, headers=HTMX).content
-    )
+    assert b"Around" not in (sam.get(url, {"date": crew.day.isoformat()}, headers=HTMX).content)
     assert b"meet-up" not in sheet.content
     plan_url = reverse("planning:plan_here", kwargs={"resort_uuid": crew.verbier.uuid})
     response = sam.post(plan_url, {"date": crew.day.isoformat()})
@@ -546,16 +521,12 @@ def test_group_detail_is_members_only(client: Client, crew: Crew) -> None:
     assert b"Leave this group" in page.content
 
 
-def test_group_detail_owner_removes_members_from_a_menu(
-    client: Client, crew: Crew
-) -> None:
+def test_group_detail_owner_removes_members_from_a_menu(client: Client, crew: Crew) -> None:
     """Remove sits behind each member's "…" menu, never on the row itself."""
     url = reverse("planning:group_detail", kwargs={"group_uuid": crew.group.uuid})
     client.force_login(crew.sam)
     html = client.get(url).content.decode()
-    assert (
-        html.count('<details class="row-menu">') == crew.group.memberships.count() - 1
-    )
+    assert html.count('<details class="row-menu">') == crew.group.memberships.count() - 1
     assert f"Remove {crew.anna}</button>" in html
 
 
@@ -622,13 +593,9 @@ def test_invite_flow(client: Client, crew: Crew) -> None:
 def test_reset_invite_kills_old_link(client: Client, crew: Crew) -> None:
     old = crew.group.invite_token
     crew.group.reset_invite_token()
-    assert (
-        client.get(reverse("planning:invite", kwargs={"token": old})).status_code == 404
-    )
+    assert client.get(reverse("planning:invite", kwargs={"token": old})).status_code == 404
     client.force_login(crew.outsider)
-    assert (
-        client.post(reverse("planning:join", kwargs={"token": old})).status_code == 404
-    )
+    assert client.post(reverse("planning:join", kwargs={"token": old})).status_code == 404
 
 
 # --- board ---------------------------------------------------------------------------

@@ -1,5 +1,4 @@
-"""
-apps/groups/management/commands/seed_demo.py — A populated group to try.
+"""apps/groups/management/commands/seed_demo.py — A populated group to try.
 
 Makes six friends in "Thursday crew" with a week of plans, so a tester
 (or a screenshot) finds a busy board, map and calendar. The week starts
@@ -86,8 +85,7 @@ class Command(BaseCommand):
         parser.add_argument(
             "--start",
             type=parse_start,
-            help="The week's first day (YYYY-MM-DD). Default: mid-January "
-            "(today in season).",
+            help="The week's first day (YYYY-MM-DD). Default: mid-January (today in season).",
         )
         parser.add_argument(
             "--email",
@@ -108,8 +106,7 @@ class Command(BaseCommand):
         days = [start + datetime.timedelta(days=n) for n in range(len(WEEK["you"]))]
         if not all(is_plannable(day) for day in days):
             raise CommandError(
-                f"{start:%d %b %Y} can't be planned: pick a week from today "
-                "to a year ahead."
+                f"{start:%d %b %Y} can't be planned: pick a week from today to a year ahead."
             )
         if not options["commit"]:
             self.stdout.write(
@@ -119,9 +116,7 @@ class Command(BaseCommand):
             )
             return
         with transaction.atomic():
-            self._seed(
-                email, days, {code: resorts[name] for code, name in RESORTS.items()}
-            )
+            self._seed(email, days, {code: resorts[name] for code, name in RESORTS.items()})
         self.stdout.write(
             f"Seeded {GROUP_NAME} from {start:%a %d %b %Y}. Sign in as {email} "
             f"and open the calendar at {start:%B}, the board at ?start={start}, or "
@@ -130,17 +125,13 @@ class Command(BaseCommand):
 
     def _person(self, email: str, name: str) -> User:
         """Return the user for ``email``, creating them if needed."""
-        user, created = User.objects.get_or_create(
-            email=email, defaults={"display_name": name}
-        )
+        user, created = User.objects.get_or_create(email=email, defaults={"display_name": name})
         if created:
             user.set_unusable_password()
             user.save(update_fields=["password"])
         return user
 
-    def _seed(
-        self, email: str, days: list[datetime.date], resorts: dict[str, Resort]
-    ) -> None:
+    def _seed(self, email: str, days: list[datetime.date], resorts: dict[str, Resort]) -> None:
         """Write the people, the group and the week."""
         owner = self._person(email, "Sam")
         people = {"you": owner}

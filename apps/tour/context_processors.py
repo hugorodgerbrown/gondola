@@ -1,5 +1,4 @@
-"""
-apps/tour/context_processors.py — What a page needs to play the tour.
+"""apps/tour/context_processors.py — What a page needs to play the tour.
 
 While someone tours, every page gets ``tour.script``: the chapters played
 on that page, as data for ``static/js/tour.js``, and the URLs it posts to.

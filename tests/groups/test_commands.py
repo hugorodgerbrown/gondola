@@ -70,12 +70,14 @@ def test_nothing_new_is_skipped(crew: Crew) -> None:
 
 def test_failure_exits_non_zero(crew: Crew) -> None:
     _tomorrow_plans(crew)
-    with mock.patch(
-        "apps.groups.management.commands.send_evening_emails.send_digest",
-        side_effect=OSError("smtp down"),
+    with (
+        mock.patch(
+            "apps.groups.management.commands.send_evening_emails.send_digest",
+            side_effect=OSError("smtp down"),
+        ),
+        pytest.raises(CommandError, match="3 evening emails failed"),
     ):
-        with pytest.raises(CommandError, match="3 evening emails failed"):
-            call_command("send_evening_emails", "--commit", stdout=StringIO())
+        call_command("send_evening_emails", "--commit", stdout=StringIO())
 
 
 def test_seed_demo_needs_resorts() -> None:
@@ -89,12 +91,8 @@ def test_seed_demo_dry_run_then_commit_twice() -> None:
     call_command("seed_demo", stdout=out)
     assert "Dry run" in out.getvalue()
     assert not Group.objects.exists()
-    call_command(
-        "seed_demo", "--commit", "--email", "Me@Example.com", stdout=StringIO()
-    )
-    call_command(
-        "seed_demo", "--commit", "--email", "me@example.com", stdout=StringIO()
-    )
+    call_command("seed_demo", "--commit", "--email", "Me@Example.com", stdout=StringIO())
+    call_command("seed_demo", "--commit", "--email", "me@example.com", stdout=StringIO())
     group = Group.objects.get()
     assert group.owner.email == "me@example.com"
     assert group.memberships.count() == 6

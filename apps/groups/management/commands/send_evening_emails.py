@@ -1,5 +1,4 @@
-"""
-apps/groups/management/commands/send_evening_emails.py — The nightly email.
+"""apps/groups/management/commands/send_evening_emails.py — The nightly email.
 
 Scheduled once each evening. A bare run lists who would get tomorrow's
 email and sends nothing; ``--commit`` sends. ``--date`` picks another day
@@ -66,8 +65,7 @@ class Command(BaseCommand):
         self._say(
             verbosity,
             1,
-            f"{verb} {count} evening emails for {day:%a %d %b}; "
-            f"{skipped} people had nothing new.",
+            f"{verb} {count} evening emails for {day:%a %d %b}; {skipped} people had nothing new.",
         )
         if not commit:
             self._say(verbosity, 1, "Dry run. Re-run with --commit to send.")

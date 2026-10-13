@@ -1,5 +1,4 @@
-"""
-apps/resorts/services.py — Load the curated resort and pass sheets.
+"""apps/resorts/services.py — Load the curated resort and pass sheets.
 
 ``passes.tsv`` and ``resorts.tsv`` under ``apps/resorts/data/`` are the
 source of truth for reference data, taken from Snowdesk's resort sheet with
@@ -53,6 +52,12 @@ def _float_or_none(value: str) -> float | None:
     return float(value) if value.strip() else None
 
 
+def _web_address(value: str) -> str:
+    """Return ``value`` if it is an http(s) address, else "": it becomes a link."""
+    value = value.strip()
+    return value if value.startswith(("https://", "http://")) else ""
+
+
 def _resort_fields(row: dict[str, str]) -> dict[str, object]:
     """Map a sheet row to Resort field values."""
     return {
@@ -62,7 +67,7 @@ def _resort_fields(row: dict[str, str]) -> dict[str, object]:
         "canton": row["canton"].strip(),
         "latitude": _float_or_none(row["latitude"]),
         "longitude": _float_or_none(row["longitude"]),
-        "website": row["website"].strip(),
+        "website": _web_address(row["website"]),
     }
 
 
@@ -71,7 +76,7 @@ def _import_passes(rows: list[dict[str, str]], result: ImportResult) -> None:
     for row in rows:
         _, created = Pass.objects.get_or_create(
             slug=row["slug"].strip(),
-            defaults={"name": row["name"].strip(), "website": row["website"].strip()},
+            defaults={"name": row["name"].strip(), "website": _web_address(row["website"])},
         )
         result.passes_created += int(created)
 
@@ -106,8 +111,7 @@ def import_sheets(
     resorts_path: Path = RESORTS_PATH,
     commit: bool = False,
 ) -> ImportResult:
-    """
-    Import the pass and resort sheets.
+    """Import the pass and resort sheets.
 
     Runs inside one transaction that is rolled back unless ``commit`` is
     true, so a dry run reports exactly what a real run would do. A bad row

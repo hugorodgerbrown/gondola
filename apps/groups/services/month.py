@@ -1,5 +1,4 @@
-"""
-apps/groups/services/month.py — the calendar, one month at a time.
+"""apps/groups/services/month.py — the calendar, one month at a time.
 
 One month at a time, weeks starting Monday. By default the calendar is
 about the viewer: each day carries their plan and how many friends will be
@@ -133,32 +132,24 @@ def _crowd(plans: list[PlanDay]) -> tuple[ResortFriends | None, int]:
     return crowd, len(by_resort) - 1
 
 
-def build_month(
-    viewer: User, first: datetime.date, group: Group | None = None
-) -> Month:
+def build_month(viewer: User, first: datetime.date, group: Group | None = None) -> Month:
     """Return ``viewer``'s calendar for the month starting ``first``.
 
     With ``group``, a day without the viewer's plan shows where that
     group's people will be.
     """
     first = month_start(first)
-    weeks_of_dates = calendar.Calendar(firstweekday=0).monthdatescalendar(
-        first.year, first.month
-    )
+    weeks_of_dates = calendar.Calendar(firstweekday=0).monthdatescalendar(first.year, first.month)
     dates = [day for week in weeks_of_dates for day in week]
     mine = {
         plan.date: plan
-        for plan in PlanDay.objects.filter(user=viewer, date__in=dates).select_related(
-            "resort"
-        )
+        for plan in PlanDay.objects.filter(user=viewer, date__in=dates).select_related("resort")
     }
     friends: dict[datetime.date, list[str]] = defaultdict(list)
     with_me: dict[datetime.date, int] = defaultdict(int)
     free: dict[datetime.date, list[PlanDay]] = defaultdict(list)
     members = (
-        set(group.memberships.values_list("user_id", flat=True))
-        if group is not None
-        else set()
+        set(group.memberships.values_list("user_id", flat=True)) if group is not None else set()
     )
     for plan in visible_friend_plans(viewer, dates):
         friends[plan.date].append(plan.user.to_string())

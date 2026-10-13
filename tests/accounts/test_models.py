@@ -1,6 +1,7 @@
 """Tests for apps/accounts/models.py."""
 
 import pytest
+from django.core.exceptions import ValidationError
 
 from apps.accounts.models import User, normalise_email
 from tests.factories import UserFactory
@@ -23,6 +24,16 @@ def test_create_user_lowercases_email_and_hashes_password() -> None:
 def test_create_user_without_email_fails() -> None:
     with pytest.raises(ValueError, match="email"):
         User.objects.create_user("")
+
+
+def test_create_user_without_password_has_none() -> None:
+    user = User.objects.create_user("anna@example.com")
+    assert not user.has_usable_password()
+
+
+def test_create_user_validates_the_password() -> None:
+    with pytest.raises(ValidationError):
+        User.objects.create_user("anna@example.com", "123")
 
 
 def test_create_superuser() -> None:

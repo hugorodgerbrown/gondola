@@ -1,5 +1,4 @@
-"""
-apps/groups/services/resort_map.py — What the map shows for a day.
+"""apps/groups/services/resort_map.py — What the map shows for a day.
 
 Every placed resort is a pin; a pass filter narrows them to that pass's
 resorts, but a resort with a friend or your own plan that day always
@@ -20,15 +19,11 @@ from .people import visible_friend_plans
 from .plans import friend_counts
 
 
-def map_pins(
-    viewer: User, day: datetime.date, pass_slug: str = ""
-) -> list[dict[str, object]]:
+def map_pins(viewer: User, day: datetime.date, pass_slug: str = "") -> list[dict[str, object]]:
     """Return one pin per placed resort, as plain data for the map script."""
     counts = friend_counts(viewer, day)
     mine_ids = set(
-        PlanDay.objects.filter(user=viewer, date=day).values_list(
-            "resort_id", flat=True
-        )
+        PlanDay.objects.filter(user=viewer, date=day).values_list("resort_id", flat=True)
     )
     keep = set(counts) | mine_ids
     resorts = Resort.objects.placed().prefetch_related("passes")
@@ -101,7 +96,5 @@ def resort_day(viewer: User, resort: Resort, day: datetime.date) -> ResortDay:
         here = [p for p in plans if p.user_id in member_ids]
         if here:
             groups.append(GroupAtResort(group=group, plans=here))
-    my_plan = (
-        PlanDay.objects.filter(user=viewer, date=day).select_related("resort").first()
-    )
+    my_plan = PlanDay.objects.filter(user=viewer, date=day).select_related("resort").first()
     return ResortDay(resort=resort, day=day, groups=groups, my_plan=my_plan)

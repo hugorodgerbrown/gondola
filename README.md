@@ -22,7 +22,7 @@ group chat. An email the evening before sums up tomorrow.
 
 ```bash
 cp .env.example .env
-uv sync
+uv sync && npm install
 uv run python manage.py migrate
 uv run python manage.py import_resorts --commit             # resorts and passes
 uv run python manage.py seed_demo --commit --email you@example.com  # a busy January week
@@ -60,10 +60,11 @@ The service reads two env groups: `titan`, shared by every Titan app
 (debug off, the Python version, hosts and CSRF origins under
 ultraniche.ai, the SMTP relay), and `gondola`, its own (`DATABASE_URL`,
 `DJANGO_SECRET_KEY`, the mail key and sender, `SITE_URL`). Only
-`DJANGO_SETTINGS_MODULE` is set in `render.yaml`. To override a shared
+`DJANGO_SETTINGS_MODULE` (`config.settings`) is set in `render.yaml`. To override a shared
 value for Gondola alone, set it on the service, which wins over both
 groups. The settings read Titan's `DJANGO_*` names as well as the bare
-ones, and the host in `SITE_URL` is always allowed.
+ones, and the host in `SITE_URL` is always allowed. On Render debug is
+off unless `DJANGO_DEBUG` turns it on.
 
 `SITE_URL` must be the address people use, because passkeys are tied to its
 domain: a passkey added on `gondola.ultraniche.ai` won't work on the
@@ -77,15 +78,16 @@ address in use, the passkey endpoints answer 409 and log
 `tox` runs everything CI runs:
 
 ```bash
-uv run tox              # fmt, lint, mypy, django-checks, migrations, test
+uv run tox              # fmt, lint, types, checks, test, js, audit
 uv run tox -e test      # one env
+uv run tox -e sast      # semgrep (downloads rule packs; CI runs it too)
 ```
 
 ## Layout
 
 ```
-config/settings/   base, development, production
-apps/core/         BaseModel, tokens, the front page, manifest and service worker
+config/            settings.py (one module, env-driven), urls, wsgi/asgi
+apps/core/         BaseModel, idempotency, tokens, the front page, manifest and service worker
 apps/accounts/     User, emailed sign-in links, the account page
 apps/resorts/      Pass, Resort, the resort sheets, import_resorts, search
 apps/groups/       Group, Membership, PlanDay;
@@ -95,7 +97,8 @@ apps/tour/         the onboarding tour (docs/onboarding-tour.md)
 apps/mcp/          the MCP endpoint (/mcp) and its tools; auth is mcp-auth
 templates/         base.html and shared includes
 static/            app.css, app.js, map.js, vendored htmx and MapLibre
-tests/             mirrors apps/
+tests/             mirrors apps/; tests/js holds the Vitest tests
+docs/              testing, the onboarding tour, decisions/
 ```
 
 ## Connecting Claude (MCP)

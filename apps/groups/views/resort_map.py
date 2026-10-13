@@ -1,5 +1,4 @@
-"""
-apps/groups/views/resort_map.py — The resort map and the resort sheet.
+"""apps/groups/views/resort_map.py — The resort map and the resort sheet.
 
 The map page is a shell; its script fetches ``map_pins`` for the chosen
 day and pass, and opens ``resort_sheet`` when a pin is tapped. The day and
@@ -86,9 +85,7 @@ def pins(request: HttpRequest) -> JsonResponse:
 @require_GET
 def resort_sheet(request: HttpRequest, resort_uuid: str) -> HttpResponse:
     """Show who from your groups is at a resort on a day."""
-    resort = get_object_or_404(
-        Resort.objects.prefetch_related("passes"), uuid=resort_uuid
-    )
+    resort = get_object_or_404(Resort.objects.prefetch_related("passes"), uuid=resort_uuid)
     day = parse_day(request.GET.get("date"))
     user = current_user(request)
     return render_sheet(

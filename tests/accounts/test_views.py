@@ -1,6 +1,7 @@
 """Tests for apps/accounts/views.py."""
 
 import re
+from typing import Any
 from urllib.parse import urlencode
 
 import pytest
@@ -27,7 +28,8 @@ def test_sign_in_page_renders(client: Client) -> None:
     assert b"Email me a link" in response.content
 
 
-def test_full_sign_up_flow(client: Client) -> None:
+def test_full_sign_up_flow(client: Client, settings: Any) -> None:
+    settings.DEBUG = True
     response = client.post(
         reverse("accounts:sign_in"), {"email": "Hugo@Example.com", "next": "/days/"}
     )
@@ -38,9 +40,7 @@ def test_full_sign_up_flow(client: Client) -> None:
     welcome = client.get(_link_from_outbox())
     assert welcome["Location"] == f"{reverse('accounts:welcome')}?next=%2Fdays%2F"
     assert client.get(welcome["Location"]).status_code == 200
-    done = client.post(
-        reverse("accounts:welcome"), {"display_name": " Hugo ", "next": "/days/"}
-    )
+    done = client.post(reverse("accounts:welcome"), {"display_name": " Hugo ", "next": "/days/"})
     # A passkey is suggested once, then the tour is offered, on the way to
     # where they were going.
     offer = f"{reverse('tour:offer')}?next=%2Fdays%2F"
@@ -56,9 +56,7 @@ def test_full_sign_up_flow(client: Client) -> None:
 
 def test_new_account_keeps_every_query_parameter_of_next(client: Client) -> None:
     next_url = "/map/?date=2027-01-16&pass=magic-pass"
-    client.post(
-        reverse("accounts:sign_in"), {"email": "new@example.com", "next": next_url}
-    )
+    client.post(reverse("accounts:sign_in"), {"email": "new@example.com", "next": next_url})
     welcome = client.get(_link_from_outbox())
     page = client.get(welcome["Location"])
     assert page.status_code == 200

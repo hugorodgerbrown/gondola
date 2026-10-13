@@ -1,5 +1,4 @@
-"""
-apps/groups/services/memberships.py — Making, joining and leaving groups.
+"""apps/groups/services/memberships.py — Making, joining and leaving groups.
 
 An invite link joins at once, but only when the person taps Join: opening
 the link never joins by itself. The owner can reset the link, which kills

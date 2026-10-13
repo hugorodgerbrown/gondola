@@ -11,6 +11,7 @@
       <input type="hidden" name="next" value="{{ next_url }}">
       <button type="submit" class="button button--block">Show me round</button>
     </form>
+    {# nosemgrep: generic.html-templates.security.var-in-href.var-in-href -- next_url passed safe_next #}
     <a class="button button--secondary button--block" href="{{ next_url }}" data-tally="Tour skipped">Not now</a>
   </section>
 {% endblock %}

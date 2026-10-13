@@ -9,6 +9,7 @@
   {% if debug_link %}
     <div class="card card--padded">
       <span class="eyebrow">Development only</span>
+      {# nosemgrep: generic.html-templates.security.var-in-href.var-in-href -- built by the server, DEBUG only #}
       <a class="button button--block" href="{{ debug_link }}">Open the sign-in link</a>
     </div>
   {% endif %}

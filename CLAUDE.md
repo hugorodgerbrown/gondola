@@ -4,12 +4,17 @@ A standalone Django app for friends to see who's skiing where. It started as a
 Snowdesk feature and was split out on purpose: it shares Snowdesk's tooling
 and conventions, not its code or database.
 
+It is a Titan app: it follows the
+[django-titan-template](https://github.com/hugorodgerbrown/django-titan-template)
+(`.copier-answers.yml`), so `copier update --trust` pulls in template fixes.
+Keep shared files close to the template so that stays a clean merge; where
+Gondola differs on purpose, the reason is in `docs/decisions/`.
+
 The product name users see is `SITE_NAME` ("Gondola"). The repository,
-Python package, Render service and database are all named `gondola` too
-(the database `gondola`, since Postgres names read better without hyphens);
+Python package, Render service and database are all named `gondola` too;
 it lives at <https://gondola.ultraniche.ai>.
 
-Python 3.14 / Django 6.0, pinned in `pyproject.toml`.
+Python 3.14 / Django 6.1, pinned in `pyproject.toml`.
 
 ## Product decisions already made
 
@@ -36,14 +41,50 @@ Python 3.14 / Django 6.0, pinned in `pyproject.toml`.
 - Every resort is Swiss, so dates and times are Swiss wall-clock
   (`TIME_ZONE = "Europe/Zurich"`).
 
-## Conventions
+## Layout
 
-- Header comment on every module, docstring on every function and class,
-  every argument typed except `*args` / `**kwargs`.
+```
+config/          settings (one module, env-driven), urls, wsgi/asgi
+apps/core/       BaseModel, IdempotencyMiddleware + IdempotencyRecord,
+                 decorators (require_htmx, login_required_json), rate
+                 limits, tokens, analytics (fivebar goals), livez and healthz
+apps/accounts/   Gondola's own User (docs/decisions/), sign-in by emailed
+                 link, passkeys, the account page
+apps/resorts/    the Swiss resorts, imported from apps/resorts/data
+apps/groups/     groups, plan days, the calendar, board and map
+apps/tour/       the onboarding tour on a private demo group
+apps/mcp/        the MCP endpoint (/mcp) and its tools; auth is mcp-auth
+templates/       base.html and includes
+static/js/       plain JavaScript, classic scripts, no build step
+static/css/      app.css: tokens on :root, components below
+docs/            testing, onboarding-tour, decisions/
+.claude/skills/  writing the Titan docs kept in Linear (research, user
+                 testing script, blog post), each with a length setting
+```
+
+## Commands
+
+```bash
+uv sync && npm install
+uv run python manage.py runserver
+uv run tox                      # every check CI runs (except sast)
+uv run pytest tests/groups      # targeted run while iterating
+```
+
+Never run a bare `pytest`; use `uv run`. Dependencies: `uv add` /
+`uv add --group <test|lint|types|e2e> …`, then commit `uv.lock`.
+
+## Code conventions
+
+- A module docstring on every module and a docstring on every class and
+  function (ruff `D`, Google style; test functions are exempt); every
+  argument typed except `*args` / `**kwargs`.
 - British English spellings, except third-party identifiers.
 - `ruff` for lint and format; `pre-commit` runs it on commit.
-- Settings: `config/settings/base.py` plus `development.py` and
-  `production.py`. Secrets via `python-decouple`, never hard-coded.
+- Simple over clever; no abstraction until two callers need it.
+- `logging.getLogger(__name__)` in every module; no `print`.
+- Settings: one `config/settings.py`; anything that differs per
+  environment is an env var read with `python-decouple`, never hard-coded.
 - Email addresses are lowercased before storage and lookup, at every entry
   point (`apps.accounts.models.normalise_email`).
 - No Django signals for side effects: call them inline from the service.
@@ -51,39 +92,42 @@ Python 3.14 / Django 6.0, pinned in `pyproject.toml`.
 - Find a person's groups (and so their friends) through
   `Group.objects.for_user`: it is what shows the demo copy while they tour
   and hides demo groups otherwise. Querying memberships directly leaks one.
-- The MCP endpoint is `/mcp` (`apps/mcp`, ported from the Titan
-  template); auth is the shared `mcp-auth` app, pinned to a tag. A tool
-  runs as the token's user and reaches people only through their groups
-  (`friend_ids`, `Group.objects.for_user`). Any active account may connect
+- The MCP endpoint is `/mcp` (`apps/mcp`, from the Titan template); auth
+  is the shared `mcp-auth` app, pinned to a tag. A tool runs as the
+  token's user and reaches people only through their groups (`friend_ids`,
+  `Group.objects.for_user`). Any active account may connect
   (`mcp_auth.policy.active_user`).
 - Product analytics are fivebar goals: queue one with
   `apps.core.analytics.record`, or `data-tally` on a clicked element.
 
 ### Models
 
-Every concrete model ships the full kit:
-
-- inherits `apps.core.models.BaseModel`;
-- an explicit admin class;
-- an explicit `to_string()` (`__str__` delegates to it);
-- an explicit `Meta.ordering`;
-- a custom queryset;
-- a factory in `tests/factories.py` and test coverage.
+Every concrete model ships the full kit: inherits
+`apps.core.models.BaseModel`; has an explicit admin class, an explicit
+`to_string()` (`__str__` delegates to it), an explicit `Meta.ordering`, a
+custom queryset, a factory in `tests/factories.py`, and tests. Use `uuid`,
+never `id`, in URLs and anything a client sees.
 
 ### Management commands
 
 Run with no arguments, change nothing without `--commit`, respect
 `--verbosity`, and exit non-zero on any failure.
 
-### Testing
+## Tests
 
-- pytest + FactoryBoy; `tests/` mirrors `apps/`. Coverage target 90%.
-- Call factories with `.create()`, never `Factory(...)`.
-- All datetimes carry `tzinfo`.
-- Run `uv run tox` before opening a PR; it is exactly what CI runs.
+pytest + FactoryBoy (`tests/` mirrors `apps/`) and Vitest for
+`static/js` (`tests/js/`). Coverage floor 90%. Call factories with
+`.create()`, never `Factory(...)`. All datetimes carry `tzinfo`. Full
+rules: [docs/testing.md](docs/testing.md).
+
+## Before opening a PR
+
+Run `uv run tox` and fix every failure; it is exactly what CI runs.
+Record a non-obvious architectural choice in `docs/decisions/`.
 
 ## Dependencies
 
-`uv` only (`uv add`, `uv add --dev`). `pyproject.toml` is the source of
+`uv` only (`uv add`, `uv add --group …`). `pyproject.toml` is the source of
 truth and `uv.lock` the pin; commit both. Tool dependencies go in the
-matching `[dependency-groups]` entry (`test`, `type`, `lint`).
+matching `[dependency-groups]` entry (`test`, `lint`, `types`, `e2e`).
+JavaScript test tooling is in `package.json` (`npm install`).

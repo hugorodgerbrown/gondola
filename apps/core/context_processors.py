@@ -1,5 +1,4 @@
-"""
-apps/core/context_processors.py — Template context every page needs.
+"""apps/core/context_processors.py — Template context every page needs.
 
 Adds the product name and the active bottom tab, so the base template can
 title the page and highlight where the person is.

@@ -1,5 +1,4 @@
-"""
-apps/mcp/tools.py — The MCP tools. Each is a function of (user, arguments).
+"""apps/mcp/tools.py — The MCP tools. Each is a function of (user, arguments).
 
 Every tool runs as the token's user and sees exactly what the app shows
 them: their own days, and the days of everyone they share a group with
@@ -138,9 +137,7 @@ def _resort(query: str) -> Resort:
     """Return the one resort ``query`` names: its code, its name, or one match."""
     matches = search_resorts(query)
     folded = fold(query)
-    exact = [
-        r for r in matches if folded in {fold(r.code), fold(r.name)} - {""}
-    ] or matches
+    exact = [r for r in matches if folded in {fold(r.code), fold(r.name)} - {""}] or matches
     if len(exact) == 1:
         return exact[0]
     if not exact:
@@ -208,9 +205,7 @@ def set_days(user: User, args: dict[str, Any]) -> dict[str, Any]:
 def clear_days(user: User, args: dict[str, Any]) -> dict[str, Any]:
     """Make the named days unsaid again, from today on (the past is kept)."""
     days = _plannable(_dates(args), "cleared")
-    had = PlanDay.objects.filter(user=user, date__in=days).values_list(
-        "date", flat=True
-    )
+    had = PlanDay.objects.filter(user=user, date__in=days).values_list("date", flat=True)
     cleared = sorted(had)
     clear_plans(user, days)
     return {"cleared": [d.isoformat() for d in cleared]}
@@ -255,14 +250,12 @@ def _people(user: User, args: dict[str, Any]) -> set[int]:
 def whos_where(user: User, args: dict[str, Any]) -> dict[str, Any]:
     """Return, day by day, which resort each of the user's people will be in."""
     days = _dates(args, limit=MAX_BOARD_DAYS, default=1)
-    plans = PlanDay.objects.filter(
-        user_id__in=_people(user, args), date__in=days
-    ).select_related("user", "resort")
+    plans = PlanDay.objects.filter(user_id__in=_people(user, args), date__in=days).select_related(
+        "user", "resort"
+    )
     if "resort" in args:
         plans = plans.filter(resort=_resort(_text(args, "resort")))
-    board: dict[datetime.date, dict[Resort, list[str]]] = defaultdict(
-        lambda: defaultdict(list)
-    )
+    board: dict[datetime.date, dict[Resort, list[str]]] = defaultdict(lambda: defaultdict(list))
     for plan in plans.order_by("date", "resort__name"):
         name = "you" if plan.user_id == user.pk else plan.user.to_string()
         board[plan.date][plan.resort].append(name)

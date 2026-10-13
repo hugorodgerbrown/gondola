@@ -1,5 +1,4 @@
-"""
-apps/groups/services/evening.py — The evening-before email.
+"""apps/groups/services/evening.py — The evening-before email.
 
 Sent once a day, the evening before. A person gets it when they have said
 something about tomorrow and there is something from friends to tell
@@ -93,9 +92,7 @@ def build_digest(user: User, day: datetime.date) -> Digest:
                 name = "you" if plan.user_id == user.pk else plan.user.to_string()
                 by_resort.setdefault(plan.resort.name, []).append(name)
         lines = [
-            ResortLine(
-                resort_name=resort, names=sorted(names, key=lambda n: n == "you")
-            )
+            ResortLine(resort_name=resort, names=sorted(names, key=lambda n: n == "you"))
             for resort, names in sorted(by_resort.items(), key=lambda kv: -len(kv[1]))
             if any(n != "you" for n in names)
         ]
@@ -114,18 +111,13 @@ def recipients(day: datetime.date) -> list[User]:
     """Return who to consider: anyone with a plan for ``day``."""
     planned = PlanDay.objects.filter(date=day).values("user_id")
     return list(
-        User.objects.wants_evening_email()
-        .filter(pk__in=planned)
-        .distinct()
-        .order_by("-id")
+        User.objects.wants_evening_email().filter(pk__in=planned).distinct().order_by("-id")
     )
 
 
 def send_digest(digest: Digest) -> None:
     """Send one evening email."""
-    stop = reverse(
-        "accounts:stop_email", kwargs={"token": make_unsubscribe_token(digest.user)}
-    )
+    stop = reverse("accounts:stop_email", kwargs={"token": make_unsubscribe_token(digest.user)})
     context = {
         "digest": digest,
         "SITE_NAME": settings.SITE_NAME,

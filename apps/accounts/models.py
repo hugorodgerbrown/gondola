@@ -1,5 +1,4 @@
-"""
-apps/accounts/models.py — The custom user model.
+"""apps/accounts/models.py — The custom user model.
 
 ``User`` signs in with an email address, never a username. Emails are
 normalised to lowercase before storage and lookup, at every entry point,
@@ -15,6 +14,7 @@ from django.contrib.auth.models import (
     BaseUserManager,
     PermissionsMixin,
 )
+from django.contrib.auth.password_validation import validate_password
 from django.db import models
 
 from apps.core.models import BaseModel
@@ -56,14 +56,17 @@ class UserManager(BaseUserManager["User"]):
         """Look a user up by email, case-insensitively."""
         return self.get(email=normalise_email(username or ""))
 
-    def create_user(
-        self, email: str, password: str | None = None, **extra_fields: Any
-    ) -> User:
+    def create_user(self, email: str, password: str | None = None, **extra_fields: Any) -> User:
         """Create and save a user with the given email and password."""
         if not email:
             raise ValueError("A user must have an email address.")
         user = self.model(email=normalise_email(email), **extra_fields)
-        user.set_password(password)
+        if password is None:
+            # People sign in by emailed link or passkey; only staff may have one.
+            user.set_unusable_password()
+        else:
+            validate_password(password, user)
+            user.set_password(password)
         user.save(using=self._db)
         return user
 
@@ -135,8 +138,7 @@ class PasskeyQuerySet(models.QuerySet["Passkey"]):
 
 
 class Passkey(BaseModel):
-    """
-    A passkey (WebAuthn credential) someone can sign in with.
+    """A passkey (WebAuthn credential) someone can sign in with.
 
     The public key is stored; the private key never leaves the person's
     device or password manager. A person can add one per device, and the

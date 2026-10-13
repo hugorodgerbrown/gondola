@@ -53,9 +53,7 @@ def test_the_owner_never_leaves(ui_group: Group) -> None:
     assert ui_test_group() == ui_group
 
 
-def test_admin_user_page_and_actions_follow_testers(
-    client: Client, ui_group: Group
-) -> None:
+def test_admin_user_page_and_actions_follow_testers(client: Client, ui_group: Group) -> None:
     admin_user = UserFactory.create(is_staff=True, is_superuser=True)
     client.force_login(admin_user)
     me = UserFactory.create(email="me@example.com", display_name="Me")
@@ -74,7 +72,5 @@ def test_admin_user_page_and_actions_follow_testers(
     changelist = reverse("admin:accounts_user_changelist")
     client.post(changelist, {"action": "add_to_testers", "_selected_action": [me.pk]})
     assert is_member(ui_group, me)
-    client.post(
-        changelist, {"action": "remove_from_testers", "_selected_action": [me.pk]}
-    )
+    client.post(changelist, {"action": "remove_from_testers", "_selected_action": [me.pk]})
     assert not is_member(ui_group, me)

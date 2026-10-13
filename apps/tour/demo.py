@@ -1,5 +1,4 @@
-"""
-apps/tour/demo.py — The onboarding tour's demo group, and its lifetime.
+"""apps/tour/demo.py — The onboarding tour's demo group, and its lifetime.
 
 Starting the tour makes a "Thursday crew" for that person alone: they own
 it, and six made-up friends (Sam, Anna, Ben, Chloé, Ella, Felix) fill a
@@ -102,9 +101,7 @@ def _friend(name: str) -> User:
     return user
 
 
-def _write_cell(
-    user: User, day: datetime.date, cell: str, resorts: dict[str, Resort]
-) -> None:
+def _write_cell(user: User, day: datetime.date, cell: str, resorts: dict[str, Resort]) -> None:
     """Write one friend's day: a resort code, or nothing."""
     if not cell:
         PlanDay.objects.filter(user=user, date=day).delete()

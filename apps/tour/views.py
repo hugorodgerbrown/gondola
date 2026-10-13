@@ -1,5 +1,4 @@
-"""
-apps/tour/views.py — Starting, ending and finishing the tour.
+"""apps/tour/views.py — Starting, ending and finishing the tour.
 
 * ``offer`` is chapter 0: the welcome, with Not now and Show me round.
   New accounts see it once, after their name and passkey screens; anyone

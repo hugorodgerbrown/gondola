@@ -1,5 +1,4 @@
-"""
-apps/accounts/services.py — Emailed sign-in links and email opt-outs.
+"""apps/accounts/services.py — Emailed sign-in links and email opt-outs.
 
 Nobody has a password. Signing in asks for an email address and sends a
 link; opening the link signs the person in, creating their account the
@@ -73,15 +72,12 @@ def make_sign_in_token(email: str, next_url: str) -> str:
 
 
 def read_sign_in_token(token: str) -> SignIn:
-    """
-    Resolve a sign-in token to its account, creating the account if needed.
+    """Resolve a sign-in token to its account, creating the account if needed.
 
     Raises ``InvalidLink`` when the token is bad, expired or already used.
     """
     try:
-        payload = signing.loads(
-            token, salt=SIGN_IN_SALT, max_age=settings.SIGN_IN_LINK_MAX_AGE
-        )
+        payload = signing.loads(token, salt=SIGN_IN_SALT, max_age=settings.SIGN_IN_LINK_MAX_AGE)
         email = normalise_email(payload["e"])
         next_url = str(payload["n"])
         stamp = str(payload["l"])

@@ -1,5 +1,4 @@
-"""
-apps/tour/session.py — Who is touring, kept in their session.
+"""apps/tour/session.py — Who is touring, kept in their session.
 
 The session names the person's demo group and where they were headed
 before the tour (``next``). ``apps.tour.middleware`` reads it on every
@@ -70,9 +69,7 @@ def group_state(user: User) -> GroupState:
     """
     if not Group.objects.for_user(user).exists():
         return "none"
-    busy = PlanDay.objects.filter(
-        user_id__in=friend_ids(user), date__gte=today()
-    ).exists()
+    busy = PlanDay.objects.filter(user_id__in=friend_ids(user), date__gte=today()).exists()
     return "busy" if busy else "quiet"
 
 

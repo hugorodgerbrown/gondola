@@ -14,10 +14,7 @@ from tests.factories import ResortFactory, UserFactory
 @pytest.fixture
 def resorts(db: None) -> dict[str, Resort]:
     """Return the five resorts the demo uses, by code."""
-    return {
-        code: ResortFactory.create(name=name, code=code)
-        for code, name in RESORTS.items()
-    }
+    return {code: ResortFactory.create(name=name, code=code) for code, name in RESORTS.items()}
 
 
 @pytest.fixture

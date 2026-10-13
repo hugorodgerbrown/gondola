@@ -1,16 +1,22 @@
-__pycache__/
-*.py[cod]
 .venv/
-.tox/
-.env
+__pycache__/
+*.pyc
 db.sqlite3
+staticfiles/
+node_modules/
+.env
+.DS_Store
+.tox/
 .coverage
+coverage.xml
+.lighthouseci/
+test-results/
+*.py[cod]
 .coverage.*
 htmlcov/
 .mypy_cache/
 .ruff_cache/
 .pytest_cache/
-staticfiles/
 logs/*.log
 
 # Screenshot scripts once wrote here when an output path was unset.

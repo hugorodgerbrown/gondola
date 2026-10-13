@@ -1,5 +1,4 @@
-"""
-apps/resorts/models.py — Resorts and the season passes they're sold on.
+"""apps/resorts/models.py — Resorts and the season passes they're sold on.
 
 A ``Pass`` is reference data that groups resorts: it filters the map and
 the resort picker, and never gates a plan. A plan can point at any

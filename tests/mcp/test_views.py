@@ -46,9 +46,7 @@ def test_writes_are_not_read_only() -> None:
     assert writers == {"set_days", "clear_days"}
 
 
-def call_endpoint(
-    client: Client, body: Any, headers: dict[str, str] | None = None
-) -> Any:
+def call_endpoint(client: Client, body: Any, headers: dict[str, str] | None = None) -> Any:
     """POST ``body`` to /mcp with a valid bearer token for an ordinary user."""
     token = TestMCPAuth().token_for(UserFactory.create())
     return client.post(
@@ -124,9 +122,7 @@ def test_a_tool_error_is_readable(client: Client) -> None:
 @pytest.mark.django_db
 def test_endpoint_refuses_anonymous_calls(client: Client) -> None:
     """No bearer token, no tools: a 401 that starts OAuth discovery."""
-    response = client.post(
-        "/mcp", json.dumps(rpc("ping", {})), content_type="application/json"
-    )
+    response = client.post("/mcp", json.dumps(rpc("ping", {})), content_type="application/json")
     assert response.status_code == 401
     assert "resource_metadata" in response["WWW-Authenticate"]
 

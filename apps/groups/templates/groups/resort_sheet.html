@@ -31,5 +31,6 @@
       {% endif %}
     </div>
   {% endif %}
+  {# nosemgrep: generic.html-templates.security.var-in-href.var-in-href -- the import keeps only http(s) addresses #}
   {% if resort.website %}<a class="small" href="{{ resort.website }}" rel="noopener" target="_blank">Resort website →</a>{% endif %}
 {% endwith %}

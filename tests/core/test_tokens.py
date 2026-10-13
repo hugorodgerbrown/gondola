@@ -8,6 +8,4 @@ def test_make_token_is_url_safe_and_unique() -> None:
     assert len(tokens) == 50
     for token in tokens:
         assert len(token) == TOKEN_LENGTH
-        assert set(token) <= set(
-            "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_"
-        )
+        assert set(token) <= set("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_")

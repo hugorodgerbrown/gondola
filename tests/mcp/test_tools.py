@@ -168,9 +168,7 @@ def test_whos_where_shows_friends_and_you_but_no_strangers(world: Any) -> None:
     PlanDayFactory.create(user=world["cara"], date=DAY, resort=world["verbier"])
     (day,) = whos_where(world["anna"], {"dates": ["2026-12-20"]})["days"]
     assert day["weekday"] == "Sunday"
-    assert day["resorts"] == [
-        {"resort": "Verbier", "code": "VER", "people": ["you", "Ben Smith"]}
-    ]
+    assert day["resorts"] == [{"resort": "Verbier", "code": "VER", "people": ["you", "Ben Smith"]}]
 
 
 def test_whos_where_defaults_to_today_and_narrows(world: Any) -> None:
@@ -182,12 +180,8 @@ def test_whos_where_defaults_to_today_and_narrows(world: Any) -> None:
     assert whos_where(world["anna"], {**args, "resort": "Verbier"}) == {"days": []}
 
 
-@pytest.mark.parametrize(
-    ("group", "message"), [("Nope", "no group called"), ("r", "could be")]
-)
-def test_whos_where_needs_one_of_your_groups(
-    world: Any, group: str, message: str
-) -> None:
+@pytest.mark.parametrize(("group", "message"), [("Nope", "no group called"), ("r", "could be")])
+def test_whos_where_needs_one_of_your_groups(world: Any, group: str, message: str) -> None:
     other = GroupFactory.create(name="Friday crew")
     MembershipFactory.create(group=other, user=world["anna"])
     with pytest.raises(ToolError, match=message):

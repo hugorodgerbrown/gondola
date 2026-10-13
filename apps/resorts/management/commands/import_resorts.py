@@ -1,5 +1,4 @@
-"""
-apps/resorts/management/commands/import_resorts.py — Load the resort sheets.
+"""apps/resorts/management/commands/import_resorts.py — Load the resort sheets.
 
 Read-only by default: a bare run reports what would change. ``--commit``
 writes it. Exits non-zero if any row failed.
