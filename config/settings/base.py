@@ -97,7 +97,7 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 LANGUAGE_CODE = "en-gb"
-# Every resort is Swiss, so plan dates and meet-up times are Swiss wall-clock.
+# Every resort is Swiss, so plan dates are Swiss wall-clock.
 TIME_ZONE = "Europe/Zurich"
 USE_I18N = True
 USE_TZ = True
