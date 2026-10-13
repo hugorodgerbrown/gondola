@@ -1,9 +1,5 @@
-{# The site footer, drawn by {% site_footer %} (apps/public/templatetags/site_footer.py) from apps/public/conf.py. Every page ends with it: DESIGN.md, "Every site has a legit footer". #}
+{# The website's footer, drawn by {% site_footer %} (apps/public/templatetags/site_footer.py) from apps/public/conf.py: DESIGN.md, "The website has a footer; the app has its links". #}
 <footer class="site-footer">
-  <div class="site-footer__brand">
-    <a class="site-footer__name" href="{% url 'public:home' %}">{{ name }}</a>
-    {% if tagline %}<p class="site-footer__tagline">{{ tagline }}</p>{% endif %}
-  </div>
   <nav class="site-footer__links" aria-label="Site">
     {% for label, url in links %}<a href="{{ url }}">{{ label }}</a>{% endfor %}
   </nav>

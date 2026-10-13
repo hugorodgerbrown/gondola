@@ -72,15 +72,17 @@ def test_home_shows_when_signed_in(signed_in: Client) -> None:
     assert reverse("planning:map").encode() in response.content
 
 
-@pytest.mark.parametrize("name", ["accounts:settings", "planning:calendar", "planning:group_list"])
-def test_app_pages_have_the_site_footer(signed_in: Client, name: str) -> None:
-    """The app's scrolling pages end with the footer: the way to the front page."""
+APP_PAGES = ["accounts:settings", "planning:calendar", "planning:group_list", "planning:map"]
+
+
+@pytest.mark.parametrize("name", APP_PAGES)
+def test_app_pages_have_no_footer(signed_in: Client, name: str) -> None:
+    """The app is an app, not a website: its links are on the account page."""
+    assert b'class="site-footer"' not in signed_in.get(reverse(name)).content
+
+
+@pytest.mark.parametrize("name", APP_PAGES)
+def test_the_app_logo_goes_to_the_front_page(signed_in: Client, name: str) -> None:
+    """The top-left mark links to the front page, the way to it from the app."""
     content = signed_in.get(reverse(name)).content.decode()
-    assert 'class="site-footer"' in content
-    assert f'href="{reverse("public:home")}"' in content
-    assert reverse("public:terms") in content
-
-
-def test_the_map_has_no_footer(signed_in: Client) -> None:
-    """The map fills the screen, so it has no footer."""
-    assert b'class="site-footer"' not in signed_in.get(reverse("planning:map")).content
+    assert f'class="topbar__brand" href="{reverse("public:home")}"' in content

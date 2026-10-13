@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load static %}
+{% load static site_footer %}
 {% block title %}Your account · {{ SITE_NAME }}{% endblock %}
 {% block content %}
   <div class="heading">
@@ -65,6 +65,11 @@
       <input type="hidden" name="next" value="{% url 'accounts:settings' %}">
       <button type="submit" class="button button--secondary button--block">Take the tour</button>
     </form>
+  </section>
+  {# The app has no footer, so its links are here (DESIGN.md). #}
+  <section class="heading" aria-labelledby="about-heading">
+    <span class="eyebrow" id="about-heading">About {{ SITE_NAME }}</span>
+    {% site_links %}
   </section>
   <form method="post" action="{% url 'accounts:sign_out' %}" data-sign-out>
     {% csrf_token %}

@@ -116,16 +116,23 @@ raising the limit; a limit changes here, for every app, or not at all.
 - Colour is never the only signal: a state also changes a shape, an icon
   or a word.
 
-## 8. Every site has a legit footer
+## 8. The website has a footer; the app has its links
 
-Every page, public or signed in, ends with the site footer: the
-`{% site_footer %}` tag in `base.html` and `public_base.html`. It holds:
+Every public page (`public_base.html`) ends with the site footer, the
+`{% site_footer %}` tag: links to at least Help, Terms and Privacy, then
+`© <this year> <holder>. All rights reserved.` Nothing else: the header
+already names the site.
 
-- the app's name, linking to the front page, and an optional one-line tagline;
-- links to at least Help, Terms and Privacy;
-- `© <this year> <holder>. All rights reserved.`
+The installed app (`base.html`, under `/app/`) has no footer: it is an
+app, not a website. Its account page, behind the header's account link,
+lists the same links and copyright with `{% site_links %}`.
 
-The holder, the tagline and the links are set in `apps/public/conf.py`;
-the markup and styles are the shared component. A screen that fills the
-viewport (a full-screen map) may leave it out; say why where it does.
-`tests/public/test_footer.py` checks it is there.
+The holder and the links are set in `apps/public/conf.py`; the markup and
+styles are the shared component. `tests/public/test_footer.py` checks both.
+
+## 9. The top-left mark always goes home
+
+The site's name or icon at the top left links to the front page
+(`public:home`) on every page, public or signed in. Nothing else (the
+app's first screen, the account page) takes that place; the app's own
+navigation does that job.

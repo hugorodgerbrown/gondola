@@ -1,4 +1,8 @@
-"""``{% site_footer %}``: the footer every page ends with (apps/public/conf.py)."""
+"""``{% site_footer %}`` and ``{% site_links %}``: the site's links (apps/public/conf.py).
+
+The website ends with the footer; the app has none, and shows the same
+links on its account page (DESIGN.md).
+"""
 
 import logging
 from typing import Any
@@ -8,7 +12,6 @@ from django.urls import reverse
 from django.utils import timezone
 
 from apps.public import conf
-from apps.pwa.conf import APP_NAME
 
 logger = logging.getLogger(__name__)
 
@@ -24,13 +27,22 @@ def footer_links() -> list[tuple[str, str]]:
     return links
 
 
-@register.inclusion_tag("includes/_footer.html")
-def site_footer() -> dict[str, Any]:
-    """Draw the site footer: name, tagline, links and this year's copyright."""
+def _context() -> dict[str, Any]:
+    """Return what both the footer and the account page's links draw."""
     return {
-        "name": APP_NAME,
-        "tagline": conf.TAGLINE,
         "links": footer_links(),
         "holder": conf.COPYRIGHT_HOLDER,
         "year": timezone.localdate().year,
     }
+
+
+@register.inclusion_tag("includes/_footer.html")
+def site_footer() -> dict[str, Any]:
+    """Draw the website's footer: the links and this year's copyright."""
+    return _context()
+
+
+@register.inclusion_tag("includes/_site_links.html")
+def site_links() -> dict[str, Any]:
+    """Draw the same links as a list, for the app's account page."""
+    return _context()

@@ -2052,37 +2052,13 @@ a.mday.mday--in.mday--picked:hover {
 .site-footer {
   max-width: var(--column);
   margin: 0 auto;
-  padding: var(--space-2xl) var(--space-lg);
-  padding-bottom: max(var(--space-2xl), env(safe-area-inset-bottom));
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-lg);
-  border-top: 1px solid var(--rule);
-  font-size: var(--type-sm);
-}
-
-/* Inside the app's page, which already has the column and its padding. */
-.page .site-footer {
-  width: 100%;
-  margin-top: var(--space-2xl);
-  padding: var(--space-2xl) 0 0;
-}
-
-.site-footer__brand {
+  padding: var(--space-lg);
+  padding-bottom: max(var(--space-lg), env(safe-area-inset-bottom));
   display: flex;
   flex-direction: column;
   gap: var(--space-xs);
-}
-
-.site-footer__name {
-  font-size: var(--type-md);
-  font-weight: 600;
-  color: var(--text-1);
-  text-decoration: none;
-}
-
-.site-footer__tagline {
-  color: var(--text-2);
+  border-top: 1px solid var(--rule);
+  font-size: var(--type-sm);
 }
 
 .site-footer__links {
@@ -2102,6 +2078,24 @@ a.mday.mday--in.mday--picked:hover {
 .site-footer__legal {
   font-size: var(--type-xs);
   color: var(--text-2);
+}
+
+/* The same links on the app's account page, one to a row. */
+.site-links {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.site-links li + li {
+  border-top: 1px solid var(--rule);
+}
+
+.site-links a {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  color: var(--text-1);
 }
 
 .prose h1 {
