@@ -15,7 +15,7 @@
   <section class="card card--padded">
     <span class="eyebrow">When you join</span>
     <ul class="steps">
-      <li>You see the {{ member_count }} member{{ member_count|pluralize }}' names and the days they've planned.</li>
+      <li>You see {% if member_count == 1 %}the member's name{% else %}the {{ member_count }} members' names{% endif %} and the days they've planned.</li>
       <li>They see your name and the days you plan.</li>
       <li>You can leave at any time.</li>
     </ul>
