@@ -1,6 +1,15 @@
+{% load static %}{# The site footer: on every public page, and at the foot of the app's scrolling pages (base.html; not the map). #}
 <footer class="site-footer">
-  <a href="{% url 'public:home' %}">{{ pwa.name }}</a>
-  <a href="{% url 'public:terms' %}">Terms</a>
-  <a href="{% url 'public:privacy' %}">Privacy</a>
-  <a href="{% url 'public:help' %}">Help</a>
+  <div class="site-footer__brand">
+    <a class="topbar__brand" href="{% url 'public:home' %}"><span class="topbar__logo"><img src="{% static 'img/logo.svg' %}" alt="" width="20" height="25"></span>{{ SITE_NAME }}</a>
+    <p class="small muted">Who's skiing where, for friends.</p>
+  </div>
+  <nav class="site-footer__links" aria-label="Site">
+    <a href="{% url 'public:home' %}">About</a>
+    <a href="{% url 'public:help' %}">Help</a>
+    <a href="{% url 'public:home' %}#ask">Use with Claude</a>
+    <a href="{% url 'public:terms' %}">Terms</a>
+    <a href="{% url 'public:privacy' %}">Privacy</a>
+  </nav>
+  <p class="site-footer__legal">© {% now "Y" %} {{ SITE_NAME }}. All rights reserved.</p>
 </footer>

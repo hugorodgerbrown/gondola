@@ -72,7 +72,23 @@ def test_home_shows_when_signed_in(signed_in: Client) -> None:
     assert reverse("planning:map").encode() in response.content
 
 
-def test_account_page_links_to_the_front_page(signed_in: Client) -> None:
-    """The account page is the way from the app to the front page."""
-    content = signed_in.get(reverse("accounts:settings")).content.decode()
+@pytest.mark.parametrize("name", ["accounts:settings", "planning:calendar", "planning:group_list"])
+def test_app_pages_have_the_site_footer(signed_in: Client, name: str) -> None:
+    """The app's scrolling pages end with the footer: the way to the front page."""
+    content = signed_in.get(reverse(name)).content.decode()
+    assert 'class="site-footer"' in content
     assert f'href="{reverse("public:home")}"' in content
+    assert reverse("public:terms") in content
+
+
+def test_the_map_has_no_footer(signed_in: Client) -> None:
+    """The map fills the screen, so it has no footer."""
+    assert b'class="site-footer"' not in signed_in.get(reverse("planning:map")).content
+
+
+def test_footer_has_the_copyright(client: Client) -> None:
+    """The footer carries this year's copyright."""
+    from django.utils import timezone
+
+    year = timezone.localdate().year
+    assert f"© {year} Gondola" in client.get(reverse("public:home")).content.decode()

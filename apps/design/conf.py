@@ -11,7 +11,6 @@ NOT_ON_PAGE: dict[str, str] = {
     "tabbar": "the frame of every page, the design page included",
     "page": "the frame of every page, the design page included",
     "sheet-page": "a sheet opened as a page of its own, without JavaScript",
-    "site-footer": "the frame of every public page",
     "offline-banner": "the frame of every page; shown while offline",
     "outbox-status": "the frame of every page; shown while writes wait to send",
     "launch-shell": "covers the whole screen while the app launches",

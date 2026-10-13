@@ -39,6 +39,7 @@
       <main class="page{% if not user.is_authenticated %} page--signed-out{% endif %}">
         {% include "includes/messages.html" %}
         {% block content %}{% endblock %}
+        {% include "includes/_footer.html" %}
       </main>
     {% endblock %}
     {% if tour.script %}{% include "tour/bar.html" %}{% endif %}

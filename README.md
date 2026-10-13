@@ -8,7 +8,7 @@ group chat. An email the evening before sums up tomorrow.
 
 | Screen | URL | What it does |
 |---|---|---|
-| Front page | `/` | Explains the app; signed in, the account page links to it |
+| Front page | `/` | Explains the app; every page's footer links to it |
 | Sign in | `/sign-in/` | Emails a link and a six-digit code, either usable once; or a passkey. No passwords. First sign-in asks for a name |
 | Map | `/app/map/?date=&pass=` | Every resort as a pin, friend counts for the day, pass filter. Tap a pin for the resort sheet: who's there, plan your day here |
 | Calendar | `/app/days/?from=&day=&group=` | A month at a time, you by default; a group chip adds pale days where that group will be. Tap a day for who's with you and who's elsewhere; Add plans picks a resort (friends' first, then search); select several days to plan them at once |

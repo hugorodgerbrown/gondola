@@ -2050,17 +2050,46 @@ a.mday.mday--in.mday--picked:hover {
 /* --- Public pages: footer, prose (terms, privacy, help) ----------------- */
 
 .site-footer {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-lg);
   max-width: var(--column);
   margin: 0 auto;
-  padding: var(--space-lg);
-  padding-bottom: max(var(--space-lg), env(safe-area-inset-bottom));
+  padding: var(--space-2xl) var(--space-lg);
+  padding-bottom: max(var(--space-2xl), env(safe-area-inset-bottom));
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+  border-top: 1px solid var(--rule);
   font-size: var(--type-sm);
 }
 
-.site-footer a {
+/* Inside the app's page, which already has the column and its padding. */
+.page .site-footer {
+  width: 100%;
+  margin-top: var(--space-2xl);
+  padding: var(--space-2xl) 0 0;
+}
+
+.site-footer__brand {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.site-footer__links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xs) var(--space-lg);
+}
+
+/* Links are 44px tall to tap, without spacing the row out. */
+.site-footer__links a {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  color: var(--text-1);
+}
+
+.site-footer__legal {
+  font-size: var(--type-xs);
   color: var(--text-2);
 }
 
