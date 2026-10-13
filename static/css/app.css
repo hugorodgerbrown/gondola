@@ -1793,36 +1793,37 @@ a.mday.mday--in.mday--picked:hover {
 /* The blue splash, bled to the column's edges, with a ridge into the page. */
 .splash {
   position: relative;
-  margin: -20px -16px 0;
-  padding: 32px 20px 84px;
+  margin: calc(-1 * var(--space-xl)) calc(-1 * var(--space-lg)) 0;
+  padding: var(--space-3xl) var(--space-xl) calc(var(--space-4xl) + var(--space-3xl));
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: var(--space-md);
   background: var(--accent);
-  color: #ffffff;
+  color: var(--on-accent);
   overflow: hidden;
 }
 
-.splash .eyebrow,
-.splash__note {
-  color: rgba(255, 255, 255, 0.72);
+.splash .eyebrow {
+  color: inherit;
+  opacity: 0.75;
 }
 
 .splash__title {
-  font-size: 36px;
-  line-height: 40px;
+  font-size: var(--type-2xl);
+  line-height: 1.15;
   font-weight: 600;
   letter-spacing: -0.02em;
 }
 
 .splash__lede {
-  font-size: 16px;
-  color: rgba(255, 255, 255, 0.88);
+  font-size: var(--type-md);
+  opacity: 0.9;
 }
 
 .splash__note {
-  font-size: 13px;
+  font-size: var(--type-sm);
   text-align: center;
+  opacity: 0.75;
 }
 
 .splash__ridge {
@@ -1835,6 +1836,7 @@ a.mday.mday--in.mday--picked:hover {
   fill: var(--ground);
 }
 
+/* A primary button on a filled colour. */
 .button--light {
   background: var(--card);
   color: var(--text-1);
@@ -1844,146 +1846,17 @@ a.mday.mday--in.mday--picked:hover {
   color: var(--text-1);
 }
 
-/* A fortnight on the calendar, drawn for the front page. */
-.demo-week {
-  margin: -72px 0 0;
+/* The front page's fortnight: the calendar's own cells, lifted over the splash. */
+.demo-month {
   position: relative;
-  padding: 14px;
+  margin: calc(-1 * (var(--space-4xl) + var(--space-2xl))) 0 0;
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.12);
+  gap: var(--space-sm);
 }
 
-.demo-week__head {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-weight: 600;
-}
-
-.demo-week__grid {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  gap: 4px;
-}
-
-.demo-week__dow {
-  font: 400 10px var(--font-mono);
-  color: var(--text-3);
-  text-align: center;
-}
-
-.demo-day {
-  min-height: 60px;
-  padding: 5px;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  border-radius: 6px;
-  background: var(--sunk);
-  font-size: 12px;
-  font-weight: 500;
-}
-
-.demo-day small {
-  font: 400 9px var(--font-mono);
-  letter-spacing: 0.04em;
-}
-
-.demo-day--yours {
-  background: var(--accent);
-  color: #ffffff;
-}
-
-.demo-day--group {
-  background: var(--accent-soft);
-  color: var(--accent);
-}
-
-.demo-day--picked {
-  outline: 2px solid var(--text-1);
-  outline-offset: 1px;
-}
-
-/* Friends there that day: one dot each, up to three. */
-.dots {
-  height: 6px;
-  background: radial-gradient(circle, currentColor 3px, transparent 3.5px) 0 0 / 8px 6px repeat-x;
-}
-
-.dots--1 {
-  width: 8px;
-}
-
-.dots--2 {
-  width: 16px;
-}
-
-.dots--3 {
-  width: 24px;
-}
-
-.demo-week__key {
-  display: flex;
-  gap: 14px;
-  font-size: 12px;
-  color: var(--text-2);
-}
-
-.key::before {
-  content: "";
-  display: inline-block;
-  width: 10px;
-  height: 10px;
-  margin-right: 5px;
-  border-radius: 3px;
-  vertical-align: -1px;
-}
-
-.key--yours::before {
-  background: var(--accent);
-}
-
-.key--group::before {
-  background: var(--accent-soft);
-  box-shadow: inset 0 0 0 1px var(--accent);
-}
-
-.faces {
-  display: inline-flex;
-}
-
-.face {
-  display: inline-grid;
-  place-items: center;
-  width: 26px;
-  height: 26px;
-  border-radius: 50%;
-  border: 2px solid var(--card);
-  color: #ffffff;
-  font-size: 11px;
-  font-weight: 600;
-}
-
-.face + .face {
-  margin-left: -8px;
-}
-
-.face--1 {
-  background: var(--ok);
-}
-
-.face--2 {
-  background: var(--amber);
-}
-
-.face--3 {
-  background: var(--pass-magic);
-}
-
-.face--4 {
-  background: var(--text-1);
+.demo-month .month {
+  box-shadow: var(--shadow-overlay);
 }
 
 /* How it works, in three tiles. */
@@ -1992,15 +1865,15 @@ a.mday.mday--in.mday--picked:hover {
   margin: 0;
   padding: 0;
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 8px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-sm);
 }
 
 .trio li {
-  padding: 12px 10px;
+  padding: var(--space-md) var(--space-sm);
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: var(--space-xs);
   background: var(--card);
   border: 1px solid var(--rule);
   border-radius: var(--radius-card);
@@ -2009,70 +1882,62 @@ a.mday.mday--in.mday--picked:hover {
 .trio svg {
   width: 22px;
   height: 22px;
-  margin-bottom: 4px;
+  margin-bottom: var(--space-xs);
   color: var(--accent);
 }
 
 .trio strong {
-  font-size: 14px;
-  line-height: 18px;
+  font-size: var(--type-sm);
 }
 
 .trio span {
-  font-size: 12px;
-  line-height: 16px;
+  font-size: var(--type-xs);
   color: var(--text-2);
 }
 
-/* Asking an AI chat, through the MCP connector. */
-.ask {
-  padding: 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
+/* A made-up exchange with an AI chat, over the MCP connector. */
 .chat {
-  padding: 12px;
+  padding: var(--space-md);
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--space-sm);
   background: var(--sunk);
   border-radius: var(--radius-control);
-  font-size: 14px;
+  font-size: var(--type-sm);
+}
+
+.chat__you,
+.chat__reply {
+  max-width: 85%;
+  padding: var(--space-sm) var(--space-md);
 }
 
 .chat__you {
   align-self: flex-end;
-  max-width: 85%;
-  padding: 8px 12px;
-  border-radius: 14px 14px 4px 14px;
+  border-radius: var(--radius-card) var(--radius-card) var(--radius-tag) var(--radius-card);
   background: var(--text-1);
-  color: #ffffff;
+  color: var(--on-accent);
 }
 
 .chat__reply {
-  max-width: 85%;
-  padding: 8px 12px;
-  border-radius: 14px 14px 14px 4px;
+  border-radius: var(--radius-card) var(--radius-card) var(--radius-card) var(--radius-tag);
   background: var(--card);
   border: 1px solid var(--rule);
 }
 
-/* Quoted, not chips: they are examples, and nothing here is tapped. */
+/* Things to ask: quoted, not chips, since nothing here is tapped. */
 .asks {
   list-style: none;
   margin: 0;
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: var(--space-xs);
 }
 
 .asks li {
-  padding-left: 12px;
+  padding-left: var(--space-md);
   border-left: 2px solid var(--accent);
-  font-size: 14px;
 }
 
 .asks li::before {
@@ -2083,31 +1948,52 @@ a.mday.mday--in.mday--picked:hover {
   content: "\201D";
 }
 
+/* An address to copy, with its copy button. The button's icon turns to a
+   tick for a moment once copied (app.js). */
+.copy-field {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
+.copy-field .invite-link {
+  flex: 1;
+  min-width: 0;
+}
+
+.copy-field svg {
+  width: 20px;
+  height: 20px;
+  display: block;
+}
+
+.copy-field__done,
+[data-copied] .copy-field__copy {
+  display: none;
+}
+
+[data-copied] .copy-field__done {
+  display: block;
+  color: var(--accent);
+}
+
+/* Three numbers in a row. */
 .facts {
-  padding: 12px 8px;
+  padding: var(--space-md) var(--space-sm);
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   text-align: center;
 }
 
 .facts strong {
   display: block;
-  font-size: 24px;
-  line-height: 32px;
+  font-size: var(--type-xl);
   font-weight: 600;
 }
 
 .facts span {
-  font-size: 12px;
+  font-size: var(--type-xs);
   color: var(--text-2);
-}
-
-.closer {
-  padding: 8px 0;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  text-align: center;
 }
 
 @media (min-width: 720px) {

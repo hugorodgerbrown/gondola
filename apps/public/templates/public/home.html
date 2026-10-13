@@ -1,39 +1,41 @@
 {% extends "public_base.html" %}
 {% block content %}
+  {% url 'planning:group_list' as groups_url %}
   <section class="splash">
     <span class="eyebrow">For skiing with friends</span>
     <h1 class="splash__title">Ski the same mountain.</h1>
     <p class="splash__lede">Say which resort you'll be in. See which friends will be there, weeks before the group chat works it out.</p>
-    <a class="button button--block button--light" href="{% url 'accounts:sign_in' %}?next={% filter urlencode:'' %}{% url 'planning:group_list' %}{% endfilter %}">Start a group</a>
+    <a class="button button--block button--light" href="{% url 'accounts:sign_in' %}?next={{ groups_url|urlencode:'' }}">Start a group</a>
     <p class="splash__note">Free. Sign in with your email, no password.</p>
     <svg class="splash__ridge" viewBox="0 0 412 64" preserveAspectRatio="none" aria-hidden="true"><path d="M0 64V40l58-24 38 16 54-28 54 34 42-16 54 22 52-30 60 22v28z"/></svg>
   </section>
 
-  {# A made-up fortnight: drawn in HTML so it stays sharp and never goes stale. #}
-  <figure class="card demo-week">
-    <figcaption class="demo-week__head">
-      <span>January</span>
-      <span class="faces" aria-hidden="true"><span class="face face--1">A</span><span class="face face--2">C</span><span class="face face--3">E</span><span class="face face--4">B</span></span>
-      <span class="visually-hidden">: you're in Verbier from the 9th to the 11th with friends, in Crans-Montana on the 14th and in Saas-Fee on the 15th. On the 12th and 13th, when you haven't said, your group will be in Champéry and Verbier.</span>
-    </figcaption>
-    <div class="demo-week__grid" aria-hidden="true">
-      <span class="demo-week__dow">M</span><span class="demo-week__dow">T</span><span class="demo-week__dow">W</span><span class="demo-week__dow">T</span><span class="demo-week__dow">F</span><span class="demo-week__dow">S</span><span class="demo-week__dow">S</span>
-      <span class="demo-day">4</span>
-      <span class="demo-day">5</span>
-      <span class="demo-day">6</span>
-      <span class="demo-day">7</span>
-      <span class="demo-day">8</span>
-      <span class="demo-day demo-day--yours demo-day--picked">9<i class="dots dots--3"></i><small>VER</small></span>
-      <span class="demo-day demo-day--yours">10<i class="dots dots--2"></i><small>VER</small></span>
-      <span class="demo-day demo-day--yours">11<i class="dots dots--1"></i><small>VER</small></span>
-      <span class="demo-day demo-day--group">12<i class="dots dots--1"></i><small>CHA</small></span>
-      <span class="demo-day demo-day--group">13<i class="dots dots--2"></i><small>VER</small></span>
-      <span class="demo-day demo-day--yours">14<i class="dots dots--2"></i><small>CRA</small></span>
-      <span class="demo-day demo-day--yours">15<i class="dots dots--1"></i><small>SAA</small></span>
-      <span class="demo-day">16</span>
-      <span class="demo-day">17</span>
+  {# A made-up fortnight, drawn with the calendar's own day cells (groups/partials/day_cell.html), so it shows exactly what the app shows. #}
+  <figure class="demo-month">
+    <div class="month card" aria-hidden="true">
+      <div class="month__week month__week--head">
+        {% for name in "MTWTFSS" %}<span class="month__weekday">{{ name }}</span>{% endfor %}
+      </div>
+      <div class="month__week">
+        <span class="mday"><span class="mday__row"><span class="mday__date">4</span></span><span class="mday__row"></span></span>
+        <span class="mday"><span class="mday__row"><span class="mday__date">5</span></span><span class="mday__row"></span></span>
+        <span class="mday"><span class="mday__row"><span class="mday__date">6</span></span><span class="mday__row"></span></span>
+        <span class="mday"><span class="mday__row"><span class="mday__date">7</span></span><span class="mday__row"></span></span>
+        <span class="mday"><span class="mday__row"><span class="mday__date">8</span></span><span class="mday__row"></span></span>
+        <span class="mday mday--in mday--selected"><span class="mday__row"><span class="mday__date">9</span><span class="mday__friends">{% include "includes/icons/people.html" %}</span></span><span class="mday__row"><span class="mday__resort">VER</span></span></span>
+        <span class="mday mday--in"><span class="mday__row"><span class="mday__date">10</span><span class="mday__friends">{% include "includes/icons/people.html" %}</span></span><span class="mday__row"><span class="mday__resort">VER</span></span></span>
+      </div>
+      <div class="month__week">
+        <span class="mday mday--in"><span class="mday__row"><span class="mday__date">11</span><span class="mday__friends">{% include "includes/icons/people.html" %}</span></span><span class="mday__row"><span class="mday__resort">VER</span></span></span>
+        <span class="mday mday--friends"><span class="mday__row"><span class="mday__date">12</span><span class="mday__friends">{% include "includes/icons/user.html" %}</span></span><span class="mday__row"><span class="mday__resort">CHA</span></span></span>
+        <span class="mday mday--friends"><span class="mday__row"><span class="mday__date">13</span><span class="mday__friends">{% include "includes/icons/people.html" %}</span></span><span class="mday__row"><span class="mday__resort">VER …</span></span></span>
+        <span class="mday mday--in"><span class="mday__row"><span class="mday__date">14</span><span class="mday__friends">{% include "includes/icons/people.html" %}</span></span><span class="mday__row"><span class="mday__resort">CRA</span></span></span>
+        <span class="mday mday--in"><span class="mday__row"><span class="mday__date">15</span><span class="mday__friends">{% include "includes/icons/user.html" %}</span></span><span class="mday__row"><span class="mday__resort">SAA</span></span></span>
+        <span class="mday"><span class="mday__row"><span class="mday__date">16</span></span><span class="mday__row"></span></span>
+        <span class="mday"><span class="mday__row"><span class="mday__date">17</span></span><span class="mday__row"></span></span>
+      </div>
     </div>
-    <p class="demo-week__key" aria-hidden="true"><span class="key key--yours">You're there</span><span class="key key--group">Your group is</span></p>
+    <figcaption class="small muted">Blue: you're in that resort. Pale blue: where your group will be on days you haven't said. The person icon means friends will be there too.<span class="visually-hidden"> Here, you're in Verbier from the 9th to the 11th, in Crans-Montana on the 14th and in Saas-Fee on the 15th; on the 12th and 13th your group will be in Champéry and Verbier.</span></figcaption>
   </figure>
 
   <section aria-labelledby="how">
@@ -45,7 +47,7 @@
     </ol>
   </section>
 
-  <section class="card ask" aria-labelledby="ask">
+  <section class="card card--padded" aria-labelledby="ask">
     <span class="eyebrow">Or just ask</span>
     <h2 id="ask" class="title">Plan from your AI chat</h2>
     <p class="lede">Connect Gondola to Claude and ask in plain words. It reads your group's calendar and fills in your days.</p>
@@ -62,8 +64,14 @@
       <li>What have I got planned in January?</li>
       <li>Clear my days next week</li>
     </ul>
-    <p class="small muted">Add this as a connector in Claude, or any app that takes MCP connectors, then sign in:</p>
-    <code class="invite-link">{{ mcp_url }}</code>
+    <p class="small muted" id="mcp-url-label">Add this as a connector in Claude, or any app that takes MCP connectors, then sign in:</p>
+    <div class="copy-field">
+      <code class="invite-link mono small" aria-labelledby="mcp-url-label">{{ mcp_url }}</code>
+      <button type="button" class="icon-button" data-copy="{{ mcp_url }}" aria-label="Copy the address" data-copied-label="Copied" data-tally="Connector address copied">
+        <span class="copy-field__copy">{% include "includes/icons/copy.html" %}</span>
+        <span class="copy-field__done">{% include "includes/icons/check.html" %}</span>
+      </button>
+    </div>
   </section>
 
   <div class="card facts">
@@ -72,8 +80,8 @@
     <p><strong>0</strong><span>passwords</span></p>
   </div>
 
-  <section class="closer">
+  <section class="stack centred">
     <h2 class="title">Your season, in one place</h2>
-    <a class="button button--block" href="{% url 'accounts:sign_in' %}?next={% filter urlencode:'' %}{% url 'planning:group_list' %}{% endfilter %}">Start a group</a>
+    <a class="button button--block" href="{% url 'accounts:sign_in' %}?next={{ groups_url|urlencode:'' }}">Start a group</a>
   </section>
 {% endblock %}

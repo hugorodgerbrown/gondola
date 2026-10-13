@@ -3,9 +3,10 @@
  *
  * Opens the bottom sheet when HTMX swaps a fragment into it, closes it on
  * a close button or a tap on the backdrop, and wires share buttons to the
- * phone's share sheet (falling back to copying the link). ``onSwipe`` turns
- * a sideways swipe into "previous" or "next", for the month calendars,
- * whose Left and Right arrow keys step a month as well.
+ * phone's share sheet (falling back to copying the link), and copy buttons
+ * to the clipboard. ``onSwipe`` turns a sideways swipe into "previous" or
+ * "next", for the month calendars, whose Left and Right arrow keys step a
+ * month as well.
  * An open "…" row menu closes on a tap anywhere else. The service worker,
  * the offline banner and clearing cached pages at sign-out are pwa.js's;
  * this file only retires Gondola's first worker (``retireRootWorker``).
@@ -103,6 +104,33 @@
     } catch (error) {
       window.prompt("Copy this link", url);
     }
+  });
+
+  // A copy button: puts ``data-copy`` on the clipboard, then shows a tick
+  // and says "Copied" for a moment. Without a clipboard, a prompt to copy by hand.
+  document.addEventListener("click", async function (event) {
+    const button = event.target.closest("[data-copy]");
+    if (!button) {
+      return;
+    }
+    const text = button.dataset.copy;
+    try {
+      await navigator.clipboard.writeText(text);
+    } catch (error) {
+      window.prompt("Copy this", text);
+      return;
+    }
+    // A second tap while it says "Copied" keeps the label it started with.
+    if (!("copyLabel" in button.dataset)) {
+      button.dataset.copyLabel = button.getAttribute("aria-label") || "";
+    }
+    button.dataset.copied = "";
+    button.setAttribute("aria-label", button.dataset.copiedLabel || "Copied");
+    clearTimeout(button.copyTimer);
+    button.copyTimer = setTimeout(function () {
+      delete button.dataset.copied;
+      button.setAttribute("aria-label", button.dataset.copyLabel);
+    }, 2000);
   });
 
   // A sideways swipe on ``element``: onNext for right-to-left, onPrevious

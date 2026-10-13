@@ -128,3 +128,52 @@ describe('calendar arrow keys', () => {
     expect(page.href).toBe('/app/calendar/');
   });
 });
+
+describe('copy buttons', () => {
+  let listeners = [];
+
+  async function load(clipboard) {
+    const add = document.addEventListener.bind(document);
+    vi.spyOn(document, 'addEventListener').mockImplementation((type, listener, options) => {
+      listeners.push([type, listener, options]);
+      add(type, listener, options);
+    });
+    document.body.innerHTML =
+      '<button type="button" id="copy" data-copy="https://gondola.example/mcp" aria-label="Copy the address"><span>icon</span></button>';
+    vi.stubGlobal('location', { href: '/', origin: 'http://localhost' });
+    vi.stubGlobal('navigator', { userAgent: 'test', clipboard });
+    vi.stubGlobal('caches', undefined);
+    await import('../../static/js/app.js?' + Math.random());
+    return document.getElementById('copy');
+  }
+
+  afterEach(() => {
+    listeners.forEach(([type, listener, options]) => document.removeEventListener(type, listener, options));
+    listeners = [];
+    vi.restoreAllMocks();
+    vi.useRealTimers();
+    document.body.innerHTML = '';
+  });
+
+  it('copies the text, shows it was copied, then goes back', async () => {
+    vi.useFakeTimers();
+    const clipboard = { writeText: vi.fn().mockResolvedValue(undefined) };
+    const button = await load(clipboard);
+    button.querySelector('span').click();
+    await vi.waitFor(() => expect(button.hasAttribute('data-copied')).toBe(true));
+    expect(clipboard.writeText).toHaveBeenCalledWith('https://gondola.example/mcp');
+    expect(button.getAttribute('aria-label')).toBe('Copied');
+    vi.advanceTimersByTime(2000);
+    expect(button.hasAttribute('data-copied')).toBe(false);
+    expect(button.getAttribute('aria-label')).toBe('Copy the address');
+  });
+
+  it('asks to copy by hand when the clipboard refuses', async () => {
+    const prompt = vi.fn();
+    vi.stubGlobal('prompt', prompt);
+    const button = await load({ writeText: vi.fn().mockRejectedValue(new Error('denied')) });
+    button.click();
+    await vi.waitFor(() => expect(prompt).toHaveBeenCalledWith('Copy this', 'https://gondola.example/mcp'));
+    expect(button.hasAttribute('data-copied')).toBe(false);
+  });
+});

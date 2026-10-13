@@ -38,11 +38,12 @@ def test_home_invites_sign_in(client: Client) -> None:
 
 
 def test_home_shows_what_the_app_does(client: Client) -> None:
-    """A drawn fortnight shows what the app does before anyone signs in."""
+    """A fortnight in the calendar's own cells shows what the app does."""
     response = client.get(reverse("public:home"))
     assert b"Start a group" in response.content
     assert b"<title>Gondola</title>" in response.content
-    assert b"demo-week" in response.content
+    assert b"demo-month" in response.content
+    assert b"mday--in" in response.content
     # Public: no service worker, no outbox.
     assert b"pwa.js" not in response.content
 
@@ -59,6 +60,7 @@ def test_home_gives_the_mcp_connector_address(client: Client, settings: Any) -> 
     settings.SITE_URL = "https://gondola.example"
     content = client.get(reverse("public:home")).content.decode()
     assert "https://gondola.example/mcp" in content
+    assert 'data-copy="https://gondola.example/mcp"' in content
 
 
 def test_home_signed_in_goes_to_the_map(signed_in: Client) -> None:

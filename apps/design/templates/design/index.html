@@ -400,10 +400,54 @@
     <div class="card card--padded">
       <div class="hero">
         <p class="title title--large">Who's skiing where</p>
-        <p class="lede lede--large">The hero, on the front page.</p>
+        <p class="lede lede--large">The hero, on an invite link.</p>
       </div>
-      <figure class="hero-figure"><img class="hero-picture" src="{% static 'img/home-calendar.png' %}" width="568" height="792" alt="The front page's picture of a month on the calendar"></figure>
       <ol class="steps"><li>Steps: numbered,</li><li>with room between.</li></ol>
+    </div>
+    <div class="splash">
+      <span class="eyebrow">Splash</span>
+      <p class="splash__title">The front page's opening</p>
+      <p class="splash__lede">On the accent, bled to the column's edges on a phone.</p>
+      <button type="button" class="button button--block button--light">Light button, on a fill</button>
+      <p class="splash__note">A note under the button.</p>
+      <svg class="splash__ridge" viewBox="0 0 412 64" preserveAspectRatio="none" aria-hidden="true"><path d="M0 64V40l58-24 38 16 54-28 54 34 42-16 54 22 52-30 60 22v28z"/></svg>
+    </div>
+    <figure class="demo-month">
+      <div class="month card" aria-hidden="true">
+        <div class="month__week">
+          <span class="mday"><span class="mday__row"><span class="mday__date">8</span></span><span class="mday__row"></span></span>
+          <span class="mday mday--in"><span class="mday__row"><span class="mday__date">9</span><span class="mday__friends">{% include "includes/icons/people.html" %}</span></span><span class="mday__row"><span class="mday__resort">VER</span></span></span>
+          <span class="mday mday--friends"><span class="mday__row"><span class="mday__date">10</span><span class="mday__friends">{% include "includes/icons/user.html" %}</span></span><span class="mday__row"><span class="mday__resort">CHA</span></span></span>
+        </div>
+      </div>
+      <figcaption class="small muted">Demo month: the calendar's own cells, lifted over the splash.</figcaption>
+    </figure>
+    <div class="card card--padded">
+      <ol class="trio">
+        <li>{% include "includes/icons/share.html" %}<strong>Trio</strong><span>Three tiles</span></li>
+        <li>{% include "includes/icons/map.html" %}<strong>Icon,</strong><span>title</span></li>
+        <li>{% include "includes/icons/people.html" %}<strong>And</strong><span>a line</span></li>
+      </ol>
+      <div class="chat">
+        <p class="chat__you">Chat: what you ask</p>
+        <p class="chat__reply">And what comes back.</p>
+      </div>
+      <ul class="asks"><li>Asks: quoted examples</li><li>not chips</li></ul>
+      <div class="copy-field">
+        <code class="invite-link">Copy field</code>
+        <button type="button" class="icon-button" data-copy="Copy field" aria-label="Copy"><span class="copy-field__copy">{% include "includes/icons/copy.html" %}</span><span class="copy-field__done">{% include "includes/icons/check.html" %}</span></button>
+      </div>
+      <div class="copy-field">
+        <code class="invite-link">Copy field, just copied</code>
+        <span class="icon-button" data-copied aria-hidden="true"><span class="copy-field__copy">{% include "includes/icons/copy.html" %}</span><span class="copy-field__done">{% include "includes/icons/check.html" %}</span></span>
+      </div>
+    </div>
+    <div class="card facts">
+      <p><strong>200+</strong><span>Facts</span></p>
+      <p><strong>1</strong><span>in a row</span></p>
+      <p><strong>0</strong><span>of three</span></p>
+    </div>
+    <div class="card card--padded">
       <div class="prose">
         <h1>Prose</h1>
         <h2>Terms, privacy and help</h2>
