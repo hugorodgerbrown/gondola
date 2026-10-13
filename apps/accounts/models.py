@@ -14,6 +14,7 @@ from django.contrib.auth.models import (
     BaseUserManager,
     PermissionsMixin,
 )
+from django.contrib.auth.password_validation import validate_password
 from django.db import models
 
 from apps.core.models import BaseModel
@@ -60,7 +61,12 @@ class UserManager(BaseUserManager["User"]):
         if not email:
             raise ValueError("A user must have an email address.")
         user = self.model(email=normalise_email(email), **extra_fields)
-        user.set_password(password)
+        if password is None:
+            # People sign in by emailed link or passkey; only staff may have one.
+            user.set_unusable_password()
+        else:
+            validate_password(password, user)
+            user.set_password(password)
         user.save(using=self._db)
         return user
 

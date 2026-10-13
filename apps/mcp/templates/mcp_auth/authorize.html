@@ -2,6 +2,7 @@
 {% block title %}Connect {{ application.name|default:"an app" }} · {{ SITE_NAME }}{% endblock %}
 {% block body %}
   {% if not error %}
+    {# nosemgrep: python.django.security.django-no-csrf-token.django-no-csrf-token -- it has one #}
     <form method="post">
       {% csrf_token %}
       {% for field in form %}

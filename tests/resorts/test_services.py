@@ -87,3 +87,13 @@ def test_value_too_long_for_its_column_is_skipped(tmp_path: Path) -> None:
     assert result.resorts_created == 0
     assert "canton" in result.errors[0]
     assert not Resort.objects.exists()
+
+
+def test_only_web_addresses_become_links(tmp_path: Path) -> None:
+    rows = (
+        f"{UUID_A}\tVerbier\tVS\t46.09\t7.22\t\tjavascript:alert(1)\n"
+        f"{UUID_B}\tThyon\tVS\t\t\t\t http://thyon.ch \n"
+    )
+    _import(tmp_path, rows, commit=True)
+    assert Resort.objects.get(name="Verbier").website == ""
+    assert Resort.objects.get(name="Thyon").website == "http://thyon.ch"

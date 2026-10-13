@@ -6,6 +6,7 @@
     <span class="eyebrow">{{ user.email }}</span>
     <h1 class="title">Your account</h1>
   </div>
+  {# nosemgrep: python.django.security.django-no-csrf-token.django-no-csrf-token -- it has one #}
   <form method="post" class="card card--padded">
     {% csrf_token %}
     {% if form.errors %}<ul class="errors">{% for error in form.display_name.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}

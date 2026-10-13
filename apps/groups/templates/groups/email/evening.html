@@ -10,9 +10,11 @@
           {% for line in section.lines %}
             <p style="margin:0;padding:8px 0;border-bottom:1px solid #ebe9e4;font-size:15px;"><strong>{{ line.resort_name }}</strong> <span style="color:#6b6860;">{{ line.people }}</span></p>
           {% endfor %}
+          {# nosemgrep: generic.html-templates.security.var-in-href.var-in-href -- built by the server #}
           <p style="margin:12px 0 0;font-size:14px;"><a href="{{ section.url }}" style="color:#1a1916;">See the whole week →</a></p>
         </div>
       {% endif %}{% endfor %}
+      {# nosemgrep: generic.html-templates.security.var-in-href.var-in-href -- built by the server #}
       <p style="margin:16px 0 0;font-size:12px;color:#6e6b65;">You get this because you're in a group on {{ SITE_NAME }} and have plans tomorrow. <a href="{{ stop_url }}" style="color:#6e6b65;">Stop these evening emails</a></p>
     </div>
   </body>

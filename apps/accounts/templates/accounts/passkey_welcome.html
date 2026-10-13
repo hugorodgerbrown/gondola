@@ -17,6 +17,7 @@
       <p class="errors" data-passkey-error role="alert" hidden></p>
     </div>
     <p class="small muted" data-passkey-unsupported>This browser can't make passkeys. You'll sign in by email.</p>
+    {# nosemgrep: generic.html-templates.security.var-in-href.var-in-href -- next_url passed safe_next #}
     <a class="button button--secondary button--block" href="{{ next_url }}">Not now</a>
   </section>
 {% endblock %}
