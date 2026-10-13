@@ -4,8 +4,10 @@ They sit outside the installed app's /app/ scope, so the service worker
 never caches them and they never show inside the installed app.
 """
 
+from django.conf import settings
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import redirect, render
+from django.urls import reverse
 from django.views.decorators.http import require_GET
 
 
@@ -14,7 +16,8 @@ def home(request: HttpRequest) -> HttpResponse:
     """The front page: what Gondola is, and the way in. Signed in, the map."""
     if request.user.is_authenticated:
         return redirect("planning:map")
-    return render(request, "public/home.html")
+    mcp_url = settings.SITE_URL + reverse("mcp")
+    return render(request, "public/home.html", {"mcp_url": mcp_url})
 
 
 @require_GET

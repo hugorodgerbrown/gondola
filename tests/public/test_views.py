@@ -1,5 +1,7 @@
 """Tests for apps.public.views: the homepage, terms, privacy and help."""
 
+from typing import Any
+
 import pytest
 from django.test import Client
 from django.urls import reverse
@@ -36,13 +38,20 @@ def test_home_invites_sign_in(client: Client) -> None:
 
 
 def test_home_shows_what_the_app_does(client: Client) -> None:
-    """A picture of the calendar shows what the app does before anyone signs in."""
+    """A drawn fortnight shows what the app does before anyone signs in."""
     response = client.get(reverse("public:home"))
-    assert b"Get started" in response.content
+    assert b"Start a group" in response.content
     assert b"<title>Gondola</title>" in response.content
-    assert b"img/home-calendar" in response.content
+    assert b"demo-week" in response.content
     # Public: no service worker, no outbox.
     assert b"pwa.js" not in response.content
+
+
+def test_home_gives_the_mcp_connector_address(client: Client, settings: Any) -> None:
+    """The front page names the address to add Gondola to an AI chat."""
+    settings.SITE_URL = "https://gondola.example"
+    content = client.get(reverse("public:home")).content.decode()
+    assert "https://gondola.example/mcp" in content
 
 
 def test_home_signed_in_goes_to_the_map(signed_in: Client) -> None:

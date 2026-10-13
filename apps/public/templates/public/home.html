@@ -1,21 +1,79 @@
 {% extends "public_base.html" %}
-{% load static %}
 {% block content %}
-  <section class="hero">
+  <section class="splash">
     <span class="eyebrow">For skiing with friends</span>
-    <h1 class="title title--large">Who's skiing where, and when</h1>
-    <p class="lede lede--large">On a season pass your friends could be at any of a hundred resorts. Say which resort you'll be in on which days, and see where your group will be over the coming weeks, without digging back through the group chat.</p>
+    <h1 class="splash__title">Ski the same mountain.</h1>
+    <p class="splash__lede">Say which resort you'll be in. See which friends will be there, weeks before the group chat works it out.</p>
+    <a class="button button--block button--light" href="{% url 'accounts:sign_in' %}">Start a group</a>
+    <p class="splash__note">Free. Sign in with your email, no password.</p>
+    <svg class="splash__ridge" viewBox="0 0 412 64" preserveAspectRatio="none" aria-hidden="true"><path d="M0 64V40l58-24 38 16 54-28 54 34 42-16 54 22 52-30 60 22v28z"/></svg>
   </section>
-  <figure class="hero-figure">
-    <img class="hero-picture" src="{% static 'img/home-calendar.png' %}" width="568" height="792" alt="A month on the calendar: the days you'll be in a resort, which friends will be there with you, and where the others are">
+
+  {# A made-up fortnight: drawn in HTML so it stays sharp and never goes stale. #}
+  <figure class="card demo-week">
+    <figcaption class="demo-week__head">
+      <span>January</span>
+      <span class="faces" aria-hidden="true"><span class="face face--1">A</span><span class="face face--2">C</span><span class="face face--3">E</span><span class="face face--4">B</span></span>
+      <span class="visually-hidden">: you're in Verbier on the 9th, 10th and 11th, with friends; your group will be in Champéry and Verbier on the 12th and 13th.</span>
+    </figcaption>
+    <div class="demo-week__grid" aria-hidden="true">
+      <span class="demo-week__dow">M</span><span class="demo-week__dow">T</span><span class="demo-week__dow">W</span><span class="demo-week__dow">T</span><span class="demo-week__dow">F</span><span class="demo-week__dow">S</span><span class="demo-week__dow">S</span>
+      <span class="demo-day">4</span>
+      <span class="demo-day">5</span>
+      <span class="demo-day">6</span>
+      <span class="demo-day">7</span>
+      <span class="demo-day">8</span>
+      <span class="demo-day demo-day--yours demo-day--picked">9<i class="dots dots--3"></i><small>VER</small></span>
+      <span class="demo-day demo-day--yours">10<i class="dots dots--2"></i><small>VER</small></span>
+      <span class="demo-day demo-day--yours">11<i class="dots dots--1"></i><small>VER</small></span>
+      <span class="demo-day demo-day--group">12<i class="dots dots--1"></i><small>CHA</small></span>
+      <span class="demo-day demo-day--group">13<i class="dots dots--2"></i><small>VER</small></span>
+      <span class="demo-day demo-day--yours">14<i class="dots dots--2"></i><small>CRA</small></span>
+      <span class="demo-day demo-day--yours">15<i class="dots dots--1"></i><small>SAA</small></span>
+      <span class="demo-day">16</span>
+      <span class="demo-day">17</span>
+    </div>
+    <p class="demo-week__key" aria-hidden="true"><span class="key key--yours">You're there</span><span class="key key--group">Your group is</span></p>
   </figure>
-  <section class="card card--padded">
-    <span class="eyebrow">How it works</span>
-    <ol class="steps">
-      <li>Start a group and send the invite link to your group chat.</li>
-      <li>Everyone fills in their days: which resort they'll be in.</li>
-      <li>Your calendar shows which friends will be in your resort and where the others are, so meeting up is one message in your group chat.</li>
+
+  <section aria-labelledby="how">
+    <h2 id="how" class="visually-hidden">How it works</h2>
+    <ol class="trio">
+      <li>{% include "includes/icons/share.html" %}<strong>Share a link</strong><span>In your group chat</span></li>
+      <li>{% include "includes/icons/map.html" %}<strong>Pick a resort</strong><span>For the days you'll be there</span></li>
+      <li>{% include "includes/icons/people.html" %}<strong>See who's there</strong><span>And where the rest are</span></li>
     </ol>
-    <a class="button button--block" href="{% url 'accounts:sign_in' %}">Get started with your email</a>
+  </section>
+
+  <section class="card ask" aria-labelledby="ask">
+    <span class="eyebrow">Or just ask</span>
+    <h2 id="ask" class="title">Plan from your AI chat</h2>
+    <p class="lede">Connect Gondola to Claude and ask in plain words. It reads your group's calendar and fills in your days.</p>
+    <div class="chat">
+      <p class="chat__you">Who's in Verbier next weekend?</p>
+      <p class="chat__reply">Anna and Chloé are there Saturday and Sunday. Ella's in Champéry, Ben's in Saas-Fee.</p>
+      <p class="chat__you">Put me in Verbier those two days.</p>
+      <p class="chat__reply">Done: you're in Verbier on 9 and 10 January.</p>
+    </div>
+    <span class="eyebrow">Try asking</span>
+    <ul class="asks">
+      <li>Where's Ben skiing over New Year?</li>
+      <li>Put me in Zermatt from 2 to 6 February</li>
+      <li>What have I got planned in January?</li>
+      <li>Clear my days next week</li>
+    </ul>
+    <p class="small muted">Add this as a connector in Claude, or any app that takes MCP connectors, then sign in:</p>
+    <code class="invite-link">{{ mcp_url }}</code>
+  </section>
+
+  <div class="card facts">
+    <p><strong>200+</strong><span>Swiss resorts</span></p>
+    <p><strong>1 link</strong><span>to join a group</span></p>
+    <p><strong>0</strong><span>passwords</span></p>
+  </div>
+
+  <section class="closer">
+    <h2 class="title">Your season, in one place</h2>
+    <a class="button button--block" href="{% url 'accounts:sign_in' %}">Start a group</a>
   </section>
 {% endblock %}
