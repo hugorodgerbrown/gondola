@@ -15,7 +15,7 @@ What is on by default, and what checks it.
 | Post-sign-in redirects stay on this site | `apps/core/redirects.py: safe_next` | `tests/core/test_redirects.py` |
 | The admin has no password form: staff sign in like everyone else | `admin_login` | `tests/accounts/test_views.py` |
 | Signing out drops cached pages on the device, including one cached mid-sign-out; unsent writes stay, sent only as the user who made them | `pwa.js` (`data-sign-out`), `sw_worker.js`, `outbox.js` | `tests/js/test_sw_worker.js`, `tests/js/test_outbox.js`; the form's clean-up by hand |
-| The design page is staff only: anyone else gets a 404 | `apps/design/views.py` | `tests/design/` |
+| The design page is staff only: signed out goes to sign-in, signed in without staff gets a 404 | `apps/design/views.py` | `tests/design/` |
 | Each keyed write runs at most once, per user, per body | `apps/core/idempotency.py` | `tests/core/test_idempotency.py` |
 | Signed-out writes get 401, never a redirect | `login_required_json` | `tests/core/test_decorators.py` |
 | Python security lint (bandit rules) | ruff `S` | `tox -e lint` |

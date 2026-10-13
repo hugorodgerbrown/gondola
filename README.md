@@ -18,7 +18,7 @@ group chat. An email the evening before sums up tomorrow.
 | Invite | `/i/<token>/` | Readable without an account; the Join button joins |
 | Account | `/app/account/` | Name, evening email, passkeys, connected apps, the tour, sign out, delete |
 | Tour | `/app/tour/` | The onboarding tour on a private demo group (docs/onboarding-tour.md) |
-| Design | `/app/design/` | Staff only (a 404 for anyone else): every token and component state (DESIGN.md) |
+| Design | `/app/design/` | Staff only (sign-in first, then a 404 if not staff): every token and component state (DESIGN.md) |
 | Offline | `/app/offline/` | What the installed app shows for a page it hasn't cached |
 | Terms, privacy, help | `/terms/`, `/privacy/`, `/help/` | Public; the MCP tools `privacy_policy`, `terms_of_service` and `help` return the same words |
 
@@ -98,7 +98,7 @@ uv run tox -e sast      # semgrep (downloads rule packs; CI runs it too)
 config/            settings.py (one module, env-driven), urls, wsgi/asgi
 apps/core/         BaseModel, idempotency, tokens, decorators, rate limits, analytics,
                    health checks, the CSRF failure page
-apps/public/       the front page, terms, privacy, help (each body also served as Markdown)
+apps/public/       the front page, terms, privacy, help (the last three also as Markdown)
 apps/pwa/          manifest, service worker (/app/sw.js), offline page, launch screen
 apps/accounts/     User, sign-in by emailed link and code, passkeys, the account page
 apps/resorts/      Pass, Resort, the resort sheets, import_resorts, search
