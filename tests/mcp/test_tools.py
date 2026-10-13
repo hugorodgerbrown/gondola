@@ -136,6 +136,15 @@ def test_clear_days(world: Any) -> None:
     assert list(PlanDay.objects.values_list("user", flat=True)) == [world["ben"].pk]
 
 
+def test_clear_days_never_touches_the_past(world: Any) -> None:
+    past = datetime.date(2025, 12, 20)
+    PlanDayFactory.create(user=world["anna"], date=past, resort=world["verbier"])
+    PlanDayFactory.create(user=world["anna"], date=DAY, resort=world["verbier"])
+    with pytest.raises(ToolError, match="nothing was cleared"):
+        clear_days(world["anna"], {"dates": ["2025-12-20", "2026-12-20"]})
+    assert PlanDay.objects.filter(user=world["anna"]).count() == 2
+
+
 def test_my_days_takes_a_range_and_skips_the_past(world: Any) -> None:
     PlanDayFactory.create(user=world["anna"], date=datetime.date(2026, 11, 1))
     PlanDayFactory.create(user=world["anna"], date=DAY)

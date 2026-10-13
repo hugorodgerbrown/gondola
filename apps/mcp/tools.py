@@ -119,6 +119,21 @@ def _text(args: dict[str, Any], key: str) -> str:
     return value.strip()
 
 
+def _plannable(days: list[datetime.date], verb: str) -> list[datetime.date]:
+    """Return ``days`` if all can be changed, else refuse the lot.
+
+    Writes and clears share the calendar's window, so a wrong year can't
+    touch a past day that no tool could then put back.
+    """
+    refused = [d.isoformat() for d in days if not is_plannable(d)]
+    if refused:
+        raise ToolError(
+            f"Days can be changed from today up to {PLAN_HORIZON_DAYS} days ahead; "
+            f"nothing was {verb}. Outside that: {', '.join(refused)}."
+        )
+    return days
+
+
 def _resort(query: str) -> Resort:
     """Return the one resort ``query`` names: its code, its name, or one match."""
     matches = search_resorts(query)
@@ -184,21 +199,15 @@ def my_days(user: User, args: dict[str, Any]) -> dict[str, Any]:
 
 def set_days(user: User, args: dict[str, Any]) -> dict[str, Any]:
     """Put the user in one resort on every day named, replacing what was there."""
-    days = _dates(args)
+    days = _plannable(_dates(args), "saved")
     resort = _resort(_text(args, "resort"))
-    refused = [d.isoformat() for d in days if not is_plannable(d)]
-    if refused:
-        raise ToolError(
-            f"Days can be said from today up to {PLAN_HORIZON_DAYS} days ahead; "
-            f"nothing was saved. Outside that: {', '.join(refused)}."
-        )
     update_plans(user, days, resort)
     return {"resort": _resort_data(resort), "saved": [d.isoformat() for d in days]}
 
 
 def clear_days(user: User, args: dict[str, Any]) -> dict[str, Any]:
-    """Make the named days unsaid again."""
-    days = _dates(args)
+    """Make the named days unsaid again, from today on (the past is kept)."""
+    days = _plannable(_dates(args), "cleared")
     had = PlanDay.objects.filter(user=user, date__in=days).values_list(
         "date", flat=True
     )
@@ -350,7 +359,10 @@ TOOLS: dict[str, Tool] = {
         ),
         Tool(
             name="clear_days",
-            description="Make the user's given days unsaid again (undecided).",
+            description=(
+                "Make the user's given days unsaid again (undecided). Days run "
+                "from today to a year ahead; past days are kept."
+            ),
             input_schema={"type": "object", "properties": DAYS},
             func=clear_days,
             read_only=False,
