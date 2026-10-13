@@ -1,5 +1,10 @@
-Open this link to sign in to {{ SITE_NAME }}:
+{% autoescape off %}Open this link to sign in to {{ SITE_NAME }}:
 
 {{ link }}
 
-It works once, for 30 minutes. If you didn't ask for it, ignore this email.
+Or type this code where you asked for it:
+
+{{ code }}
+
+The link and the code work once, for {{ minutes }} minutes. If you didn't ask to sign in, ignore this email: nothing happens unless the link or code is used.
+{% endautoescape %}

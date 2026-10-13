@@ -54,7 +54,7 @@ apps/public/     the public pages: /, /terms/, /privacy/, /help/; each body
 apps/pwa/        /app/manifest.webmanifest, /app/sw.js, /app/offline/;
                  conf.py holds the app's identity, SCOPE and the precache list
 apps/accounts/   Gondola's own User (docs/decisions/), sign-in by emailed
-                 link, passkeys, the account page
+                 link and code (docs/accounts.md), passkeys, the account page
 apps/resorts/    the Swiss resorts, imported from apps/resorts/data
 apps/groups/     groups, plan days, the calendar, board and map
 apps/tour/       the onboarding tour on a private demo group

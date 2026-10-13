@@ -4,8 +4,10 @@
     <div style="max-width:480px;margin:0 auto;background:#ffffff;border-radius:12px;padding:24px;">
       <p style="margin:0 0 16px;font-size:16px;">Tap the button to sign in to {{ SITE_NAME }}.</p>
       {# nosemgrep: generic.html-templates.security.var-in-href.var-in-href -- built by the server #}
-      <p style="margin:0 0 16px;"><a href="{{ link }}" style="display:inline-block;padding:14px 20px;border-radius:8px;background:#1a1916;color:#ffffff;text-decoration:none;font-weight:600;">Sign in</a></p>
-      <p style="margin:0;font-size:13px;color:#6b6860;">It works once, for 30 minutes. If you didn't ask for it, ignore this email.</p>
+      <p style="margin:0 0 24px;"><a href="{{ link }}" style="display:inline-block;padding:14px 20px;border-radius:8px;background:#1a1916;color:#ffffff;text-decoration:none;font-weight:600;">Sign in</a></p>
+      <p style="margin:0 0 8px;font-size:14px;">Or type this code where you asked for it:</p>
+      <p style="margin:0 0 24px;font-size:28px;font-weight:600;letter-spacing:6px;font-family:ui-monospace,Menlo,monospace;">{{ code }}</p>
+      <p style="margin:0;font-size:13px;color:#6b6860;">The link and the code work once, for {{ minutes }} minutes. If you didn't ask to sign in, ignore this email.</p>
     </div>
   </body>
 </html>

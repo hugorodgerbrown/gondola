@@ -239,8 +239,10 @@ LOGIN_REDIRECT_URL = "planning:map"
 LOGOUT_REDIRECT_URL = "public:home"
 # An installed app should not sign people out while they are offline.
 SESSION_COOKIE_AGE = 60 * 60 * 24 * 90
-# How long an emailed sign-in link works, in seconds.
-SIGN_IN_LINK_MAX_AGE = 60 * 30
+# How long an emailed sign-in link and code work, in seconds, and how many
+# wrong codes end a request (docs/accounts.md).
+SIGN_IN_MAX_AGE_SECONDS = 60 * 30
+SIGN_IN_MAX_CODE_ATTEMPTS = 5
 
 # Passkeys (WebAuthn). The relying party is this site's host name; a passkey
 # only works on the host it was made for. Both default to SITE_URL, so

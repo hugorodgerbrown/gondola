@@ -1,24 +1,27 @@
-"""apps/accounts/views.py — Signing in by emailed link, and the account page.
+"""apps/accounts/views.py — Signing in by emailed link or code, and the account page.
 
-* ``sign_in`` asks for an email and sends a link; ``check_email`` says so.
-* ``verify`` is the link itself: it signs the person in and, the first
-  time, asks what friends should call them (``welcome``).
+* ``sign_in`` asks for an email and sends a link and a six-digit code;
+  ``sign_in_code`` says so and takes the code.
+* ``sign_in_link`` is the link itself: a Continue button whose POST signs
+  in. It asks for a click because mail scanners open links to check them,
+  and would use the link up.
+* Signing in the first time asks what friends should call them
+  (``welcome``), then suggests a passkey (``passkey_welcome``), once.
 * ``account_settings`` edits the name and the evening email; it also holds
   sign-out and account deletion.
 * ``stop_evening_email`` is the one-tap opt-out from the email footer.
-* ``welcome`` asks a new account its name, then ``passkey_welcome``
-  suggests a passkey, once.
+* ``admin_login`` sends the admin's password form to the normal sign-in.
 * The ``passkey_*`` views back the browser's WebAuthn calls (see
   ``passkeys.py``, ported from Tally): JSON in, JSON out, except removing
   one, which is a form.
+
+See docs/accounts.md.
 """
 
 from __future__ import annotations
 
 import json
 import logging
-from collections.abc import Callable
-from functools import wraps
 from typing import Any
 from urllib.parse import urlencode
 
@@ -30,24 +33,20 @@ from django.core.exceptions import PermissionDenied
 from django.http import HttpRequest, HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
-from django.views.decorators.http import require_GET, require_POST
+from django.views.decorators.cache import never_cache
+from django.views.decorators.http import require_GET, require_http_methods, require_POST
 from mcp_auth.policy import can_connect
 
+from apps.core.decorators import login_required_json
 from apps.core.ratelimit import client_ip, over_limit
+from apps.core.redirects import safe_next
 from apps.tour.session import after_welcome
 
-from . import passkeys
-from .forms import NameForm, ProfileForm, SignInForm
-from .models import Passkey, User
-from .services import (
-    InvalidLink,
-    read_sign_in_token,
-    read_unsubscribe_token,
-    safe_next,
-    send_sign_in_email,
-    sign_in_allowed,
-    sign_in_url,
-)
+from . import passkeys, sign_in
+from .forms import CodeForm, NameForm, ProfileForm, SignInForm
+from .models import Passkey, SignInRequest, User
+from .services import InvalidLink, read_unsubscribe_token
+from .tasks import send_sign_in_email
 
 logger = logging.getLogger(__name__)
 
@@ -64,61 +63,136 @@ MODEL_BACKEND = "django.contrib.auth.backends.ModelBackend"
 # Passkey requests per address per ten minutes, as in Tally.
 PASSKEY_LIMIT = 30
 
-# Session key holding the last link, shown on the page in DEBUG only.
+# The session remembers which request this browser started, so its code
+# only works here.
+SESSION_REQUEST = "accounts.sign_in_request"
+SESSION_EMAIL = "accounts.sign_in_email"
+# The last link, shown on the code page in DEBUG only.
 DEBUG_LINK_KEY = "debug_sign_in_link"
 
 
-def sign_in(request: HttpRequest) -> HttpResponse:
-    """Ask for an email address and send a sign-in link to it."""
-    next_url = safe_next(request.POST.get("next") or request.GET.get("next"), request)
-    if request.user.is_authenticated:
+def _minutes() -> int:
+    """How long a sign-in email works, for the pages that say so."""
+    return int(settings.SIGN_IN_MAX_AGE_SECONDS // 60)
+
+
+def _link_invalid(request: HttpRequest) -> HttpResponse:
+    """Say a sign-in link is used up or out of date."""
+    return render(request, "accounts/link_invalid.html", {"minutes": _minutes()}, status=410)
+
+
+def _after_sign_in(request: HttpRequest, user: User, next_url: str | None) -> str:
+    """Return where a freshly signed-in user goes: their name first, if it's missing."""
+    url = safe_next(request, next_url)
+    if not user.display_name:
+        return f"{reverse('accounts:welcome')}?{urlencode({'next': url})}"
+    return url
+
+
+def _complete_sign_in(request: HttpRequest, sign_in_request: SignInRequest) -> HttpResponse:
+    """Sign in the account a redeemed request belongs to, and send it on."""
+    user = sign_in.user_for(sign_in_request)
+    if user is None:
+        return render(request, "accounts/account_disabled.html", status=403)
+    login(request, user, backend=MODEL_BACKEND)
+    for key in (SESSION_REQUEST, SESSION_EMAIL, DEBUG_LINK_KEY):
+        request.session.pop(key, None)
+    return redirect(_after_sign_in(request, user, sign_in_request.next_url))
+
+
+@never_cache
+@require_http_methods(["GET", "POST"])
+def sign_in_view(request: HttpRequest) -> HttpResponse:
+    """Ask for an email address and send it a sign-in link and code."""
+    next_url = safe_next(request, request.POST.get("next") or request.GET.get("next"))
+    if request.user.is_authenticated and request.method == "GET":
         return redirect(next_url)
     form = SignInForm(request.POST or None)
+    status = 200
     if request.method == "POST" and form.is_valid():
         email = form.cleaned_data["email"]
-        if not sign_in_allowed(email):
-            form.add_error("email", "Too many links sent to this address. Try again later.")
+        if over_limit("sign-in-ip", client_ip(request), limit=10, window_seconds=600) or (
+            over_limit("sign-in-email", email, limit=5, window_seconds=3600)
+        ):
+            form.add_error("email", "Too many sign-in emails. Wait a few minutes and try again.")
+            status = 429
         else:
-            link = sign_in_url(request, email, next_url)
-            send_sign_in_email(email, link)
-            request.session["sign_in_email"] = email
+            sign_in_request, token, code = sign_in.issue(email, next_url)
+            link = request.build_absolute_uri(reverse("accounts:sign_in_link", args=[token]))
+            send_sign_in_email.enqueue(email=email, link=link, code=code)
+            request.session[SESSION_REQUEST] = str(sign_in_request.uuid)
+            request.session[SESSION_EMAIL] = email
             if settings.DEBUG:
                 request.session[DEBUG_LINK_KEY] = link
-            return redirect("accounts:check_email")
-    return render(request, "accounts/sign_in.html", {"form": form, "next_url": next_url})
-
-
-def check_email(request: HttpRequest) -> HttpResponse:
-    """Tell the person to open the link in their email."""
+            return redirect("accounts:sign_in_code")
+    elif request.method == "POST":
+        status = 400
     return render(
-        request,
-        "accounts/check_email.html",
-        {
-            "email": request.session.get("sign_in_email", ""),
-            "debug_link": request.session.get(DEBUG_LINK_KEY) if settings.DEBUG else "",
-        },
+        request, "accounts/sign_in.html", {"form": form, "next_url": next_url}, status=status
     )
 
 
-def verify(request: HttpRequest, token: str) -> HttpResponse:
-    """Sign in with an emailed link, creating the account the first time."""
-    try:
-        result = read_sign_in_token(token)
-    except InvalidLink as exc:
-        return render(request, "accounts/link_invalid.html", {"reason": str(exc)}, status=400)
-    login(request, result.user, backend=MODEL_BACKEND)
-    request.session.pop(DEBUG_LINK_KEY, None)
-    next_url = safe_next(result.next_url, request)
-    if not result.user.display_name:
-        query = urlencode({"next": next_url})
-        return redirect(f"{reverse('accounts:welcome')}?{query}")
-    return redirect(next_url)
+@never_cache
+@require_http_methods(["GET", "POST"])
+def sign_in_code(request: HttpRequest) -> HttpResponse:
+    """Tell the person to check their email, and take the code from it."""
+    request_uuid = request.session.get(SESSION_REQUEST)
+    if not request_uuid:
+        return redirect("accounts:sign_in")
+    form = CodeForm(request.POST or None)
+    status = 200
+    if request.method == "POST":
+        status = 400
+        if over_limit("sign-in-code-ip", client_ip(request), limit=20, window_seconds=600):
+            form.add_error(None, "Too many attempts. Wait a few minutes, or use the link.")
+            status = 429
+        elif form.is_valid():
+            redeemed = sign_in.redeem_code(request_uuid, form.cleaned_data["code"])
+            if redeemed is not None:
+                return _complete_sign_in(request, redeemed)
+            form.add_error(
+                "code", "That code didn't work. Check the newest email, or use its link."
+            )
+    context = {
+        "form": form,
+        "email": request.session.get(SESSION_EMAIL, ""),
+        "minutes": _minutes(),
+        "debug_link": request.session.get(DEBUG_LINK_KEY) if settings.DEBUG else "",
+    }
+    return render(request, "accounts/sign_in_code.html", context, status=status)
+
+
+@never_cache
+@require_http_methods(["GET", "POST"])
+def sign_in_link(request: HttpRequest, token: str) -> HttpResponse:
+    """Show a Continue button for an emailed link; the POST signs in."""
+    if request.method == "GET":
+        pending = sign_in.find_by_token(token)
+        if pending is None:
+            return _link_invalid(request)
+        return render(request, "accounts/sign_in_link.html", {"email": pending.email})
+    redeemed = sign_in.redeem_token(token)
+    if redeemed is None:
+        return _link_invalid(request)
+    return _complete_sign_in(request, redeemed)
+
+
+def admin_login(request: HttpRequest) -> HttpResponse:
+    """Send the admin's password form to the normal sign-in.
+
+    Staff sign in like everyone else; a signed-in user who isn't staff is
+    refused here rather than sent round in a loop.
+    """
+    if request.user.is_authenticated:
+        raise PermissionDenied
+    query = urlencode({"next": request.GET.get("next", reverse("admin:index"))})
+    return redirect(f"{reverse('accounts:sign_in')}?{query}")
 
 
 @login_required
 def welcome(request: HttpRequest) -> HttpResponse:
     """Ask a new account what friends should call them."""
-    next_url = safe_next(request.POST.get("next") or request.GET.get("next"), request)
+    next_url = safe_next(request, request.POST.get("next") or request.GET.get("next"))
     form = NameForm(request.POST or None, instance=request.user)
     if request.method == "POST" and form.is_valid():
         form.save()
@@ -194,20 +268,6 @@ def _json_body(request: HttpRequest) -> dict[str, Any] | None:
     return data if isinstance(data, dict) else None
 
 
-def _login_required_json(
-    view: Callable[..., JsonResponse],
-) -> Callable[..., HttpResponse]:
-    """Answer a signed-out request with 401 JSON instead of a redirect."""
-
-    @wraps(view)
-    def wrapper(request: HttpRequest, *args: Any, **kwargs: Any) -> HttpResponse:
-        if not request.user.is_authenticated:
-            return JsonResponse({"error": "signed_out"}, status=401)
-        return view(request, *args, **kwargs)
-
-    return wrapper
-
-
 def _wrong_host(request: HttpRequest) -> JsonResponse | None:
     """Refuse passkey options the browser would reject for this page's host.
 
@@ -264,24 +324,22 @@ def passkey_sign_in(request: HttpRequest) -> JsonResponse:
         return JsonResponse({"error": "account_disabled"}, status=403)
     login(request, user, backend=MODEL_BACKEND)
     raw_next = data.get("next")
-    next_url = safe_next(raw_next if isinstance(raw_next, str) else None, request)
-    if not user.display_name:
-        next_url = f"{reverse('accounts:welcome')}?{urlencode({'next': next_url})}"
-    return JsonResponse({"next": next_url})
+    next_url = raw_next if isinstance(raw_next, str) else None
+    return JsonResponse({"next": _after_sign_in(request, user, next_url)})
 
 
 @login_required
 @require_GET
 def passkey_welcome(request: HttpRequest) -> HttpResponse:
     """Suggest a passkey to a new account, once; anyone with one goes straight on."""
-    next_url = safe_next(request.GET.get("next"), request)
+    next_url = safe_next(request, request.GET.get("next"))
     if Passkey.objects.for_user(current_user(request)).exists():
         return redirect(next_url)
     return render(request, "accounts/passkey_welcome.html", {"next_url": next_url})
 
 
 @require_POST
-@_login_required_json
+@login_required_json
 def passkey_register_options(request: HttpRequest) -> JsonResponse:
     """Return a challenge for ``navigator.credentials.create()``."""
     if refusal := _wrong_host(request):
@@ -290,7 +348,7 @@ def passkey_register_options(request: HttpRequest) -> JsonResponse:
 
 
 @require_POST
-@_login_required_json
+@login_required_json
 def passkey_register(request: HttpRequest) -> JsonResponse:
     """Verify a new passkey and save it. The body is the credential's JSON."""
     if _passkey_rate_limited(request):

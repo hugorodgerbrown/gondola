@@ -1,0 +1,13 @@
+{% extends "public_base.html" %}
+{% block title %}Sign in · {{ SITE_NAME }}{% endblock %}
+{% block content %}
+  <div class="heading">
+    <span class="eyebrow">Sign in</span>
+    <h1 class="title">Continue as {{ email }}</h1>
+  </div>
+  {# A button, not an automatic sign-in: mail scanners open links, and would use this one up. #}
+  <form method="post" class="card card--padded">
+    {% csrf_token %}
+    <button type="submit" class="button button--block">Continue</button>
+  </form>
+{% endblock %}

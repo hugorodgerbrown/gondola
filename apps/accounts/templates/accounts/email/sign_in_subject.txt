@@ -1,0 +1,1 @@
+Your {{ SITE_NAME }} sign-in code is {{ code }}

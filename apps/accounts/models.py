@@ -1,8 +1,9 @@
-"""apps/accounts/models.py — The custom user model.
+"""apps/accounts/models.py — The user, their passkeys, and pending sign-ins.
 
 ``User`` signs in with an email address, never a username. Emails are
 normalised to lowercase before storage and lookup, at every entry point,
-so ``Bob@x.com`` and ``bob@x.com`` are one account.
+so ``Bob@x.com`` and ``bob@x.com`` are one account. ``SignInRequest`` is
+one emailed link and code (see ``sign_in.py``).
 """
 
 from __future__ import annotations
@@ -16,6 +17,7 @@ from django.contrib.auth.models import (
 )
 from django.contrib.auth.password_validation import validate_password
 from django.db import models
+from django.utils import timezone
 
 from apps.core.models import BaseModel
 
@@ -169,3 +171,51 @@ class Passkey(BaseModel):
     def to_string(self) -> str:
         """Return the passkey's name and whose it is."""
         return f"{self.name} ({self.user.email})"
+
+
+class SignInRequestQuerySet(models.QuerySet["SignInRequest"]):
+    """Custom queryset for SignInRequest."""
+
+    def live(self) -> SignInRequestQuerySet:
+        """Return requests that are unused and unexpired."""
+        return self.filter(used_at__isnull=True, expires_at__gt=timezone.now())
+
+    def expired(self) -> SignInRequestQuerySet:
+        """Return requests past their expiry, used or not: safe to delete."""
+        return self.filter(expires_at__lte=timezone.now())
+
+    def for_email(self, email: str) -> SignInRequestQuerySet:
+        """Return the requests sent to ``email``."""
+        return self.filter(email=normalise_email(email))
+
+
+class SignInRequest(BaseModel):
+    """One emailed sign-in: a link and a six-digit code, either usable once.
+
+    Only hashes are stored, so a copy of the database signs no one in. The
+    link works in any browser; the code only in the browser that asked for
+    it (the session holds this row's uuid), which is what makes it safe to
+    keep short. The code is there because an installed iPhone app has its
+    own cookies: a link opened from Mail signs in Safari, not the app, so
+    the app's user types the code instead.
+    """
+
+    email = models.EmailField(db_index=True)
+    token_hash = models.CharField(max_length=64, unique=True)
+    code_hash = models.CharField(max_length=64)
+    next_url = models.CharField(max_length=2048, blank=True)
+    expires_at = models.DateTimeField(db_index=True)
+    used_at = models.DateTimeField(null=True, blank=True)
+    code_attempts = models.PositiveSmallIntegerField(default=0)
+
+    objects = SignInRequestQuerySet.as_manager()
+
+    class Meta(BaseModel.Meta):
+        """Model metadata."""
+
+        ordering = ["-created_at"]
+
+    def to_string(self) -> str:
+        """Return who it was for and whether it was used."""
+        state = "used" if self.used_at else "unused"
+        return f"Sign-in for {self.email} ({state})"
