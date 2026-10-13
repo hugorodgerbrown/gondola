@@ -111,6 +111,20 @@ def test_a_tool_call_answers_as_the_token_user(client: Client) -> None:
 
 
 @pytest.mark.django_db
+@pytest.mark.parametrize(
+    ("tool", "heading"),
+    [("privacy_policy", "# Privacy notice"), ("terms_of_service", "# Terms"), ("help", "# Help")],
+)
+def test_public_pages_come_back_as_markdown(client: Client, tool: str, heading: str) -> None:
+    """The text content is the Markdown itself; structuredContent adds title and URL."""
+    result = call_endpoint(client, rpc("tools/call", {"name": tool})).json()["result"]
+    text = result["content"][0]["text"]
+    assert heading in text
+    assert text == result["structuredContent"]["markdown"]
+    assert result["structuredContent"]["url"].startswith("http")
+
+
+@pytest.mark.django_db
 def test_a_tool_error_is_readable(client: Client) -> None:
     """A bad argument is an isError result, not a protocol error."""
     body = rpc("tools/call", {"name": "find_resort", "arguments": {}})
@@ -147,7 +161,7 @@ def test_endpoint_refuses_a_deactivated_account(client: Client) -> None:
 def test_account_page_offers_connected_apps(client: Client) -> None:
     """Everyone's account page says how to connect and links to their apps."""
     client.force_login(UserFactory.create())
-    page = client.get("/account/").content.decode()
+    page = client.get("/app/account/").content.decode()
     assert "/oauth/connected/" in page
     assert "/mcp" in page
 

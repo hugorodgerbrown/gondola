@@ -230,8 +230,8 @@ def test_sign_in_options_allow_any_passkey(client: Client) -> None:
 def test_passkey_signs_in_its_owner(client: Client, verified_sign_in: None) -> None:
     """A verified passkey signs its owner in and records the use."""
     passkey = PasskeyFactory.create(credential_id="credential-1")
-    response = sign_in_with(client, CREDENTIAL, "/account/")
-    assert response.json() == {"next": "/account/"}
+    response = sign_in_with(client, CREDENTIAL, "/app/account/")
+    assert response.json() == {"next": "/app/account/"}
     assert client.session["_auth_user_id"] == str(passkey.user.pk)
     passkey.refresh_from_db()
     assert passkey.sign_count == 7
@@ -345,8 +345,8 @@ def test_new_account_signing_in_by_passkey_is_asked_its_name(
 ) -> None:
     """An account with no name yet goes to the welcome page first."""
     PasskeyFactory.create(credential_id="credential-1", user__display_name="")
-    response = sign_in_with(client, CREDENTIAL, "/days/")
-    assert response.json() == {"next": f"{reverse('accounts:welcome')}?next=%2Fdays%2F"}
+    response = sign_in_with(client, CREDENTIAL, "/app/days/")
+    assert response.json() == {"next": f"{reverse('accounts:welcome')}?next=%2Fapp%2Fdays%2F"}
 
 
 def test_verification_requires_the_person(
@@ -374,16 +374,16 @@ def test_verification_requires_the_person(
 
 def test_welcome_nudge_suggests_a_passkey(signed_in: Client) -> None:
     """No passkey yet: the page offers one and a way to skip it."""
-    response = signed_in.get(reverse("accounts:passkey_welcome"), {"next": "/days/"})
+    response = signed_in.get(reverse("accounts:passkey_welcome"), {"next": "/app/days/"})
     assert b"data-passkey-register" in response.content
-    assert b'href="/days/"' in response.content
+    assert b'href="/app/days/"' in response.content
 
 
 def test_welcome_nudge_skips_anyone_with_a_passkey(signed_in: Client, user: User) -> None:
     """Someone who already has one goes straight on."""
     PasskeyFactory.create(user=user)
-    response = signed_in.get(reverse("accounts:passkey_welcome"), {"next": "/days/"})
-    assert response["Location"] == "/days/"
+    response = signed_in.get(reverse("accounts:passkey_welcome"), {"next": "/app/days/"})
+    assert response["Location"] == "/app/days/"
 
 
 def test_account_page_lists_my_passkeys_only(signed_in: Client, user: User) -> None:

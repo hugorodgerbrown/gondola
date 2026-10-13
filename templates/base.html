@@ -1,27 +1,30 @@
 {% load static %}<!doctype html>
+{# The installed app's pages (everything under /app/). Public pages extend public_base.html. #}
 <html lang="en-GB">
   <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    {% include "includes/_head.html" %}
     <title>{% block title %}{{ SITE_NAME }}{% endblock %}</title>
     <meta name="description" content="{% block description %}Say which resort you'll be in on which days, and see where your friends will be over the coming weeks.{% endblock %}">
     {% block og %}{% endblock %}
-    <meta name="theme-color" content="#f2f0ec">
-    <link rel="manifest" href="{% url 'core:manifest' %}">
-    <link rel="icon" href="{% static 'img/icon.svg' %}" type="image/svg+xml">
-    <link rel="apple-touch-icon" href="{% static 'img/apple-touch-icon.png' %}">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap">
-    <link rel="stylesheet" href="{% static 'css/app.css' %}">
-    {% include "includes/analytics.html" %}
-    {% block head %}{% endblock %}
+    {# The outbox reads these to send queued writes as the right user. #}
+    <meta name="app-principal" content="{{ request.user.pk|default_if_none:'' }}">
     <meta name="csrf-token" content="{{ csrf_token }}">
+    {# pwa.js registers the worker from these. #}
+    <meta name="app-worker" content="{% url 'pwa:service_worker' %}">
+    <meta name="app-scope" content="{{ pwa.scope }}">
+    {# No eval, no injected <style>: both would need a looser CSP. #}
+    <meta name="htmx-config" content='{"allowEval": false, "includeIndicatorStyles": false}'>
+    <link rel="manifest" href="{% url 'pwa:manifest' %}">
+    {# Blocking on purpose and tiny: decides before first paint whether the launch screen shows. #}
+    <script src="{% static 'js/launch_gate.js' %}"></script>
+    {% block head %}{% endblock %}
   </head>
   <body hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
+    {% include "includes/_launch_shell.html" %}
     {% block topbar %}
       <header class="topbar">
-        <a class="topbar__brand" href="{% url 'core:home' %}"><span class="topbar__logo"><img src="{% static 'img/logo.svg' %}" alt="" width="20" height="25"></span>{{ SITE_NAME }}</a>
+        <a class="topbar__brand" href="{% url 'planning:map' %}"><span class="topbar__logo"><img src="{% static 'img/logo.svg' %}" alt="" width="20" height="25"></span>{{ SITE_NAME }}</a>
+        {% include "includes/_outbox_status.html" %}
         {% if user.is_authenticated %}
           <a class="icon-button" href="{% url 'accounts:settings' %}" aria-label="Your account">{% include "includes/icons/user.html" %}</a>
         {% else %}
@@ -29,6 +32,9 @@
         {% endif %}
       </header>
     {% endblock %}
+    <div class="offline-banner" data-offline-banner hidden>
+      You're offline. Pages you've opened before still work.
+    </div>
     {% block main %}
       <main class="page{% if not user.is_authenticated %} page--signed-out{% endif %}">
         {% include "includes/messages.html" %}
@@ -41,7 +47,12 @@
     <dialog class="sheet" id="sheet" aria-label="Details">
       <div id="sheet-body" class="sheet__body"></div>
     </dialog>
-    <script src="{% static 'vendor/htmx-2.0.4.min.js' %}"></script>
+    <script src="{% static 'vendor/htmx.min.js' %}"></script>
+    <script src="{% static 'js/idb.js' %}"></script>
+    <script src="{% static 'js/outbox_core.js' %}"></script>
+    <script src="{% static 'js/outbox.js' %}"></script>
+    <script src="{% static 'js/pwa.js' %}"></script>
+    <script src="{% static 'js/launch_shell.js' %}"></script>
     <script src="{% static 'js/app.js' %}"></script>
     {# Before the page's own scripts: the tour opens the map on the demo's day. #}
     {% if tour.script %}{{ tour.script|json_script:"tour-script" }}{% endif %}

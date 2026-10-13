@@ -14,11 +14,11 @@
   <section class="card card--padded" aria-labelledby="invite-heading">
     <span class="eyebrow" id="invite-heading">Invite link</span>
     <p class="small muted">Anyone with this link can join and will see everyone's names and planned days.</p>
-    <code class="mono small" style="display:block;padding:10px 12px;background:var(--sunk);border-radius:var(--radius-control);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ invite_link }}</code>
+    <code class="mono small invite-link">{{ invite_link }}</code>
     <div class="actions">
       <button type="button" class="button button--small" data-share-url="{{ invite_link }}" data-share-title="Join {{ group.name }}"{% if not group.is_demo %} data-tally="Invite shared" data-tally-from="group"{% endif %}>Share invite link</button>
       {% if is_owner %}
-        <form method="post" action="{% url 'planning:reset_invite' group.uuid %}" style="flex:0 0 auto">
+        <form method="post" action="{% url 'planning:reset_invite' group.uuid %}" class="no-shrink">
           {% csrf_token %}
           <button type="submit" class="button button--secondary button--small">Reset link</button>
         </form>

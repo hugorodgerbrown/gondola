@@ -120,5 +120,8 @@ def _call_tool(user: Any, params: dict[str, Any]) -> dict[str, Any]:
     except ToolError as exc:
         return {"content": [{"type": "text", "text": str(exc)}], "isError": True}
     logger.info("mcp.tool name=%s", tool.name)
-    content = {"type": "text", "text": json.dumps(result, ensure_ascii=False)}
+    if tool.markdown:
+        content = {"type": "text", "text": result["markdown"]}
+    else:
+        content = {"type": "text", "text": json.dumps(result, ensure_ascii=False)}
     return {"content": [content], "structuredContent": result}

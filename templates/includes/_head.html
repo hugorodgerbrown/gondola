@@ -1,0 +1,12 @@
+{% load static %}{# What every page's <head> has, public or in the app. #}
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="{{ pwa.theme_colour }}">
+<link rel="icon" href="{% static 'img/icon.svg' %}" type="image/svg+xml">
+<link rel="icon" href="{% static 'icons/icon-192.png' %}" type="image/png">
+<link rel="apple-touch-icon" href="{% static 'icons/apple-touch-icon.png' %}">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap">
+<link rel="stylesheet" href="{% static 'css/app.css' %}">
+{% include "includes/_analytics.html" %}

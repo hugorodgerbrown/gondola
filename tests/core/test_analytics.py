@@ -41,7 +41,7 @@ def test_counted_path_names_the_values() -> None:
     assert counted_path(request) == ""  # no match resolved yet
     request.resolver_match = resolve("/i/abc/")
     assert counted_path(request) == "/i/:token/"
-    request.resolver_match = resolve("/days/")
+    request.resolver_match = resolve("/app/days/")
     assert counted_path(request) == ""
 
 

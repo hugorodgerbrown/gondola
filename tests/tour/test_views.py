@@ -40,11 +40,11 @@ def _script(response: object) -> dict[str, object]:
 
 def test_offer_welcomes_and_keeps_next(client: Client, tourist: User) -> None:
     client.force_login(tourist)
-    response = client.get(reverse("tour:offer"), {"next": "/map/"})
+    response = client.get(reverse("tour:offer"), {"next": "/app/map/"})
     assert response.status_code == 200
     assert b"Welcome to Gondola!" in response.content
     assert b"Show me round" in response.content
-    assert response.context["next_url"] == "/map/"
+    assert response.context["next_url"] == "/app/map/"
 
 
 def test_offer_needs_sign_in(client: Client) -> None:
@@ -57,16 +57,16 @@ def test_start_makes_the_copy_and_opens_the_calendar(
     client: Client, tourist: User, resorts: dict[str, Resort]
 ) -> None:
     client.force_login(tourist)
-    response = client.post(reverse("tour:start"), {"next": "/map/"})
+    response = client.post(reverse("tour:start"), {"next": "/app/map/"})
     assert response["Location"] == reverse("planning:calendar")
     group = _demo(tourist)
-    assert client.session[TOUR_KEY] == {"group": str(group.uuid), "next": "/map/"}
+    assert client.session[TOUR_KEY] == {"group": str(group.uuid), "next": "/app/map/"}
 
 
 def test_start_without_resorts_goes_on(client: Client, tourist: User) -> None:
     client.force_login(tourist)
-    response = client.post(reverse("tour:start"), {"next": "/map/"})
-    assert response["Location"] == "/map/"
+    response = client.post(reverse("tour:start"), {"next": "/app/map/"})
+    assert response["Location"] == "/app/map/"
     assert not Group.objects.demos().exists()
 
 

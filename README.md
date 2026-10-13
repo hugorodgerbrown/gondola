@@ -10,13 +10,17 @@ group chat. An email the evening before sums up tomorrow.
 |---|---|---|
 | Front page | `/` | Explains the app; signed-in people go to the map |
 | Sign in | `/sign-in/` | Emails a one-time link; no passwords. First sign-in asks for a name |
-| Map | `/map/?date=&pass=` | Every resort as a pin, friend counts for the day, pass filter. Tap a pin for the resort sheet: who's there, plan your day here |
-| Calendar | `/days/` | A month at a time. Tap a day for who's with you and who's elsewhere; Add plans picks a resort (friends' first, then search) |
-| Groups | `/groups/` | Your groups; start one |
-| Group | `/groups/<uuid>/` | Members, the invite link (share, reset), leave or delete |
-| Who's where | `/groups/<uuid>/board/` | People down the side, 7 days across, resort codes |
+| Map | `/app/map/?date=&pass=` | Every resort as a pin, friend counts for the day, pass filter. Tap a pin for the resort sheet: who's there, plan your day here |
+| Calendar | `/app/days/` | A month at a time. Tap a day for who's with you and who's elsewhere; Add plans picks a resort (friends' first, then search) |
+| Groups | `/app/groups/` | Your groups; start one |
+| Group | `/app/groups/<uuid>/` | Members, the invite link (share, reset), leave or delete |
+| Who's where | `/app/groups/<uuid>/board/` | People down the side, 7 days across, resort codes |
 | Invite | `/i/<token>/` | Readable without an account; the Join button joins |
-| Account | `/account/` | Name, evening email, sign out, delete |
+| Account | `/app/account/` | Name, evening email, sign out, delete |
+| Terms, privacy, help | `/terms/`, `/privacy/`, `/help/` | Public; the MCP tools `privacy_policy`, `terms_of_service` and `help` return the same words |
+
+Everything signed-in lives under `/app/`, the installed app's scope
+(docs/pwa.md).
 
 ## Running locally
 
@@ -79,6 +83,7 @@ address in use, the passkey endpoints answer 409 and log
 
 ```bash
 uv run tox              # fmt, lint, types, checks, test, js, audit
+uv run tox -e e2e       # Playwright journeys (service worker, offline)
 uv run tox -e test      # one env
 uv run tox -e sast      # semgrep (downloads rule packs; CI runs it too)
 ```
@@ -87,7 +92,9 @@ uv run tox -e sast      # semgrep (downloads rule packs; CI runs it too)
 
 ```
 config/            settings.py (one module, env-driven), urls, wsgi/asgi
-apps/core/         BaseModel, idempotency, tokens, the front page, manifest and service worker
+apps/core/         BaseModel, idempotency, tokens, health checks, the move to /app/
+apps/public/       the front page, terms, privacy, help
+apps/pwa/          manifest, service worker (/app/sw.js), offline page, launch screen
 apps/accounts/     User, emailed sign-in links, the account page
 apps/resorts/      Pass, Resort, the resort sheets, import_resorts, search
 apps/groups/       Group, Membership, PlanDay;
@@ -98,7 +105,7 @@ apps/mcp/          the MCP endpoint (/mcp) and its tools; auth is mcp-auth
 templates/         base.html and shared includes
 static/            app.css, app.js, map.js, vendored htmx and MapLibre
 tests/             mirrors apps/; tests/js holds the Vitest tests
-docs/              testing, the onboarding tour, decisions/
+docs/              pwa, security, performance, testing, the onboarding tour, decisions/
 ```
 
 ## Connecting Claude (MCP)
@@ -118,6 +125,7 @@ any active account may connect. The tools:
 | `my_groups` | Your groups and their members |
 | `whos_where` | Who's in which resort, day by day |
 | `where_is` | One friend's days |
+| `privacy_policy`, `terms_of_service`, `help` | The public pages, as Markdown |
 
 Locally, mint a token for the only superuser and call it with curl
 (mcp-auth 0.1.2's `--username` looks up a `username` field, which

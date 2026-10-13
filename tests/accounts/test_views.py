@@ -31,31 +31,33 @@ def test_sign_in_page_renders(client: Client) -> None:
 def test_full_sign_up_flow(client: Client, settings: Any) -> None:
     settings.DEBUG = True
     response = client.post(
-        reverse("accounts:sign_in"), {"email": "Hugo@Example.com", "next": "/days/"}
+        reverse("accounts:sign_in"), {"email": "Hugo@Example.com", "next": "/app/days/"}
     )
     assert response["Location"] == reverse("accounts:check_email")
     page = client.get(response["Location"])
     assert b"hugo@example.com" in page.content
     assert b"Open the sign-in link" in page.content  # DEBUG shows the link
     welcome = client.get(_link_from_outbox())
-    assert welcome["Location"] == f"{reverse('accounts:welcome')}?next=%2Fdays%2F"
+    assert welcome["Location"] == f"{reverse('accounts:welcome')}?next=%2Fapp%2Fdays%2F"
     assert client.get(welcome["Location"]).status_code == 200
-    done = client.post(reverse("accounts:welcome"), {"display_name": " Hugo ", "next": "/days/"})
+    done = client.post(
+        reverse("accounts:welcome"), {"display_name": " Hugo ", "next": "/app/days/"}
+    )
     # A passkey is suggested once, then the tour is offered, on the way to
     # where they were going.
-    offer = f"{reverse('tour:offer')}?next=%2Fdays%2F"
+    offer = f"{reverse('tour:offer')}?next=%2Fapp%2Fdays%2F"
     assert done["Location"] == (
         f"{reverse('accounts:passkey_welcome')}?{urlencode({'next': offer})}"
     )
     nudge = client.get(done["Location"])
     assert b"Add a passkey?" in nudge.content
     assert nudge.context["next_url"] == offer
-    assert client.get(offer).context["next_url"] == "/days/"
+    assert client.get(offer).context["next_url"] == "/app/days/"
     assert User.objects.get(email="hugo@example.com").display_name == "Hugo"
 
 
 def test_new_account_keeps_every_query_parameter_of_next(client: Client) -> None:
-    next_url = "/map/?date=2027-01-16&pass=magic-pass"
+    next_url = "/app/map/?date=2027-01-16&pass=magic-pass"
     client.post(reverse("accounts:sign_in"), {"email": "new@example.com", "next": next_url})
     welcome = client.get(_link_from_outbox())
     page = client.get(welcome["Location"])
@@ -77,9 +79,9 @@ def test_welcome_requires_a_name(client: Client) -> None:
 
 def test_named_user_goes_straight_to_next(client: Client) -> None:
     user = UserFactory.create()
-    token = make_sign_in_token(user.email, "/groups/")
+    token = make_sign_in_token(user.email, "/app/groups/")
     response = client.get(reverse("accounts:verify", kwargs={"token": token}))
-    assert response["Location"] == "/groups/"
+    assert response["Location"] == "/app/groups/"
 
 
 def test_used_link_shows_error(client: Client) -> None:
@@ -90,8 +92,8 @@ def test_used_link_shows_error(client: Client) -> None:
 
 def test_signed_in_user_skips_sign_in(client: Client) -> None:
     client.force_login(UserFactory.create())
-    response = client.get(reverse("accounts:sign_in") + "?next=/days/")
-    assert response["Location"] == "/days/"
+    response = client.get(reverse("accounts:sign_in") + "?next=/app/days/")
+    assert response["Location"] == "/app/days/"
 
 
 def test_rate_limited_sign_in(client: Client) -> None:
@@ -120,7 +122,7 @@ def test_sign_out_goes_straight_home(client: Client) -> None:
     # The page drops the worker's cached pages before posting (app.js).
     assert b"data-sign-out" in page.content
     response = client.post(reverse("accounts:sign_out"))
-    assert response["Location"] == reverse("core:home")
+    assert response["Location"] == reverse("public:home")
     # Chrome on Android held the redirect while it cleared the cache.
     assert "Clear-Site-Data" not in response
     assert "_auth_user_id" not in client.session

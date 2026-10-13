@@ -25,6 +25,7 @@ from typing import TYPE_CHECKING
 from django.conf import settings
 
 if TYPE_CHECKING:
+    # Only for annotations: config/settings.py imports this module.
     from django.http import HttpRequest
 
 # Where the script loads from.
@@ -37,6 +38,11 @@ MAX_DATA = 8
 
 # A route's converters, "<str:token>" or "<token>": each becomes ":token".
 _CONVERTER = re.compile(r"<(?:\w+:)?(\w+)>")
+
+
+def csp_sources(domain: str) -> list[str]:
+    """Return the sources script-src and connect-src add for fivebar: none while it is off."""
+    return [ORIGIN] if domain else []
 
 
 def record(request: HttpRequest, name: str, **data: str | int | bool) -> None:

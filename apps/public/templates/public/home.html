@@ -1,14 +1,12 @@
-{% extends "base.html" %}
+{% extends "public_base.html" %}
 {% load static %}
 {% block content %}
-  {# Signed out: app.js drops the pages the service worker cached for whoever was signed in. #}
-  <div hidden data-forget-pages></div>
   <section class="hero">
     <span class="eyebrow">For skiing with friends</span>
     <h1 class="title title--large">Who's skiing where, and when</h1>
-    <p class="lede" style="font-size:16px">On a season pass your friends could be at any of a hundred resorts. Say which resort you'll be in on which days, and see where your group will be over the coming weeks, without digging back through the group chat.</p>
+    <p class="lede lede--large">On a season pass your friends could be at any of a hundred resorts. Say which resort you'll be in on which days, and see where your group will be over the coming weeks, without digging back through the group chat.</p>
   </section>
-  <figure style="margin:0">
+  <figure class="hero-figure">
     <img class="hero-picture" src="{% static 'img/home-calendar.png' %}" width="568" height="792" alt="A month on the calendar: the days you'll be in a resort, which friends will be there with you, and where the others are">
   </figure>
   <section class="card card--padded">

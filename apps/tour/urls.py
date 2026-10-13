@@ -7,8 +7,8 @@ from . import views
 app_name = "tour"
 
 urlpatterns = [
-    path("tour/", views.offer, name="offer"),
-    path("tour/start/", views.start, name="start"),
-    path("tour/end/", views.end, name="end"),
-    path("tour/finish/", views.finish, name="finish"),
+    path("app/tour/", views.offer, name="offer"),
+    path("app/tour/start/", views.start, name="start"),
+    path("app/tour/end/", views.end, name="end"),
+    path("app/tour/finish/", views.finish, name="finish"),
 ]

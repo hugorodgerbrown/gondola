@@ -47,17 +47,23 @@ Python 3.14 / Django 6.1, pinned in `pyproject.toml`.
 config/          settings (one module, env-driven), urls, wsgi/asgi
 apps/core/       BaseModel, IdempotencyMiddleware + IdempotencyRecord,
                  decorators (require_htmx, login_required_json), rate
-                 limits, tokens, analytics (fivebar goals), livez and healthz
+                 limits, tokens, analytics (fivebar goals), livez,
+                 healthz and the CSRF failure page
+apps/public/     the public pages: /, /terms/, /privacy/, /help/; each body
+                 is one _<name>_body.html, also served as Markdown
+apps/pwa/        /app/manifest.webmanifest, /app/sw.js, /app/offline/;
+                 conf.py holds the app's identity, SCOPE and the precache list
 apps/accounts/   Gondola's own User (docs/decisions/), sign-in by emailed
                  link, passkeys, the account page
 apps/resorts/    the Swiss resorts, imported from apps/resorts/data
 apps/groups/     groups, plan days, the calendar, board and map
 apps/tour/       the onboarding tour on a private demo group
 apps/mcp/        the MCP endpoint (/mcp) and its tools; auth is mcp-auth
-templates/       base.html and includes
+templates/       base.html (the app, /app/), public_base.html, includes
 static/js/       plain JavaScript, classic scripts, no build step
 static/css/      app.css: tokens on :root, components below
-docs/            testing, onboarding-tour, decisions/
+docs/            pwa, security, performance, testing, onboarding-tour,
+                 decisions/
 .claude/skills/  writing the Titan docs kept in Linear (research, user
                  testing script, blog post), each with a length setting
 ```
@@ -67,7 +73,8 @@ docs/            testing, onboarding-tour, decisions/
 ```bash
 uv sync && npm install
 uv run python manage.py runserver
-uv run tox                      # every check CI runs (except sast)
+uv run tox                      # every check CI runs (except e2e, sast)
+uv run tox -e e2e               # Playwright journeys
 uv run pytest tests/groups      # targeted run while iterating
 ```
 
@@ -100,6 +107,19 @@ Never run a bare `pytest`; use `uv run`. Dependencies: `uv add` /
 - Product analytics are fivebar goals: queue one with
   `apps.core.analytics.record`, or `data-tally` on a clicked element.
 
+### Views and templates
+
+- Signed-in pages live under `/app/` (the installed app's scope) and
+  extend `base.html`; public pages (front page, sign-in, invite links)
+  sit outside it and extend `public_base.html`. Read
+  [docs/pwa.md](docs/pwa.md#scope).
+- No inline `<script>`, `style=` or `on*=` in templates (emails aside): the
+  CSP blocks them and `tests/test_security.py` fails the build.
+- Style with the tokens in `static/css/app.css`; add a component class
+  there rather than one-off values.
+- Add any new static file the shell needs offline to
+  `apps/pwa/conf.py: PRECACHE_STATIC` (it has a byte budget).
+
 ### Models
 
 Every concrete model ships the full kit: inherits
@@ -115,8 +135,9 @@ Run with no arguments, change nothing without `--commit`, respect
 
 ## Tests
 
-pytest + FactoryBoy (`tests/` mirrors `apps/`) and Vitest for
-`static/js` (`tests/js/`). Coverage floor 90%. Call factories with
+pytest + FactoryBoy (`tests/` mirrors `apps/`), Vitest for `static/js`
+(`tests/js/`), and a small, capped Playwright suite for the service worker
+and offline (`tests/e2e/`). Coverage floor 90%. Call factories with
 `.create()`, never `Factory(...)`. All datetimes carry `tzinfo`. Full
 rules: [docs/testing.md](docs/testing.md).
 

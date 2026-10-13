@@ -13,7 +13,10 @@ from urllib.parse import urlsplit
 import dj_database_url
 from decouple import Csv, config
 from django.core.exceptions import ImproperlyConfigured
+from django.utils.csp import CSP
 from mcp_auth.conf import oauth2_settings
+
+from apps.core import analytics
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -94,6 +97,55 @@ SILENCED_SYSTEM_CHECKS = [
 _fivebar_default = _site_host if _site_host not in {None, "localhost", "127.0.0.1"} else ""
 FIVEBAR_DOMAIN: str = config("FIVEBAR_DOMAIN", default=_fivebar_default or "")
 
+# The basemap. Any MapLibre style URL; empty draws the built-in plain map
+# (Switzerland's outline only), which is also the fallback when it fails.
+# The default is swisstopo's winter base map, which needs no key and covers
+# Switzerland, which is every resort here.
+MAP_STYLE_URL: str = config(
+    "MAP_STYLE_URL",
+    default="https://vectortiles.geo.admin.ch/styles/ch.swisstopo.basemap-winter.vt/style.json",
+)
+# Where the map may fetch its style, tiles, glyphs and sprites from: the
+# style's own origin, and for swisstopo's styles any geo.admin.ch host (its
+# tiles and relief can come from a sibling). Override with MAP_SOURCES.
+_style_host = urlsplit(MAP_STYLE_URL).hostname or ""
+MAP_SOURCES: list[str] = config(
+    "MAP_SOURCES",
+    default=",".join(
+        ([f"https://{_style_host}"] if _style_host else [])
+        + (["https://*.geo.admin.ch"] if _style_host.endswith("geo.admin.ch") else [])
+    ),
+    cast=Csv(),
+)
+
+# Content Security Policy: everything from this origin, nothing inline.
+# There is no inline <script> anywhere; the launch-screen gate is a tiny
+# blocking file instead, so the policy needs no nonce. htmx's eval and
+# injected indicator styles are turned off in the base templates to match.
+# The other origins: Google Fonts (the stylesheet and the fonts), the
+# basemap (MapLibre also needs blob: workers and images), and fivebar's
+# only while FIVEBAR_DOMAIN is set.
+_FONTS_CSS = "https://fonts.googleapis.com"
+_FONTS = "https://fonts.gstatic.com"
+SECURE_CSP = {
+    "default-src": [CSP.SELF],
+    "script-src": [CSP.SELF, *analytics.csp_sources(FIVEBAR_DOMAIN)],
+    "style-src": [CSP.SELF, _FONTS_CSS],
+    "img-src": [CSP.SELF, "data:", "blob:", *MAP_SOURCES],
+    "font-src": [CSP.SELF, _FONTS],
+    "connect-src": [CSP.SELF, *MAP_SOURCES, *analytics.csp_sources(FIVEBAR_DOMAIN)],
+    "worker-src": [CSP.SELF, "blob:"],
+    "manifest-src": [CSP.SELF],
+    "object-src": [CSP.NONE],
+    "base-uri": [CSP.SELF],
+    "form-action": [CSP.SELF],
+    "frame-ancestors": [CSP.NONE],
+}
+# Marks CSRF refusals, so a refused keyed write isn't stored as answered.
+CSRF_FAILURE_VIEW = "apps.core.views.csrf_failure"
+SECURE_REFERRER_POLICY = "same-origin"
+SECURE_CROSS_ORIGIN_OPENER_POLICY = "same-origin"
+
 INSTALLED_APPS = [
     "django.contrib.admin",
     "django.contrib.auth",
@@ -104,6 +156,8 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "apps.core",
     "apps.accounts",
+    "apps.public",
+    "apps.pwa",
     "apps.resorts",
     "apps.groups",
     "apps.tour",
@@ -115,6 +169,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "django.middleware.csp.ContentSecurityPolicyMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -129,8 +184,6 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = "config.urls"
-# Marks CSRF refusals so a refused keyed write isn't stored as answered.
-CSRF_FAILURE_VIEW = "apps.core.views.csrf_failure"
 
 TEMPLATES = [
     {
@@ -143,6 +196,7 @@ TEMPLATES = [
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
                 "apps.core.context_processors.site",
+                "apps.pwa.context_processors.pwa",
                 "apps.core.analytics.analytics",
                 "apps.tour.context_processors.tour",
             ],
@@ -182,6 +236,9 @@ AUTH_PASSWORD_VALIDATORS = [
 # Signing in is an emailed link or a passkey; there are no passwords for people.
 LOGIN_URL = "accounts:sign_in"
 LOGIN_REDIRECT_URL = "planning:map"
+LOGOUT_REDIRECT_URL = "public:home"
+# An installed app should not sign people out while they are offline.
+SESSION_COOKIE_AGE = 60 * 60 * 24 * 90
 # How long an emailed sign-in link works, in seconds.
 SIGN_IN_LINK_MAX_AGE = 60 * 30
 
@@ -262,14 +319,5 @@ OAUTH2_PROVIDER = oauth2_settings(
     scope_description="See your groups' plans and change your own days",
 )
 MCP_AUTH = {"CAN_CONNECT": "mcp_auth.policy.active_user"}
-
-# The basemap. Any MapLibre style URL; empty draws the built-in plain map
-# (Switzerland's outline only), which is also the fallback when it fails.
-# The default is swisstopo's winter base map, which needs no key and covers
-# Switzerland, which is every resort here.
-MAP_STYLE_URL: str = config(
-    "MAP_STYLE_URL",
-    default="https://vectortiles.geo.admin.ch/styles/ch.swisstopo.basemap-winter.vt/style.json",
-)
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"

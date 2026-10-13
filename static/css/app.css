@@ -1719,6 +1719,191 @@ a.mday.mday--in.mday--picked:hover {
   box-shadow: var(--shadow-float);
 }
 
+/* --- Small utilities (templates carry no style attributes: the CSP) ----- */
+
+.title__link {
+  text-decoration: none;
+}
+
+.stack--tight {
+  gap: 8px;
+}
+
+.lede--large {
+  font-size: 16px;
+}
+
+.centred {
+  text-align: center;
+}
+
+.no-shrink {
+  flex: 0 0 auto;
+}
+
+.invite-link {
+  display: block;
+  padding: 10px 12px;
+  background: var(--sunk);
+  border-radius: var(--radius-control);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.hero-figure {
+  margin: 0;
+}
+
+/* --- Public pages: footer, prose (terms, privacy, help) ----------------- */
+
+.site-footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  max-width: var(--column);
+  margin: 0 auto;
+  padding: 16px;
+  padding-bottom: max(16px, env(safe-area-inset-bottom));
+  font-size: 13px;
+}
+
+.site-footer a {
+  color: var(--text-2);
+}
+
+.prose h1 {
+  font-size: 22px;
+  line-height: 28px;
+  margin: 0;
+}
+
+.prose h2 {
+  font-size: 16px;
+  margin: 24px 0 0;
+}
+
+.prose p,
+.prose ul {
+  margin: 8px 0 0;
+}
+
+.meta {
+  color: var(--text-2);
+  font-size: 13px;
+}
+
+.notice {
+  margin: 0 0 16px;
+  padding: 8px 12px;
+  border-radius: var(--radius-control);
+  background: rgba(217, 119, 6, 0.12);
+  color: var(--text-1);
+  font-size: 13px;
+}
+
+/* --- Offline and the outbox (static/js/pwa.js) --------------------------- */
+
+.offline-banner {
+  position: sticky;
+  top: var(--topbar-height);
+  z-index: 5;
+  padding: 8px 16px;
+  background: rgba(217, 119, 6, 0.12);
+  color: var(--text-1);
+  font-size: 13px;
+  text-align: center;
+}
+
+.outbox-status {
+  margin-left: auto;
+  margin-right: 8px;
+  font-size: 13px;
+  color: var(--text-2);
+}
+
+.outbox-status:empty {
+  display: none;
+}
+
+/* htmx request indicator (htmx's own injected styles are off, for the CSP). */
+
+.htmx-indicator {
+  opacity: 0;
+  transition: opacity 200ms ease-in;
+}
+
+.htmx-request .htmx-indicator,
+.htmx-request.htmx-indicator {
+  opacity: 1;
+}
+
+/*
+ * Launch screen. Hidden unless js/launch_gate.js put .app-launching on <html>
+ * before first paint. js/launch_shell.js fades it out; the failsafe keyframe
+ * hides it at 10s whether or not any script ran, because a launch screen
+ * that never leaves is worse than none.
+ */
+
+.launch-shell {
+  display: none;
+}
+
+.app-launching .launch-shell {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  background: var(--ground);
+  transition: opacity 300ms ease-out;
+  animation: launch-failsafe 0s linear 10s forwards;
+}
+
+.app-launching .launch-shell.launch-shell--done {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.launch-shell__icon {
+  border-radius: 22%;
+}
+
+.launch-shell__spinner {
+  width: 28px;
+  height: 28px;
+  border: 3px solid var(--rule-strong);
+  border-top-color: var(--text-1);
+  border-radius: 50%;
+  animation: spin 800ms linear infinite;
+}
+
+@keyframes launch-failsafe {
+  to {
+    visibility: hidden;
+    opacity: 0;
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app-launching .launch-shell {
+    transition: none;
+  }
+
+  .launch-shell__spinner {
+    animation-duration: 2400ms;
+  }
+}
+
 /* --- Onboarding tour (static/js/tour.js, docs/onboarding-tour.md) --------- */
 
 :root {

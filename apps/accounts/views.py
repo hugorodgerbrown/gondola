@@ -152,12 +152,12 @@ def sign_out(request: HttpRequest) -> HttpResponse:
     """Sign out and go to the front page.
 
     The page drops the service worker's cached pages before the form posts
-    (``data-sign-out`` in app.js). There is no ``Clear-Site-Data: "cache"``
+    (``data-sign-out`` in pwa.js). There is no ``Clear-Site-Data: "cache"``
     here: Chrome on Android held the redirect while it cleared the cache,
     so the button looked dead until the page was refreshed.
     """
     logout(request)
-    return redirect("core:home")
+    return redirect("public:home")
 
 
 @login_required
@@ -168,7 +168,7 @@ def delete_account(request: HttpRequest) -> HttpResponse:
         logout(request)
         user.delete()
         messages.success(request, "Your account and your plans are deleted.")
-        return redirect("core:home")
+        return redirect("public:home")
     return render(request, "accounts/delete.html")
 
 
