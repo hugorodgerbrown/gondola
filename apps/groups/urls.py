@@ -24,6 +24,8 @@ urlpatterns = [
     path("app/days/<date:day>/clear/", days.day_clear, name="day_clear"),
     path("app/days/several/", days.several_days, name="several_days"),
     path("app/days/several/clear/", days.several_days_clear, name="several_days_clear"),
+    # The outbox's save and clear (JSON), for any of the sheets above.
+    path("app/days/plans/", days.plans_write, name="plans_write"),
     path("app/resorts/search/", days.resort_search, name="resort_search"),
     # Groups and the board
     path("app/groups/", groups.group_list, name="group_list"),

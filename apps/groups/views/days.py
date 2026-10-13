@@ -15,21 +15,30 @@ over every resort).
 
 Pressing and holding a day starts selecting: tap more days (or drag
 across a run), then one sheet puts them all in one resort (``?days=``).
+
+``plans_write`` is the same save and clear as JSON, for the offline
+outbox (static/js/plans.js): the sheets' forms go there when JavaScript
+runs, and post as plain forms when it doesn't.
 """
 
 from __future__ import annotations
 
 import datetime
+import json
+import uuid
+from typing import Any
 from urllib.parse import urlencode
 
 from django.contrib.auth.decorators import login_required
-from django.http import Http404, HttpRequest, HttpResponse
+from django.http import Http404, HttpRequest, HttpResponse, JsonResponse
 from django.shortcuts import render
 from django.urls import reverse
+from django.utils import timezone
 from django.views.decorators.http import require_GET, require_POST
 
 from apps.accounts.models import User
 from apps.core.analytics import record
+from apps.core.decorators import login_required_json
 from apps.core.http import refresh, render_sheet
 from apps.resorts.models import Resort
 from apps.resorts.search import search_resorts
@@ -261,6 +270,10 @@ def _sheet(
             "selected": selected,
             "groups_count": Group.objects.for_user(user).count(),
             "back": _request_back(request),
+            # For the outbox (static/js/plans.js): the days, and where to go
+            # once the write is queued when the sheet is a page of its own.
+            "days_csv": ",".join(day.isoformat() for day in days),
+            "done_url": _calendar_url(_request_back(request), days),
         },
     )
 
@@ -367,4 +380,75 @@ def resort_search(request: HttpRequest) -> HttpResponse:
             "query": query,
             "field": request.GET.get("field", "resort"),
         },
+    )
+
+
+def _bad_write(reason: str) -> JsonResponse:
+    """Refuse a plan write the outbox can't fix by sending it again."""
+    return JsonResponse({"error": reason}, status=400)
+
+
+def _written_at(value: Any) -> datetime.datetime:
+    """Return when the person made a queued write: its ``written_at``, else now.
+
+    A time in the future (a phone's clock running fast) counts as now.
+    """
+    now = timezone.now()
+    try:
+        written = datetime.datetime.fromisoformat(str(value))
+    except ValueError:
+        return now
+    if written.tzinfo is None:
+        return now
+    return min(written, now)
+
+
+@require_POST
+@login_required_json
+def plans_write(request: HttpRequest) -> JsonResponse:
+    """Put the person in a resort on some days, or clear them: JSON for the outbox.
+
+    The body is ``{"days": ["2026-12-14", ...], "resort": "<uuid>" or null,
+    "written_at": "<ISO time>"}``; a null resort clears the days. A queued
+    write can arrive long after it was made, so a day that has since gone
+    by, or that was said after ``written_at`` (from another device, or a
+    later write), is skipped rather than overwritten. The check is on
+    ``said_at``, which a queued write sets to its own ``written_at``, so
+    several writes queued for one day still land in the order they were
+    made. The answer lists
+    what was saved and what was skipped.
+    """
+    try:
+        data = json.loads(request.body)
+        raw_days = data["days"]
+        days = sorted({datetime.date.fromisoformat(str(day)) for day in raw_days})
+    except ValueError, TypeError, KeyError:
+        return _bad_write("days")
+    if not days or len(days) > MAX_SELECTED_DAYS:
+        return _bad_write("days")
+    resort = None
+    if data.get("resort") is not None:
+        try:
+            resort = Resort.objects.get(uuid=uuid.UUID(str(data["resort"])))
+        except ValueError, Resort.DoesNotExist:
+            return _bad_write("resort")
+    user = current_user(request)
+    written_at = _written_at(data.get("written_at"))
+    changed_since = set(
+        PlanDay.objects.filter(user=user, date__in=days, said_at__gt=written_at).values_list(
+            "date", flat=True
+        )
+    )
+    wanted = [day for day in days if is_plannable(day) and day not in changed_since]
+    if wanted and resort is not None:
+        record_day_planned(request, user)
+        update_plans(user, wanted, resort, said_at=written_at)
+    elif wanted:
+        clear_plans(user, wanted)
+    skipped = [day for day in days if day not in wanted]
+    return JsonResponse(
+        {
+            "saved": [day.isoformat() for day in wanted],
+            "skipped": [day.isoformat() for day in skipped],
+        }
     )

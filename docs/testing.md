@@ -5,6 +5,7 @@ Every check runs through tox, locally and in CI, one CI job per env:
 ```bash
 uv run tox                  # fmt, lint, types, checks, test, js, audit
 uv run tox -e sast          # semgrep (downloads rule packs)
+uv run tox -e e2e           # Playwright journeys (needs a Chromium)
 uv run pytest tests/groups  # a targeted run while iterating
 ```
 
@@ -17,9 +18,20 @@ test in the wrong layer is a defect, whatever it asserts.
 | --- | --- | --- |
 | **pytest** | `tests/` | Anything the Django test client can see: status codes, redirects, rendered HTML, htmx fragments, JSON, querysets, commands, headers. **A 401 needs no browser.** |
 | **Vitest** | `tests/js/` | Anything a `static/js` file does that jsdom can observe. The default home for client-side behaviour. |
+| **Playwright** | `tests/e2e/` | Only what needs a real browser: the service worker, Cache Storage, going offline and back. |
 
-A browser suite (Playwright, `tests/e2e/`) arrives with the installed app
-and its service worker, the first thing only a real browser can check.
+## Journeys
+
+The browser suite is capped (`tests/test_e2e_budget.py`: 12 tests, 40
+lines each). Each journey is named in its module docstring.
+
+| Journey | Test |
+| --- | --- |
+| Offline fallback: an unvisited page shows "No signal"; a visited one opens from cache | `test_offline_page.py` |
+| Offline write: a day saved with no signal waits on the phone, then sends | `test_offline_write.py` |
+
+Locally, point Playwright at a Chromium you have with
+`PLAYWRIGHT_CHROMIUM_EXECUTABLE`; CI installs its own.
 
 ## Rules
 

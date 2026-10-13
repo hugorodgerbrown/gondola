@@ -1,5 +1,6 @@
 {% include "includes/sheet_header.html" with eyebrow=eyebrow title=title %}
-<form method="post" action="{{ form_url }}" hx-post="{{ form_url }}" hx-target="#sheet-body" class="stack" data-day-form>
+<form method="post" action="{{ form_url }}" hx-post="{{ form_url }}" hx-target="#sheet-body" class="stack" data-day-form
+      {% if not request.tour %}data-plan-write="set" data-days="{{ days_csv }}" data-plans-url="{% url 'planning:plans_write' %}" data-done="{{ done_url }}"{% endif %}>
   {% for name, value in back.items %}<input type="hidden" name="{{ name }}" value="{{ value }}">{% endfor %}
   {% csrf_token %}
   {% if mixed %}
@@ -15,14 +16,14 @@
     <div class="choices" role="radiogroup" aria-label="Resort">
       {% for entry in friends %}
         <label class="choice">
-          <input type="radio" name="resort" value="{{ entry.resort.uuid }}"{% if selected == entry.resort.uuid|stringformat:"s" %} checked{% endif %}>
+          <input type="radio" name="resort" value="{{ entry.resort.uuid }}" data-code="{{ entry.resort.display_code }}"{% if selected == entry.resort.uuid|stringformat:"s" %} checked{% endif %}>
           <span class="choice__main"><span class="choice__title">{{ entry.resort.name }}</span><span class="choice__meta">{{ entry.names }}</span></span>
           <span class="choice__count">{{ entry.friends|length }}</span>
         </label>
       {% endfor %}
       {% for resort in elsewhere %}
         <label class="choice">
-          <input type="radio" name="resort" value="{{ resort.uuid }}"{% if selected == resort.uuid|stringformat:"s" %} checked{% endif %}>
+          <input type="radio" name="resort" value="{{ resort.uuid }}" data-code="{{ resort.display_code }}"{% if selected == resort.uuid|stringformat:"s" %} checked{% endif %}>
           <span class="choice__main"><span class="choice__title">{{ resort.name }}</span><span class="choice__meta">Your pick</span></span>
         </label>
       {% endfor %}
@@ -42,7 +43,8 @@
   </div>
 </form>
 {% if has_plans %}
-  <form method="post" action="{{ clear_url }}" hx-post="{{ clear_url }}">
+  <form method="post" action="{{ clear_url }}" hx-post="{{ clear_url }}"
+        {% if not request.tour %}data-plan-write="clear" data-days="{{ days_csv }}" data-plans-url="{% url 'planning:plans_write' %}" data-done="{{ done_url }}"{% endif %}>
     {% for name, value in back.items %}<input type="hidden" name="{{ name }}" value="{{ value }}">{% endfor %}
     {% csrf_token %}
     <button type="submit" class="button button--secondary button--block">Clear {% if span > 1 %}these days{% else %}this day{% endif %}</button>

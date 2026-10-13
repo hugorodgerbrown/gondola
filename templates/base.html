@@ -19,7 +19,7 @@
     <script src="{% static 'js/launch_gate.js' %}"></script>
     {% block head %}{% endblock %}
   </head>
-  <body hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
+  <body hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}' data-plans-url="{% url 'planning:plans_write' %}">
     {% include "includes/_launch_shell.html" %}
     {% block topbar %}
       <header class="topbar">
@@ -54,6 +54,7 @@
     <script src="{% static 'js/pwa.js' %}"></script>
     <script src="{% static 'js/launch_shell.js' %}"></script>
     <script src="{% static 'js/app.js' %}"></script>
+    <script src="{% static 'js/plans.js' %}"></script>
     {# Before the page's own scripts: the tour opens the map on the demo's day. #}
     {% if tour.script %}{{ tour.script|json_script:"tour-script" }}{% endif %}
     {% if user.is_authenticated %}<script src="{% static 'js/tour.js' %}"></script>{% endif %}

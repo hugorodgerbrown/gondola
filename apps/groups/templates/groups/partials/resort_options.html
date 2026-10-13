@@ -1,6 +1,6 @@
 {% for resort in resorts %}
   <label class="choice" data-lat="{{ resort.latitude|default_if_none:'' }}" data-lng="{{ resort.longitude|default_if_none:'' }}">
-    <input type="radio" name="{{ field }}" value="{{ resort.uuid }}">
+    <input type="radio" name="{{ field }}" value="{{ resort.uuid }}" data-code="{{ resort.display_code }}">
     <span class="choice__main"><span class="choice__title">{{ resort.name }}</span><span class="choice__meta">{{ resort.canton }}{% for pass in resort.passes.all %} · {{ pass.name }}{% endfor %}</span></span>
     <span class="choice__count">{{ resort.display_code }}</span>
   </label>

@@ -55,6 +55,24 @@ A row is only ever sent as the user who wrote it. Signing in as someone
 else leaves the first user's writes on the device, unsent, until they sign
 back in.
 
+## Gondola's queued writes: plan days
+
+Saving or clearing days goes through the outbox. The day sheet and the
+map's "I'll be here" are ordinary forms (`data-plan-write`), so they still
+post without JavaScript. With it, `static/js/plans.js` turns the submit
+into `Outbox.enqueue` for `POST /app/days/plans/` (`days.plans_write`),
+closes the sheet, and draws those days on the calendar as waiting
+(striped, with the resort's code). Once the write has gone, the page
+reloads to show what the server holds.
+
+- The sheet itself comes from the server, so it opens only with signal;
+  once open, Save and Clear work without it. This covers the lift queue,
+  where signal comes and goes.
+- `plans_write` skips, rather than fails, a day that has gone by, and a
+  day changed after the write was made (`written_at`), so a write that
+  waited never overwrites a newer answer.
+- During the tour the sheets post as forms, as before: nothing is saved.
+
 ## Caching
 
 - **Static files**: hashed names in production, so cache-first is safe;

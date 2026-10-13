@@ -2071,3 +2071,21 @@ body:has(.tour-bar) .select-bar {
 .tour-welcome {
   margin-top: 8px;
 }
+
+/* A day saved or cleared on this device, waiting to send (static/js/plans.js):
+   striped until the server has it. Red stripes if the server refused it. */
+.mday--pending {
+  background-image: repeating-linear-gradient(
+    135deg,
+    transparent 0 5px,
+    rgb(255 255 255 / 35%) 5px 10px
+  );
+}
+
+.mday--pending:not(.mday--in) {
+  box-shadow: inset 0 0 0 2px var(--accent-soft);
+}
+
+.mday--failed {
+  background-color: var(--danger);
+}
