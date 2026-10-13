@@ -1,5 +1,4 @@
-"""
-apps/tour/script.py — The tour's words, and what each frame points at.
+"""apps/tour/script.py — The tour's words, and what each frame points at.
 
 The locked script lives in docs/onboarding-tour.md; this is it as data, so
 ``static/js/tour.js`` can play it and the tests can hold it to the doc.
@@ -251,9 +250,7 @@ def chapters_for(page: str, week: DemoWeek) -> list[dict[str, object]]:
             data["target"] = [_fill(s, week) for s in frame.target]
             data["tap"] = _fill(frame.tap, week)
             frames.append(data)
-        played.append(
-            {"number": chapter.number, "name": chapter.name, "frames": frames}
-        )
+        played.append({"number": chapter.number, "name": chapter.name, "frames": frames})
     return played
 
 

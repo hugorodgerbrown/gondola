@@ -1,5 +1,4 @@
-"""
-apps/core/views.py — The front page and the installable-app plumbing.
+"""apps/core/views.py — The front page and the installable-app plumbing.
 
 * ``home`` explains the app to a signed-out visitor and sends a signed-in
   one to the map.

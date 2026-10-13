@@ -1,5 +1,4 @@
-"""
-apps/core/analytics.py — Visitor counts and goals by fivebar (https://fiveb.ar).
+"""apps/core/analytics.py — Visitor counts and goals by fivebar (https://fiveb.ar).
 
 Off unless ``FIVEBAR_DOMAIN`` is set to the domain the site was added to
 fivebar under. Then every page carries fivebar's tag

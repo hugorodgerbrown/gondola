@@ -31,9 +31,7 @@ def _age(group: Group, by: datetime.timedelta) -> None:
     Group.objects.filter(pk=group.pk).update(created_at=timezone.now() - by)
 
 
-def test_create_demo_makes_a_private_copy(
-    tourist: User, resorts: dict[str, Resort]
-) -> None:
+def test_create_demo_makes_a_private_copy(tourist: User, resorts: dict[str, Resort]) -> None:
     group = create_demo(tourist)
     assert group.is_demo
     assert group.owner == tourist
@@ -59,9 +57,7 @@ def test_each_tourist_gets_their_own_copy(resorts: dict[str, Resort]) -> None:
     assert User.objects.filter(email__endswith="@tour.invalid").count() == len(FRIENDS)
 
 
-def test_starting_again_replaces_the_copy(
-    tourist: User, resorts: dict[str, Resort]
-) -> None:
+def test_starting_again_replaces_the_copy(tourist: User, resorts: dict[str, Resort]) -> None:
     first = create_demo(tourist)
     second = create_demo(tourist)
     assert not Group.objects.filter(pk=first.pk).exists()
@@ -90,26 +86,20 @@ def test_demo_week_points_at_today_and_verbier(resorts: dict[str, Resort]) -> No
     assert week.resort == resorts["VERB"]
 
 
-def test_live_demo_returns_a_fresh_copy(
-    tourist: User, resorts: dict[str, Resort]
-) -> None:
+def test_live_demo_returns_a_fresh_copy(tourist: User, resorts: dict[str, Resort]) -> None:
     group = create_demo(tourist)
     assert live_demo(tourist, str(group.uuid)) == group
     assert live_demo(UserFactory.create(), str(group.uuid)) is None
 
 
-def test_live_demo_deletes_a_stale_copy(
-    tourist: User, resorts: dict[str, Resort]
-) -> None:
+def test_live_demo_deletes_a_stale_copy(tourist: User, resorts: dict[str, Resort]) -> None:
     group = create_demo(tourist)
     _age(group, DEMO_LIFETIME + datetime.timedelta(minutes=1))
     assert live_demo(tourist, str(group.uuid)) is None
     assert not Group.objects.filter(pk=group.pk).exists()
 
 
-def test_discard_demos_keeps_real_groups(
-    tourist: User, resorts: dict[str, Resort]
-) -> None:
+def test_discard_demos_keeps_real_groups(tourist: User, resorts: dict[str, Resort]) -> None:
     real = Group.objects.create(owner=tourist, name="Real")
     create_demo(tourist)
     assert discard_demos(tourist) == 1

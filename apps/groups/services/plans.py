@@ -1,5 +1,4 @@
-"""
-apps/groups/services/plans.py — Saying which resort you'll be in.
+"""apps/groups/services/plans.py — Saying which resort you'll be in.
 
 A plan day belongs to a person, not a group, and answers one question:
 which resort they'll be in. ``update_plans`` is the one place plans are
@@ -49,14 +48,10 @@ def date_range(start: datetime.date, days: int) -> list[datetime.date]:
 
 
 @transaction.atomic
-def update_plans(
-    user: User, days: Iterable[datetime.date], resort: Resort
-) -> list[PlanDay]:
+def update_plans(user: User, days: Iterable[datetime.date], resort: Resort) -> list[PlanDay]:
     """Put ``user`` in ``resort`` on each of ``days``."""
     dates = sorted(set(days))
-    existing = {
-        plan.date: plan for plan in PlanDay.objects.filter(user=user, date__in=dates)
-    }
+    existing = {plan.date: plan for plan in PlanDay.objects.filter(user=user, date__in=dates)}
     saved = []
     for day in dates:
         plan = existing.get(day) or PlanDay(user=user, date=day)
@@ -123,9 +118,7 @@ def friends_by_resort(
         entry = groups.setdefault(plan.resort.pk, ResortFriends(resort=plan.resort))
         if plan.user not in entry.friends:
             entry.friends.append(plan.user)
-    return sorted(
-        groups.values(), key=lambda g: (-len(g.friends), g.resort.name.lower())
-    )
+    return sorted(groups.values(), key=lambda g: (-len(g.friends), g.resort.name.lower()))
 
 
 def friend_counts(viewer: User, day: datetime.date) -> dict[int, int]:

@@ -72,9 +72,7 @@ class UserAdmin(DjangoUserAdmin):
         self.message_user(request, f"Added {queryset.count()} to Testers.")
 
     @admin.action(description="Remove from Testers (leaves UI test)")
-    def remove_from_testers(
-        self, request: HttpRequest, queryset: QuerySet[User]
-    ) -> None:
+    def remove_from_testers(self, request: HttpRequest, queryset: QuerySet[User]) -> None:
         """Take the selected users out of Testers."""
         set_testers(queryset, on=False)
         self.message_user(request, f"Removed {queryset.count()} from Testers.")

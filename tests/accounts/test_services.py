@@ -68,9 +68,7 @@ def test_sign_in_email_is_sent() -> None:
 
 def test_unsubscribe_token_round_trip() -> None:
     user = UserFactory.create()
-    assert (
-        services.read_unsubscribe_token(services.make_unsubscribe_token(user)) == user
-    )
+    assert services.read_unsubscribe_token(services.make_unsubscribe_token(user)) == user
     with pytest.raises(services.InvalidLink):
         services.read_unsubscribe_token("bad")
 

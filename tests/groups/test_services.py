@@ -97,9 +97,7 @@ def test_friends_by_resort_count_each_friend_once(crew: Crew) -> None:
     assert entry.names == "Anna and Ben"
     assert plans.friend_counts(crew.sam, crew.day) == {crew.verbier.pk: 2}
     # Over two days Ben is there on both, and still counts once.
-    (both,) = plans.friends_by_resort(
-        crew.sam, [crew.day, crew.day + datetime.timedelta(1)]
-    )
+    (both,) = plans.friends_by_resort(crew.sam, [crew.day, crew.day + datetime.timedelta(1)])
     assert both.names == "Anna and Ben"
 
 

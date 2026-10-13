@@ -1,5 +1,4 @@
-"""
-apps/core/http.py — Small helpers for HTMX-aware views.
+"""apps/core/http.py — Small helpers for HTMX-aware views.
 
 A sheet (the bottom panel that opens over a page) is fetched by HTMX as a
 fragment, and the same URL renders a whole page when opened directly, so
@@ -17,11 +16,8 @@ def is_htmx(request: HttpRequest) -> bool:
     return request.headers.get("HX-Request") == "true"
 
 
-def render_sheet(
-    request: HttpRequest, template: str, context: dict[str, object]
-) -> HttpResponse:
-    """
-    Render a sheet's fragment for HTMX, or the fragment inside a page.
+def render_sheet(request: HttpRequest, template: str, context: dict[str, object]) -> HttpResponse:
+    """Render a sheet's fragment for HTMX, or the fragment inside a page.
 
     ``template`` is the fragment. A plain request gets ``core/sheet_page.html``
     wrapped around it, so the sheet works as a page of its own.
@@ -32,8 +28,7 @@ def render_sheet(
 
 
 def refresh(request: HttpRequest, fallback_url: str) -> HttpResponse:
-    """
-    Finish a sheet that saved something.
+    """Finish a sheet that saved something.
 
     HTMX reloads the page underneath the sheet; a plain form post is sent
     on to ``fallback_url``.

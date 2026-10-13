@@ -1,5 +1,4 @@
-"""
-apps/core/ratelimit.py — Fixed-window rate limits kept in the cache.
+"""Fixed-window rate limits kept in the cache.
 
 Small on purpose: a counter per key per window, enough to stop someone
 mailing a stranger a hundred sign-in links or guessing codes. The cache is
@@ -26,9 +25,7 @@ def client_ip(request: HttpRequest) -> str:
     """
     proxies = settings.RATE_LIMIT_PROXY_COUNT
     if proxies > 0:
-        hops = [
-            h.strip() for h in request.headers.get("X-Forwarded-For", "").split(",")
-        ]
+        hops = [h.strip() for h in request.headers.get("X-Forwarded-For", "").split(",")]
         hops = [h for h in hops if h]
         if len(hops) >= proxies:
             return hops[-proxies]
@@ -36,7 +33,7 @@ def client_ip(request: HttpRequest) -> str:
 
 
 def over_limit(group: str, value: str, *, limit: int, window_seconds: int) -> bool:
-    """Count a hit for ``value`` in ``group``; return True once past ``limit``.
+    """Count one hit for ``value`` in ``group`` and return True once it passes ``limit``.
 
     ``value`` is hashed, so an email address or IP never appears in a cache key.
     """

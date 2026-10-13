@@ -1,5 +1,4 @@
-"""
-apps/groups/management/commands/seed_ui_test.py — A group for testing the UI.
+"""apps/groups/management/commands/seed_ui_test.py — A group for testing the UI.
 
 Makes "UI test" with a tester and four friends, and fills the tester's
 next couple of months with every case the calendar, the day sheet, the map
@@ -71,9 +70,7 @@ class Run:
 
     def days(self, first: datetime.date) -> list[datetime.date]:
         """Return the run's dates, counting ``start`` days from ``first``."""
-        return [
-            first + datetime.timedelta(days=self.start + n) for n in range(self.length)
-        ]
+        return [first + datetime.timedelta(days=self.start + n) for n in range(self.length)]
 
 
 def month_end_offset(first: datetime.date) -> int:
@@ -145,10 +142,7 @@ class Command(BaseCommand):
 
     verbosity = 1
 
-    help = (
-        "Create a group whose tester covers every calendar case. "
-        "Dry run unless --commit."
-    )
+    help = "Create a group whose tester covers every calendar case. Dry run unless --commit."
 
     def add_arguments(self, parser: CommandParser) -> None:
         """Add --commit."""
@@ -199,9 +193,7 @@ class Command(BaseCommand):
 
     def _person(self, email: str, name: str) -> User:
         """Return the user for ``email``, creating them if needed."""
-        user, created = User.objects.get_or_create(
-            email=email, defaults={"display_name": name}
-        )
+        user, created = User.objects.get_or_create(email=email, defaults={"display_name": name})
         if created:
             user.set_unusable_password()
             user.save(update_fields=["password"])

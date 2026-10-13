@@ -13,9 +13,7 @@ urlpatterns = [
     # A · the map
     path("map/", resort_map.map_page, name="map"),
     path("map/pins.json", resort_map.pins, name="map_pins"),
-    path(
-        "map/resort/<uuid:resort_uuid>/", resort_map.resort_sheet, name="resort_sheet"
-    ),
+    path("map/resort/<uuid:resort_uuid>/", resort_map.resort_sheet, name="resort_sheet"),
     path("map/resort/<uuid:resort_uuid>/plan/", resort_map.plan_here, name="plan_here"),
     # B · the calendar
     path("days/", days.calendar, name="calendar"),

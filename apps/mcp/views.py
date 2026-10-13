@@ -1,5 +1,4 @@
-"""
-apps/mcp/views.py — The MCP endpoint: JSON-RPC over the Streamable HTTP transport.
+"""apps/mcp/views.py — The MCP endpoint: JSON-RPC over the Streamable HTTP transport.
 
 Stateless and synchronous: every request is a POST answered with one JSON
 body, so it runs under gunicorn's sync workers like the rest of the site.
@@ -52,18 +51,14 @@ def mcp(request: HttpRequest) -> HttpResponse:
     """Answer one JSON-RPC message as the token's user."""
     version = request.headers.get("MCP-Protocol-Version")
     if version and version not in SUPPORTED_VERSIONS:
-        return _error_response(
-            None, INVALID_REQUEST, f"Unsupported protocol version {version}"
-        )
+        return _error_response(None, INVALID_REQUEST, f"Unsupported protocol version {version}")
 
     try:
         message = json.loads(request.body)
     except ValueError:
         return _error_response(None, PARSE_ERROR, "Parse error")
     if not isinstance(message, dict) or message.get("jsonrpc") != "2.0":
-        return _error_response(
-            None, INVALID_REQUEST, "Expected one JSON-RPC 2.0 message"
-        )
+        return _error_response(None, INVALID_REQUEST, "Expected one JSON-RPC 2.0 message")
 
     # Notifications and responses from the client need no answer.
     if "method" not in message or "id" not in message:

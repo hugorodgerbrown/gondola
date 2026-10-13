@@ -1,5 +1,4 @@
-"""
-apps/resorts/search.py — Find a resort by typing part of its name.
+"""apps/resorts/search.py — Find a resort by typing part of its name.
 
 There are only a couple of hundred resorts, so the search runs in Python,
 which makes it accent-blind ("champery" finds Champéry) on any database.

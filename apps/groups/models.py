@@ -1,5 +1,4 @@
-"""
-apps/groups/models.py — Groups of friends and their plans.
+"""apps/groups/models.py — Groups of friends and their plans.
 
 * ``Group`` — friends who share plans. Joined through one invite link
   that joins at once; the owner can reset the link to kill the old one.
@@ -70,9 +69,7 @@ class Group(BaseModel):
         on_delete=models.CASCADE,
         related_name="owned_groups",
     )
-    invite_token = models.CharField(
-        max_length=64, unique=True, default=make_token, editable=False
-    )
+    invite_token = models.CharField(max_length=64, unique=True, default=make_token, editable=False)
     is_demo = models.BooleanField(
         default=False,
         editable=False,
@@ -119,9 +116,7 @@ class Membership(BaseModel):
         OWNER = "owner", "Owner"
         MEMBER = "member", "Member"
 
-    group = models.ForeignKey(
-        Group, on_delete=models.CASCADE, related_name="memberships"
-    )
+    group = models.ForeignKey(Group, on_delete=models.CASCADE, related_name="memberships")
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
@@ -136,9 +131,7 @@ class Membership(BaseModel):
 
         ordering = ["-created_at"]
         constraints = [
-            models.UniqueConstraint(
-                fields=["group", "user"], name="membership_one_per_group_user"
-            ),
+            models.UniqueConstraint(fields=["group", "user"], name="membership_one_per_group_user"),
             models.UniqueConstraint(
                 fields=["group"],
                 condition=models.Q(role="owner"),
@@ -194,9 +187,7 @@ class PlanDay(BaseModel):
 
         ordering = ["date"]
         constraints = [
-            models.UniqueConstraint(
-                fields=["user", "date"], name="planday_one_per_user_date"
-            ),
+            models.UniqueConstraint(fields=["user", "date"], name="planday_one_per_user_date"),
         ]
 
     def to_string(self) -> str:

@@ -1,5 +1,4 @@
-"""
-apps/resorts/services.py — Load the curated resort and pass sheets.
+"""apps/resorts/services.py — Load the curated resort and pass sheets.
 
 ``passes.tsv`` and ``resorts.tsv`` under ``apps/resorts/data/`` are the
 source of truth for reference data, taken from Snowdesk's resort sheet with
@@ -106,8 +105,7 @@ def import_sheets(
     resorts_path: Path = RESORTS_PATH,
     commit: bool = False,
 ) -> ImportResult:
-    """
-    Import the pass and resort sheets.
+    """Import the pass and resort sheets.
 
     Runs inside one transaction that is rolled back unless ``commit`` is
     true, so a dry run reports exactly what a real run would do. A bad row

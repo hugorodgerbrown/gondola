@@ -1,5 +1,4 @@
-"""
-tests/accounts/test_passkeys.py — Passkeys: the service and its views.
+"""tests/accounts/test_passkeys.py — Passkeys: the service and its views.
 
 Ported from Tally with the code it tests. py_webauthn's verifiers are
 replaced with stubs, since a real signature needs a real authenticator;
@@ -64,18 +63,14 @@ def verified_registration(monkeypatch: pytest.MonkeyPatch) -> None:
         sign_count=0,
         credential_backed_up=True,
     )
-    monkeypatch.setattr(
-        passkeys.webauthn, "verify_registration_response", lambda **_: result
-    )
+    monkeypatch.setattr(passkeys.webauthn, "verify_registration_response", lambda **_: result)
 
 
 @pytest.fixture
 def verified_sign_in(monkeypatch: pytest.MonkeyPatch) -> None:
     """Make every sign-in verify."""
     result = SimpleNamespace(new_sign_count=7, credential_backed_up=True)
-    monkeypatch.setattr(
-        passkeys.webauthn, "verify_authentication_response", lambda **_: result
-    )
+    monkeypatch.setattr(passkeys.webauthn, "verify_authentication_response", lambda **_: result)
 
 
 def post_json(client: Client, url: str, data: Any) -> Any:
@@ -113,9 +108,7 @@ def test_register_saves_a_passkey_named_for_the_device(
         reverse("accounts:passkey_register"),
         json.dumps(CREDENTIAL),
         content_type="application/json",
-        headers={
-            "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X)"
-        },
+        headers={"User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X)"},
     )
     assert response.status_code == 201
     passkey = Passkey.objects.get()
@@ -125,9 +118,7 @@ def test_register_saves_a_passkey_named_for_the_device(
     assert passkey.backed_up
 
 
-def test_register_needs_the_challenge_first(
-    signed_in: Client, verified_registration: None
-) -> None:
+def test_register_needs_the_challenge_first(signed_in: Client, verified_registration: None) -> None:
     """Without options there is no challenge to verify against."""
     response = post_json(signed_in, reverse("accounts:passkey_register"), CREDENTIAL)
     assert response.status_code == 400
@@ -159,9 +150,7 @@ def test_register_refuses_a_body_that_is_not_json(signed_in: Client) -> None:
     assert response.status_code == 400
 
 
-@pytest.mark.parametrize(
-    "url_name", ["passkey_register_options", "passkey_sign_in_options"]
-)
+@pytest.mark.parametrize("url_name", ["passkey_register_options", "passkey_sign_in_options"])
 def test_options_refuse_a_host_the_passkey_domain_does_not_cover(
     signed_in: Client, settings: Any, caplog: pytest.LogCaptureFixture, url_name: str
 ) -> None:
@@ -193,10 +182,7 @@ def test_serves_host(settings: Any, host: str, serves: bool) -> None:
 def test_registering_needs_sign_in(client: Client) -> None:
     """Signed out, both endpoints answer 401 JSON."""
     assert client.post(reverse("accounts:passkey_register_options")).status_code == 401
-    assert (
-        post_json(client, reverse("accounts:passkey_register"), CREDENTIAL).status_code
-        == 401
-    )
+    assert post_json(client, reverse("accounts:passkey_register"), CREDENTIAL).status_code == 401
 
 
 # ---------- signing in with one ----------
@@ -211,9 +197,7 @@ def signed(challenge: str, credential: dict[str, Any] = CREDENTIAL) -> dict[str,
 
 def options(client: Client) -> str:
     """Ask for sign-in options; return the challenge."""
-    return str(
-        client.post(reverse("accounts:passkey_sign_in_options")).json()["challenge"]
-    )
+    return str(client.post(reverse("accounts:passkey_sign_in_options")).json()["challenge"])
 
 
 def answer(client: Client, credential: Any, next_url: str = "") -> Any:
@@ -272,9 +256,7 @@ def test_passkey_that_does_not_verify(client: Client) -> None:
     assert "_auth_user_id" not in client.session
 
 
-def test_passkey_sign_in_needs_the_challenge(
-    client: Client, verified_sign_in: None
-) -> None:
+def test_passkey_sign_in_needs_the_challenge(client: Client, verified_sign_in: None) -> None:
     """An answer to a challenge this session wasn't given fails."""
     PasskeyFactory.create(credential_id="credential-1")
     assert answer(client, signed("never-issued")).status_code == 400
@@ -310,9 +292,7 @@ def test_old_challenges_lapse(client: Client, verified_sign_in: None) -> None:
 
 def test_passkey_for_a_closed_account(client: Client, verified_sign_in: None) -> None:
     """An inactive account's passkey doesn't sign in."""
-    PasskeyFactory.create(
-        credential_id="credential-1", user=UserFactory.create(is_active=False)
-    )
+    PasskeyFactory.create(credential_id="credential-1", user=UserFactory.create(is_active=False))
     assert sign_in_with(client, CREDENTIAL).status_code == 403
 
 
@@ -331,9 +311,7 @@ def test_credential_without_an_id(client: Client) -> None:
 
 
 @pytest.mark.parametrize("client_data", ["%%%", "bm90IGpzb24", "WzFd"])
-def test_credential_with_unreadable_client_data(
-    client: Client, client_data: str
-) -> None:
+def test_credential_with_unreadable_client_data(client: Client, client_data: str) -> None:
     """A clientDataJSON that isn't base64url JSON with a challenge is a 400."""
     options(client)
     credential = {**CREDENTIAL, "response": {"clientDataJSON": client_data}}
@@ -401,9 +379,7 @@ def test_welcome_nudge_suggests_a_passkey(signed_in: Client) -> None:
     assert b'href="/days/"' in response.content
 
 
-def test_welcome_nudge_skips_anyone_with_a_passkey(
-    signed_in: Client, user: User
-) -> None:
+def test_welcome_nudge_skips_anyone_with_a_passkey(signed_in: Client, user: User) -> None:
     """Someone who already has one goes straight on."""
     PasskeyFactory.create(user=user)
     response = signed_in.get(reverse("accounts:passkey_welcome"), {"next": "/days/"})

@@ -1,5 +1,4 @@
-"""
-apps/tour/middleware.py — Scope every screen to the demo while someone tours.
+"""apps/tour/middleware.py — Scope every screen to the demo while someone tours.
 
 While the session says the person is touring, ``request.tour`` holds the
 tour and ``request.user.tour_group_id`` names their demo copy, which

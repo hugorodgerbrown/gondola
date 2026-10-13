@@ -1,5 +1,4 @@
-"""
-config/urls.py — Root URL configuration.
+"""config/urls.py — Root URL configuration.
 
 Everything is mounted at the root: the front page and app plumbing under
 ``core``, sign-in and the account page under ``accounts``, and the

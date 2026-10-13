@@ -1,5 +1,4 @@
-"""
-apps/groups/views/helpers.py — Lookups the planning views share.
+"""apps/groups/views/helpers.py — Lookups the planning views share.
 
 A group is only ever found for one of its members: anyone else gets a 404,
 so a guessed uuid reveals nothing.

@@ -35,9 +35,7 @@ def test_every_app_model_is_registered() -> None:
 
 @pytest.mark.django_db
 @pytest.mark.parametrize(("app_label", "model_name"), MODELS)
-def test_admin_pages_render(
-    staff_client: Client, app_label: str, model_name: str
-) -> None:
+def test_admin_pages_render(staff_client: Client, app_label: str, model_name: str) -> None:
     for view in ("changelist", "add"):
         url = reverse(f"admin:{app_label}_{model_name}_{view}")
         assert staff_client.get(url).status_code == 200, url

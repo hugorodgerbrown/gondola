@@ -1,5 +1,4 @@
-"""
-apps/groups/views/groups.py — Groups, their invite links and members.
+"""apps/groups/views/groups.py — Groups, their invite links and members.
 
 * ``group_list`` lists your groups and makes a new one.
 * ``group_detail`` is a group's page: who's in it and its invite link.
@@ -133,9 +132,7 @@ def remove(request: HttpRequest, group_uuid: str, user_uuid: str) -> HttpRespons
 
 def invite(request: HttpRequest, token: str) -> HttpResponse:
     """Show an invite: what the group is, and a Join button."""
-    group = (
-        Group.objects.real().select_related("owner").filter(invite_token=token).first()
-    )
+    group = Group.objects.real().select_related("owner").filter(invite_token=token).first()
     if group is None:
         return render(request, "groups/invite_invalid.html", status=404)
     user = request.user

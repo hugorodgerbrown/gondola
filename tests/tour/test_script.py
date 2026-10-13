@@ -24,9 +24,7 @@ def test_the_tour_has_twenty_four_frames() -> None:
     assert frame_count() == 24
 
 
-@pytest.mark.parametrize(
-    "frame", [f for c in CHAPTERS for f in c.frames], ids=lambda f: f.id
-)
+@pytest.mark.parametrize("frame", [f for c in CHAPTERS for f in c.frames], ids=lambda f: f.id)
 def test_every_coach_mark_is_the_locked_copy(frame: object) -> None:
     assert f"| {frame.id} |" in DOC  # type: ignore[attr-defined]
     assert frame.text in DOC  # type: ignore[attr-defined]

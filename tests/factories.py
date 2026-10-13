@@ -1,5 +1,4 @@
-"""
-tests/factories.py — FactoryBoy factories, one per concrete model.
+"""tests/factories.py — FactoryBoy factories, one per concrete model.
 
 Always call them with ``.create()`` so mypy infers the model type.
 """

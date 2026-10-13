@@ -79,9 +79,7 @@ def test_account_page_offers_the_tour(client: Client, tourist: User) -> None:
 # --- Touring: the demo, and only the demo -----------------------------------
 
 
-def test_touring_pages_show_the_demo_and_the_bar(
-    touring: Client, tourist: User
-) -> None:
+def test_touring_pages_show_the_demo_and_the_bar(touring: Client, tourist: User) -> None:
     response = touring.get(reverse("planning:calendar"))
     assert b"Demo</strong> \xc2\xb7 nothing is saved" in response.content
     assert b'id="tour-script"' in response.content
@@ -102,9 +100,7 @@ def test_touring_hides_real_groups(
     assert [g.name for g in groups] == ["Thursday crew"]
     real_page = reverse("planning:group_detail", kwargs={"group_uuid": real.uuid})
     assert touring.get(real_page).status_code == 404
-    pins = touring.get(
-        reverse("planning:map_pins"), {"date": today().isoformat()}
-    ).json()
+    pins = touring.get(reverse("planning:map_pins"), {"date": today().isoformat()}).json()
     verbier = next(p for p in pins["pins"] if p["id"] == str(resorts["VERB"].uuid))
     assert verbier["friends"] == 3  # Sam, Anna and Chloé, not Rita
 
@@ -124,9 +120,7 @@ def test_outside_the_tour_demo_groups_never_show(
 
 
 def test_a_stale_tour_ends_on_the_next_request(touring: Client, tourist: User) -> None:
-    Group.objects.filter(pk=_demo(tourist).pk).update(
-        created_at=timezone.now() - DEMO_LIFETIME * 2
-    )
+    Group.objects.filter(pk=_demo(tourist).pk).update(created_at=timezone.now() - DEMO_LIFETIME * 2)
     response = touring.get(reverse("planning:calendar"))
     assert response.context["tour"]["script"] is None
     assert TOUR_KEY not in touring.session
@@ -152,9 +146,7 @@ def test_the_demo_share_button_is_not_counted(touring: Client, tourist: User) ->
 def test_saving_a_day_moves_on_to_the_group(touring: Client, tourist: User) -> None:
     url = reverse("planning:day", kwargs={"day": today()})
     response = touring.post(url, {"resort": ""}, headers=HTMX)
-    group_url = reverse(
-        "planning:group_detail", kwargs={"group_uuid": _demo(tourist).uuid}
-    )
+    group_url = reverse("planning:group_detail", kwargs={"group_uuid": _demo(tourist).uuid})
     assert response.status_code == 204
     assert response["HX-Redirect"] == group_url
     plain = touring.post(url, {"resort": ""})
@@ -208,19 +200,13 @@ def test_finish_hands_over_once(touring: Client, tourist: User) -> None:
     # No group yet: Let's go starts one.
     assert reverse("planning:group_list").encode() in page.content
     assert b"Tell the group" not in page.content
-    assert (
-        b"This is your real calendar"
-        not in touring.get(reverse("planning:calendar")).content
-    )
+    assert b"This is your real calendar" not in touring.get(reverse("planning:calendar")).content
 
 
 def test_the_handoff_waits_for_the_calendar(touring: Client) -> None:
     touring.post(reverse("tour:finish"))
     touring.get(reverse("planning:group_list"))
-    assert (
-        b"This is your real calendar"
-        in touring.get(reverse("planning:calendar")).content
-    )
+    assert b"This is your real calendar" in touring.get(reverse("planning:calendar")).content
 
 
 def test_a_quiet_group_gets_tell_the_group(touring: Client, tourist: User) -> None:
@@ -271,9 +257,7 @@ def test_new_account_from_an_invite_is_offered_after_joining(
     invite = reverse("planning:invite", args=[group.invite_token])
     newcomer = UserFactory.create(display_name="")
     client.force_login(newcomer)
-    done = client.post(
-        reverse("accounts:welcome"), {"display_name": "N", "next": invite}
-    )
+    done = client.post(reverse("accounts:welcome"), {"display_name": "N", "next": invite})
     assert "%2Ftour%2F" not in done["Location"]
     assert client.session[OFFER_KEY] is True
     joined = client.post(reverse("planning:join", args=[group.invite_token]))
@@ -302,9 +286,7 @@ def _events(client: Client) -> list[list[object]]:
     if marker not in content:
         return []
     start = content.index(marker) + len(marker)
-    events: list[list[object]] = json.loads(
-        content[start : content.index("</script>", start)]
-    )
+    events: list[list[object]] = json.loads(content[start : content.index("</script>", start)])
     return events
 
 
@@ -314,9 +296,7 @@ def fivebar(settings: object) -> None:
 
 
 @pytest.mark.usefixtures("fivebar")
-def test_the_offer_is_counted_and_not_now_is_tagged(
-    client: Client, tourist: User
-) -> None:
+def test_the_offer_is_counted_and_not_now_is_tagged(client: Client, tourist: User) -> None:
     client.force_login(tourist)
     page = client.get(reverse("tour:offer"))
     assert b'"Tour offered"' in page.content
@@ -325,9 +305,7 @@ def test_the_offer_is_counted_and_not_now_is_tagged(
 
 
 @pytest.mark.usefixtures("fivebar")
-def test_tour_events_are_counted(
-    client: Client, tourist: User, resorts: dict[str, Resort]
-) -> None:
+def test_tour_events_are_counted(client: Client, tourist: User, resorts: dict[str, Resort]) -> None:
     client.force_login(tourist)
     client.post(reverse("tour:start"))
     assert _events(client) == [["Tour started", {"replay": False}]]

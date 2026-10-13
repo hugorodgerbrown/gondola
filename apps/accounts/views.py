@@ -1,5 +1,4 @@
-"""
-apps/accounts/views.py — Signing in by emailed link, and the account page.
+"""apps/accounts/views.py — Signing in by emailed link, and the account page.
 
 * ``sign_in`` asks for an email and sends a link; ``check_email`` says so.
 * ``verify`` is the link itself: it signs the person in and, the first
@@ -78,9 +77,7 @@ def sign_in(request: HttpRequest) -> HttpResponse:
     if request.method == "POST" and form.is_valid():
         email = form.cleaned_data["email"]
         if not sign_in_allowed(email):
-            form.add_error(
-                "email", "Too many links sent to this address. Try again later."
-            )
+            form.add_error("email", "Too many links sent to this address. Try again later.")
         else:
             link = sign_in_url(request, email, next_url)
             send_sign_in_email(email, link)
@@ -88,9 +85,7 @@ def sign_in(request: HttpRequest) -> HttpResponse:
             if settings.DEBUG:
                 request.session[DEBUG_LINK_KEY] = link
             return redirect("accounts:check_email")
-    return render(
-        request, "accounts/sign_in.html", {"form": form, "next_url": next_url}
-    )
+    return render(request, "accounts/sign_in.html", {"form": form, "next_url": next_url})
 
 
 def check_email(request: HttpRequest) -> HttpResponse:
@@ -110,9 +105,7 @@ def verify(request: HttpRequest, token: str) -> HttpResponse:
     try:
         result = read_sign_in_token(token)
     except InvalidLink as exc:
-        return render(
-            request, "accounts/link_invalid.html", {"reason": str(exc)}, status=400
-        )
+        return render(request, "accounts/link_invalid.html", {"reason": str(exc)}, status=400)
     login(request, result.user, backend=MODEL_BACKEND)
     request.session.pop(DEBUG_LINK_KEY, None)
     next_url = safe_next(result.next_url, request)
@@ -132,9 +125,7 @@ def welcome(request: HttpRequest) -> HttpResponse:
         # The tour is offered next, once (apps/tour/session.py).
         query = urlencode({"next": after_welcome(request, next_url)})
         return redirect(f"{reverse('accounts:passkey_welcome')}?{query}")
-    return render(
-        request, "accounts/welcome.html", {"form": form, "next_url": next_url}
-    )
+    return render(request, "accounts/welcome.html", {"form": form, "next_url": next_url})
 
 
 @login_required
@@ -186,16 +177,12 @@ def stop_evening_email(request: HttpRequest, token: str) -> HttpResponse:
     try:
         user = read_unsubscribe_token(token)
     except InvalidLink as exc:
-        return render(
-            request, "accounts/link_invalid.html", {"reason": str(exc)}, status=400
-        )
+        return render(request, "accounts/link_invalid.html", {"reason": str(exc)}, status=400)
     done = request.method == "POST"
     if done and user.evening_email_enabled:
         user.evening_email_enabled = False
         user.save(update_fields=["evening_email_enabled", "updated_at"])
-    return render(
-        request, "accounts/stop_evening_email.html", {"done": done, "person": user}
-    )
+    return render(request, "accounts/stop_evening_email.html", {"done": done, "person": user})
 
 
 def _json_body(request: HttpRequest) -> dict[str, Any] | None:
@@ -240,9 +227,7 @@ def _wrong_host(request: HttpRequest) -> JsonResponse | None:
 
 def _passkey_rate_limited(request: HttpRequest) -> bool:
     """Count a passkey request from this address; True once over the limit."""
-    return over_limit(
-        "passkey-ip", client_ip(request), limit=PASSKEY_LIMIT, window_seconds=600
-    )
+    return over_limit("passkey-ip", client_ip(request), limit=PASSKEY_LIMIT, window_seconds=600)
 
 
 @require_POST
@@ -301,9 +286,7 @@ def passkey_register_options(request: HttpRequest) -> JsonResponse:
     """Return a challenge for ``navigator.credentials.create()``."""
     if refusal := _wrong_host(request):
         return refusal
-    return JsonResponse(
-        passkeys.registration_options(current_user(request), request.session)
-    )
+    return JsonResponse(passkeys.registration_options(current_user(request), request.session))
 
 
 @require_POST
@@ -329,9 +312,7 @@ def passkey_register(request: HttpRequest) -> JsonResponse:
 @require_POST
 def passkey_delete(request: HttpRequest, passkey_uuid: str) -> HttpResponse:
     """Remove one of the signed-in person's passkeys."""
-    passkey = get_object_or_404(
-        Passkey.objects.for_user(current_user(request)), uuid=passkey_uuid
-    )
+    passkey = get_object_or_404(Passkey.objects.for_user(current_user(request)), uuid=passkey_uuid)
     passkey.delete()
     messages.success(
         request,

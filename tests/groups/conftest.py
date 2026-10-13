@@ -44,11 +44,7 @@ def crew(db: None) -> Crew:
         anna=anna,
         ben=ben,
         outsider=outsider,
-        verbier=ResortFactory.create(
-            name="Verbier", code="VERB", latitude=46.1, longitude=7.2
-        ),
-        zermatt=ResortFactory.create(
-            name="Zermatt", code="ZERM", latitude=46.0, longitude=7.7
-        ),
+        verbier=ResortFactory.create(name="Verbier", code="VERB", latitude=46.1, longitude=7.2),
+        zermatt=ResortFactory.create(name="Zermatt", code="ZERM", latitude=46.0, longitude=7.7),
         day=today() + datetime.timedelta(days=2),
     )

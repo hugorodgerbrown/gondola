@@ -1,5 +1,4 @@
-"""
-apps/groups/services/board.py — The who's-where board for one group.
+"""apps/groups/services/board.py — The who's-where board for one group.
 
 People down the side, seven days across, a short resort code in each cell.
 The viewer's own row comes first.
@@ -84,18 +83,14 @@ def cell_for(plan: PlanDay | None, *, mine: bool) -> Cell:
     return Cell(text=plan.resort.display_code, title=plan.describe())
 
 
-def build_board(
-    group: Group, viewer: User, start: datetime.date | None = None
-) -> Board:
+def build_board(group: Group, viewer: User, start: datetime.date | None = None) -> Board:
     """Return ``group``'s board for the week from ``start`` (default today)."""
     start = start or today()
     days = date_range(start, BOARD_DAYS)
     people = members_of(group)
     plans = {
         (p.user_id, p.date): p
-        for p in PlanDay.objects.filter(user__in=people, date__in=days).select_related(
-            "resort"
-        )
+        for p in PlanDay.objects.filter(user__in=people, date__in=days).select_related("resort")
     }
     ordered = sorted(people, key=lambda u: u.pk != viewer.pk)
     rows = [
@@ -103,8 +98,7 @@ def build_board(
             person=person,
             is_me=person.pk == viewer.pk,
             cells=[
-                cell_for(plans.get((person.pk, day)), mine=person.pk == viewer.pk)
-                for day in days
+                cell_for(plans.get((person.pk, day)), mine=person.pk == viewer.pk) for day in days
             ],
         )
         for person in ordered

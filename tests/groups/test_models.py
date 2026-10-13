@@ -72,9 +72,7 @@ def test_one_membership_per_group_and_user() -> None:
 
 def test_one_owner_per_group() -> None:
     group = GroupFactory.create()
-    owner = MembershipFactory.create(
-        group=group, user=group.owner, role=Membership.Role.OWNER
-    )
+    owner = MembershipFactory.create(group=group, user=group.owner, role=Membership.Role.OWNER)
     MembershipFactory.create(group=group)
     assert list(Membership.objects.owners()) == [owner]
     with pytest.raises(IntegrityError):

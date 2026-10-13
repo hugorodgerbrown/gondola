@@ -26,17 +26,13 @@ def test_over_limit_counts_per_value() -> None:
 def test_client_ip_without_a_proxy(rf: RequestFactory, settings: Any) -> None:
     """With no trusted proxy, X-Forwarded-For is ignored: the client could have written it."""
     settings.RATE_LIMIT_PROXY_COUNT = 0
-    request = rf.get(
-        "/", REMOTE_ADDR="10.0.0.1", headers={"X-Forwarded-For": "1.2.3.4"}
-    )
+    request = rf.get("/", REMOTE_ADDR="10.0.0.1", headers={"X-Forwarded-For": "1.2.3.4"})
     assert client_ip(request) == "10.0.0.1"
 
 
 def test_client_ip_behind_one_proxy(rf: RequestFactory, settings: Any) -> None:
     """Behind one proxy the client is the last entry, whatever came before it."""
     settings.RATE_LIMIT_PROXY_COUNT = 1
-    request = rf.get(
-        "/", REMOTE_ADDR="10.0.0.1", headers={"X-Forwarded-For": "6.6.6.6, 1.2.3.4"}
-    )
+    request = rf.get("/", REMOTE_ADDR="10.0.0.1", headers={"X-Forwarded-For": "6.6.6.6, 1.2.3.4"})
     assert client_ip(request) == "1.2.3.4"
     assert client_ip(rf.get("/", REMOTE_ADDR="10.0.0.1")) == "10.0.0.1"

@@ -1,5 +1,4 @@
-"""
-apps/groups/services/testers.py — Who is in the "UI test" group.
+"""apps/groups/services/testers.py — Who is in the "UI test" group.
 
 Membership of the "UI test" planning group follows one Django auth group,
 "Testers". The seed_ui_test command puts its made-up people in Testers; a
@@ -34,9 +33,7 @@ def get_testers_group() -> AuthGroup:
 def ui_test_group() -> Group | None:
     """Return the "UI test" planning group, or None before it's seeded."""
     return (
-        Group.objects.filter(
-            name=UI_TEST_GROUP, owner__email__endswith=f"@{MADE_UP_DOMAIN}"
-        )
+        Group.objects.filter(name=UI_TEST_GROUP, owner__email__endswith=f"@{MADE_UP_DOMAIN}")
         .order_by("created_at")
         .first()
     )

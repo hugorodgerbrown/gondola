@@ -1,5 +1,4 @@
-"""
-apps/accounts/passkeys.py — Passkeys (WebAuthn), wrapping py_webauthn.
+"""apps/accounts/passkeys.py — Passkeys (WebAuthn), wrapping py_webauthn.
 
 Ported from Tally, which shares it with the Titan template, so passkeys
 behave the same in every project. A passkey sits alongside the emailed
@@ -99,9 +98,7 @@ def registration_options(user: User, session: SessionBase) -> dict[str, Any]:
     return _options_dict(options)
 
 
-def register(
-    credential_json: str, session: SessionBase, user: User, name: str
-) -> Passkey:
+def register(credential_json: str, session: SessionBase, user: User, name: str) -> Passkey:
     """Verify the browser's ``create()`` answer and save the new passkey."""
     challenge = session.pop(_REGISTER_CHALLENGE, None)
     if not challenge:
@@ -152,9 +149,7 @@ def sign_in_options(session: SessionBase) -> dict[str, Any]:
 
 def _signed_challenge(credential: dict[str, Any]) -> str:
     """Return the challenge the browser signed, from the answer's clientDataJSON."""
-    client_data = json.loads(
-        base64url_to_bytes(credential["response"]["clientDataJSON"])
-    )
+    client_data = json.loads(base64url_to_bytes(credential["response"]["clientDataJSON"]))
     return str(client_data["challenge"])
 
 
@@ -172,11 +167,7 @@ def authenticate(credential_json: str, session: SessionBase) -> User:
     # Used once, whether or not it verifies.
     session[_SIGN_IN_CHALLENGES] = [c for c in challenges if c != challenge]
 
-    passkey = (
-        Passkey.objects.select_related("user")
-        .filter(credential_id=credential_id)
-        .first()
-    )
+    passkey = Passkey.objects.select_related("user").filter(credential_id=credential_id).first()
     if passkey is None:
         raise UnknownPasskeyError(credential_id)
     try:
@@ -195,9 +186,7 @@ def authenticate(credential_json: str, session: SessionBase) -> User:
     passkey.sign_count = verified.new_sign_count
     passkey.backed_up = verified.credential_backed_up
     passkey.last_used_at = timezone.now()
-    passkey.save(
-        update_fields=["sign_count", "backed_up", "last_used_at", "updated_at"]
-    )
+    passkey.save(update_fields=["sign_count", "backed_up", "last_used_at", "updated_at"])
     return passkey.user
 
 

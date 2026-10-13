@@ -1,5 +1,4 @@
-"""
-apps/accounts/models.py — The custom user model.
+"""apps/accounts/models.py — The custom user model.
 
 ``User`` signs in with an email address, never a username. Emails are
 normalised to lowercase before storage and lookup, at every entry point,
@@ -56,9 +55,7 @@ class UserManager(BaseUserManager["User"]):
         """Look a user up by email, case-insensitively."""
         return self.get(email=normalise_email(username or ""))
 
-    def create_user(
-        self, email: str, password: str | None = None, **extra_fields: Any
-    ) -> User:
+    def create_user(self, email: str, password: str | None = None, **extra_fields: Any) -> User:
         """Create and save a user with the given email and password."""
         if not email:
             raise ValueError("A user must have an email address.")
@@ -135,8 +132,7 @@ class PasskeyQuerySet(models.QuerySet["Passkey"]):
 
 
 class Passkey(BaseModel):
-    """
-    A passkey (WebAuthn credential) someone can sign in with.
+    """A passkey (WebAuthn credential) someone can sign in with.
 
     The public key is stored; the private key never leaves the person's
     device or password manager. A person can add one per device, and the

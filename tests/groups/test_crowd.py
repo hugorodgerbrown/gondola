@@ -46,9 +46,7 @@ def test_an_unsaid_day_shows_where_most_friends_are(crew: Crew) -> None:
     plain = month.build_month(crew.sam, dec(1)).weeks
     assert not any(d.crowd for week in plain for d in week)
     days = {
-        d.date: d
-        for week in month.build_month(crew.sam, dec(1), crew.group).weeks
-        for d in week
+        d.date: d for week in month.build_month(crew.sam, dec(1), crew.group).weeks for d in week
     }
     crowd = days[dec(5)].crowd
     assert crowd is not None and crowd.resort == crew.zermatt
