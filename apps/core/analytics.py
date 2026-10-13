@@ -1,8 +1,8 @@
 """apps/core/analytics.py — Visitor counts and goals by fivebar (https://fiveb.ar).
 
-Off unless ``FIVEBAR_DOMAIN`` is set to the domain the site was added to
-fivebar under. Then every page carries fivebar's tag
-(``templates/includes/analytics.html``): the script counts each page by
+On under SITE_URL's host unless that is local; ``FIVEBAR_DOMAIN`` overrides
+it, and empty turns it off (config/settings.py). Then every page carries
+fivebar's tag (``templates/includes/_analytics.html``): the script counts each page by
 itself, with no cookies. Ported from the Titan template.
 
 A page whose address holds a secret or an id (an invite token, a group's

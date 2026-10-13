@@ -11,12 +11,15 @@ group chat. An email the evening before sums up tomorrow.
 | Front page | `/` | Explains the app; signed-in people go to the map |
 | Sign in | `/sign-in/` | Emails a link and a six-digit code, either usable once; or a passkey. No passwords. First sign-in asks for a name |
 | Map | `/app/map/?date=&pass=` | Every resort as a pin, friend counts for the day, pass filter. Tap a pin for the resort sheet: who's there, plan your day here |
-| Calendar | `/app/days/` | A month at a time. Tap a day for who's with you and who's elsewhere; Add plans picks a resort (friends' first, then search) |
+| Calendar | `/app/days/?from=&day=&group=` | A month at a time, you by default; a group chip adds pale days where that group will be. Tap a day for who's with you and who's elsewhere; Add plans picks a resort (friends' first, then search); select several days to plan them at once |
 | Groups | `/app/groups/` | Your groups; start one |
-| Group | `/app/groups/<uuid>/` | Members, the invite link (share, reset), leave or delete |
-| Who's where | `/app/groups/<uuid>/board/` | People down the side, 7 days across, resort codes |
+| Group | `/app/groups/<uuid>/` | Members (the owner can remove them), the invite link (share, reset), leave, or delete if you own it |
+| Who's where | `/app/groups/<uuid>/board/?start=` | People down the side, 7 days across, resort codes |
 | Invite | `/i/<token>/` | Readable without an account; the Join button joins |
-| Account | `/app/account/` | Name, evening email, sign out, delete |
+| Account | `/app/account/` | Name, evening email, passkeys, connected apps, the tour, sign out, delete |
+| Tour | `/app/tour/` | The onboarding tour on a private demo group (docs/onboarding-tour.md) |
+| Design | `/app/design/` | Staff only (a 404 for anyone else): every token and component state (DESIGN.md) |
+| Offline | `/app/offline/` | What the installed app shows for a page it hasn't cached |
 | Terms, privacy, help | `/terms/`, `/privacy/`, `/help/` | Public; the MCP tools `privacy_policy`, `terms_of_service` and `help` return the same words |
 
 Everything signed-in lives under `/app/`, the installed app's scope
@@ -63,7 +66,8 @@ titan golive gondola   # after the CNAME: waits for DNS, sets SITE_URL
 The service reads two env groups: `titan`, shared by every Titan app
 (debug off, the Python version, hosts and CSRF origins under
 ultraniche.ai, the SMTP relay), and `gondola`, its own (`DATABASE_URL`,
-`DJANGO_SECRET_KEY`, the mail key and sender, `SITE_URL`). Only
+`DJANGO_SECRET_KEY`, the mail key and sender, `SITE_URL`, and
+`FIVEBAR_DOMAIN` if visitor counts should go anywhere but `SITE_URL`'s host). Only
 `DJANGO_SETTINGS_MODULE` (`config.settings`) is set in `render.yaml`. To override a shared
 value for Gondola alone, set it on the service, which wins over both
 groups. The settings read Titan's `DJANGO_*` names as well as the bare
@@ -92,8 +96,9 @@ uv run tox -e sast      # semgrep (downloads rule packs; CI runs it too)
 
 ```
 config/            settings.py (one module, env-driven), urls, wsgi/asgi
-apps/core/         BaseModel, idempotency, tokens, health checks, the move to /app/
-apps/public/       the front page, terms, privacy, help
+apps/core/         BaseModel, idempotency, tokens, decorators, rate limits, analytics,
+                   health checks, the CSRF failure page
+apps/public/       the front page, terms, privacy, help (each body also served as Markdown)
 apps/pwa/          manifest, service worker (/app/sw.js), offline page, launch screen
 apps/accounts/     User, sign-in by emailed link and code, passkeys, the account page
 apps/resorts/      Pass, Resort, the resort sheets, import_resorts, search
@@ -102,10 +107,13 @@ apps/groups/       Group, Membership, PlanDay;
                    seed_ui_test
 apps/tour/         the onboarding tour (docs/onboarding-tour.md)
 apps/mcp/          the MCP endpoint (/mcp) and its tools; auth is mcp-auth
+apps/design/       the staff-only design page (/app/design/, DESIGN.md)
 templates/         base.html and shared includes
-static/            app.css, app.js, map.js, vendored htmx and MapLibre
+static/            css/app.css (the design system), js/ (plain scripts: the app, map,
+                   service worker, outbox), vendored htmx and MapLibre
 tests/             mirrors apps/; tests/js holds the Vitest tests
-docs/              pwa, security, performance, testing, the onboarding tour, decisions/
+docs/              accounts, pwa, security, performance, testing, the onboarding tour,
+                   decisions/
 ```
 
 ## Connecting Claude (MCP)
@@ -114,7 +122,9 @@ Gondola serves an MCP endpoint at `/mcp`, so Claude can read and change
 your days: add `https://gondola.ultraniche.ai/mcp` as a custom connector
 and sign in when asked. Signing in and tokens are the shared Titan
 [mcp-auth](https://github.com/hugorodgerbrown/mcp-auth) app (OAuth 2.1);
-any active account may connect. The tools:
+any active account may connect. A tool runs as the signed-in person and
+sees what they see in the app: their own days, and the names and days of
+everyone in their groups. Writes only ever change their own days. The tools:
 
 | Tool | Does |
 |------|------|

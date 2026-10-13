@@ -23,7 +23,7 @@ can't both write.
 - Writes appear at once as pending, whether or not there is a connection.
 - Endpoints that take outbox writes answer JSON, and 401 rather than
   redirect when signed out.
-- `IdempotencyRecord` grows by one row per write; a daily job
-  (`purge_idempotency_records --commit`) deletes expired rows.
+- `IdempotencyRecord` grows by one row per write;
+  `purge_idempotency_records --commit` deletes expired rows on each deploy.
 - Writes that need an immediate server answer (sign-in, payments) stay
   online-only and don't use the outbox.

@@ -122,7 +122,7 @@ on the control that leads to the next page.
 | 5.2 | Friends | Next | The number on a resort is how many friends are there that day. |
 | 5.3 | Pass | Next | Show only the resorts on your pass. |
 | 5.4 | Open a resort | Tap Verbier | Tap a resort to see who's there. |
-| 5.5 | Resort sheet | Next | Say you'll be here without leaving the map. |
+| 5.5 | Resort sheet | Finish | Say you'll be here without leaving the map. |
 
 ## Chapter 6: Over to you
 
@@ -132,7 +132,7 @@ on the control that leads to the next page.
 
 | Frame | Element | Advances on | Coach mark |
 |---|---|---|---|
-| 6.0 | Hand-off | Let's go | That's the tour. The demo group is gone. This is your real calendar: tap a day you might ski, then Add plans, and your group will see it. The evening before you ski, we'll email you who's where. |
+| 6.0 | Hand-off | Let's go (or Later) | That's the tour. The demo group is gone. This is your real calendar: tap a day you might ski, then Add plans, and your group will see it. The evening before you ski, we'll email you who's where. |
 
 ## Measuring it: fivebar goals
 
@@ -147,7 +147,7 @@ it. Add that site in fivebar for the counts to show.
 | `Tour skipped` | Not now is tapped | none |
 | `Tour started` | Show me round is tapped | `replay`: true / false |
 | `Tour ended` | End tour is tapped | `chapter`: 1 to 5 |
-| `Tour finished` | Chapter 6 is reached | `group`: busy / quiet / none |
+| `Tour finished` | Finish is tapped on the last map frame (5.5) | `group`: busy / quiet / none |
 | `Day planned` | A real day is saved | `first`, `after_tour`: true / false |
 | `Invite shared` | The invite link is shared | `from`: tour / group |
 
@@ -186,5 +186,5 @@ Passkeys (asked just before the tour), reset link, leave and delete.
   the layer moves into the dialog, which sits above the page.
 - **Offered** after the passkey screen for a new account, or after joining
   for someone who signed up through an invite link; again from the account
-  page. Chapter 0 is `/tour/`.
+  page. Chapter 0 is `/app/tour/`.
 - A frame whose target isn't on screen is skipped.

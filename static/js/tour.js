@@ -20,7 +20,7 @@
 (function () {
   "use strict";
 
-  // Chapter 7: the hand-off over the real calendar closes on Later or Let's go.
+  // Chapter 6: the hand-off over the real calendar closes on Later or Let's go.
   document.querySelectorAll("[data-tour-handoff]").forEach(function (layer) {
     layer.addEventListener("click", function (event) {
       if (event.target.closest("[data-tour-close]")) layer.remove();

@@ -32,9 +32,9 @@ person in a group meant every screen was blank.
 - A bar on every tour screen says it is a demo and offers End tour.
 - The tour ends by deleting the demo copy and handing over to the
   person's real first action: the thing the app is for, on their own data.
-- It is measured in fivebar with three events, `Tour started`,
-  `Tour ended` (with the chapter) and `Tour finished`, plus the app's own
-  first real action, so the tour's effect can be compared with people who
+- It is measured in fivebar with the tour's own events (`Tour offered`,
+  `Tour skipped`, `Tour started`, `Tour ended` with the chapter and
+  `Tour finished`), plus the app's own first real action, so the tour's effect can be compared with people who
   skipped it.
 
 ## Consequences
@@ -42,8 +42,10 @@ person in a group meant every screen was blank.
 - Each app needs a demo-data builder and a way to keep demo data out of
   everything real: lists, counts, emails, exports, the MCP tools.
 - A demo copy abandoned mid-tour is deleted the next time its owner loads
-  a page, or by the daily clean-up job, so no scheduled job is added.
-- The tour's words are the app's copy like any other: they go through
-  `{% trans %}` and are reviewed in the PR that changes the page.
+  a page, so no scheduled job is needed.
+- The tour's words are the app's copy like any other: they are reviewed
+  in the PR that changes the page. Gondola keeps them in
+  `apps/tour/script.py`, held to `docs/onboarding-tour.md` by
+  `tests/tour/test_script.py`.
 - The first app to build this was Gondola; its engine is the reference
   until the template carries one of its own.
