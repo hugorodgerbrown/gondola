@@ -61,10 +61,11 @@ async function fromStatic(request) {
 
 async function fromPage(event) {
   const request = event.request;
+  const key = SwCore.pageCacheKey(request);
   const cache = await caches.open(names.pages);
   const network = fetch(request).then((response) => {
     if (SwCore.isStorable(response)) {
-      event.waitUntil(cache.put(request, response.clone()));
+      event.waitUntil(cache.put(key, response.clone()));
     }
     return response;
   });
@@ -75,10 +76,10 @@ async function fromPage(event) {
     const first = await Promise.race([network, timedOut]);
     if (first !== 'timeout') return first;
     // Slow network: a cached copy if there is one, otherwise keep waiting.
-    const cached = await cache.match(request, { ignoreVary: true });
+    const cached = await cache.match(key, { ignoreVary: true });
     return cached || (await network);
   } catch (error) {
-    const cached = await cache.match(request, { ignoreVary: true });
+    const cached = await cache.match(key, { ignoreVary: true });
     if (cached) return cached;
     if (request.mode === 'navigate') {
       const offline = await caches.match(config.offlineUrl);

@@ -102,6 +102,9 @@ keyframe hides it at 10 s even if no script runs.
 ## Gondola's move to /app/
 
 Gondola had a worker of its own at `/sw.js`, scoped to the whole site, and
-its signed-in pages at the root. It had no live data or users when it moved,
-so nothing redirects from the old addresses and nothing retires the old
-worker. Invite links (`/i/<token>/`) stay public, outside the app.
+its signed-in pages at the root. It had no live data when it moved, so
+nothing redirects from the old addresses. A phone that installed the old
+app may still hold that worker and its caches (`static-v1`, `pages-v1`),
+which could serve a signed-in page offline after sign-out; every page load
+unregisters it and deletes them (`retireRootWorker` in `static/js/app.js`).
+Invite links (`/i/<token>/`) stay public, outside the app.

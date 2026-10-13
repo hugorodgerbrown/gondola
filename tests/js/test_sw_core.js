@@ -67,3 +67,18 @@ describe('isStorable', () => {
     expect(core.isStorable(res(overrides))).toBe(false);
   });
 });
+
+
+describe('pageCacheKey', () => {
+  it('keeps a navigation under its own request', () => {
+    const request = new Request(ORIGIN + '/app/days/?day=2026-12-14');
+    expect(core.pageCacheKey(request)).toBe(request);
+  });
+
+  it('files an htmx fragment under its URL plus __htmx=1', () => {
+    const request = new Request(ORIGIN + '/app/days/?day=2026-12-14', {
+      headers: { 'HX-Request': 'true' },
+    });
+    expect(core.pageCacheKey(request)).toBe(ORIGIN + '/app/days/?day=2026-12-14&__htmx=1');
+  });
+});

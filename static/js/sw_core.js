@@ -43,6 +43,20 @@
     return 'page';
   }
 
+  /**
+   * The key a page's response is cached under. An htmx request for the same
+   * URL gets a fragment (a sheet) where a navigation gets the whole page, so
+   * the two are kept apart: the fragment under the URL plus ``__htmx=1``.
+   * @param {Request} request
+   */
+  function pageCacheKey(request) {
+    const htmx = request.headers && request.headers.get('HX-Request') === 'true';
+    if (!htmx) return request;
+    const url = new URL(request.url);
+    url.searchParams.set('__htmx', '1');
+    return url.href;
+  }
+
   /** True when a response can be stored and served later. */
   function isStorable(response) {
     if (!response || !response.ok || response.redirected || response.type !== 'basic') return false;
@@ -50,5 +64,5 @@
     return !/no-store/i.test(cacheControl);
   }
 
-  self.SwCore = Object.freeze({ cacheNames, isStaleCache, route, isStorable });
+  self.SwCore = Object.freeze({ cacheNames, isStaleCache, route, pageCacheKey, isStorable });
 })();

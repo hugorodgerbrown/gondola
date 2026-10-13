@@ -6,7 +6,8 @@
  * phone's share sheet (falling back to copying the link). ``onSwipe`` turns
  * a sideways swipe into "previous" or "next", for the month calendars.
  * An open "…" row menu closes on a tap anywhere else. The service worker,
- * the offline banner and clearing cached pages at sign-out are pwa.js's.
+ * the offline banner and clearing cached pages at sign-out are pwa.js's;
+ * this file only retires Gondola's first worker (``retireRootWorker``).
  */
 (function () {
   "use strict";
@@ -156,4 +157,27 @@
       function () { go(element.dataset.swipeNext); }
     );
   });
+
+  // Gondola's first service worker was registered at /sw.js for the whole
+  // site, with its own caches. A phone that installed it still has both:
+  // unregister it and drop them, so it can never again answer for a page,
+  // signed out or not. The app's worker is /app/sw.js, scoped to /app/.
+  var ROOT_CACHES = ["static-v1", "pages-v1"];
+  function retireRootWorker() {
+    var jobs = [];
+    if (navigator.serviceWorker && navigator.serviceWorker.getRegistrations) {
+      jobs.push(navigator.serviceWorker.getRegistrations().then(function (registrations) {
+        var root = location.origin + "/";
+        return Promise.all(registrations.filter(function (registration) {
+          return registration.scope === root;
+        }).map(function (registration) { return registration.unregister(); }));
+      }));
+    }
+    if (window.caches) {
+      jobs.push(Promise.all(ROOT_CACHES.map(function (name) { return caches.delete(name); })));
+    }
+    return Promise.all(jobs).catch(function () { /* nothing to retire */ });
+  }
+  window.retireRootWorker = retireRootWorker;
+  retireRootWorker();
 })();
