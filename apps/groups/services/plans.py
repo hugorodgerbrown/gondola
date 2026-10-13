@@ -48,14 +48,25 @@ def date_range(start: datetime.date, days: int) -> list[datetime.date]:
 
 
 @transaction.atomic
-def update_plans(user: User, days: Iterable[datetime.date], resort: Resort) -> list[PlanDay]:
-    """Put ``user`` in ``resort`` on each of ``days``."""
+def update_plans(
+    user: User,
+    days: Iterable[datetime.date],
+    resort: Resort,
+    said_at: datetime.datetime | None = None,
+) -> list[PlanDay]:
+    """Put ``user`` in ``resort`` on each of ``days``.
+
+    ``said_at`` is when the person chose it (default now); a write queued
+    offline passes the time it was made.
+    """
+    said_at = said_at or timezone.now()
     dates = sorted(set(days))
     existing = {plan.date: plan for plan in PlanDay.objects.filter(user=user, date__in=dates)}
     saved = []
     for day in dates:
         plan = existing.get(day) or PlanDay(user=user, date=day)
         plan.resort = resort
+        plan.said_at = said_at
         plan.save()
         saved.append(plan)
     return saved

@@ -19,6 +19,7 @@ from typing import TYPE_CHECKING
 
 from django.conf import settings
 from django.db import models
+from django.utils import timezone
 
 from apps.core.models import BaseModel
 from apps.core.tokens import make_token
@@ -178,6 +179,11 @@ class PlanDay(BaseModel):
         on_delete=models.PROTECT,
         related_name="plan_days",
         help_text="Where they'll be.",
+    )
+    said_at = models.DateTimeField(
+        default=timezone.now,
+        help_text="When the person chose this resort: for a write queued offline, "
+        "when they made it, not when it arrived.",
     )
 
     objects = PlanDayQuerySet.as_manager()

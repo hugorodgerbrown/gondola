@@ -411,8 +411,11 @@ def plans_write(request: HttpRequest) -> JsonResponse:
     The body is ``{"days": ["2026-12-14", ...], "resort": "<uuid>" or null,
     "written_at": "<ISO time>"}``; a null resort clears the days. A queued
     write can arrive long after it was made, so a day that has since gone
-    by, or that was changed after ``written_at`` (from another device, or
-    a later write), is skipped rather than overwritten. The answer lists
+    by, or that was said after ``written_at`` (from another device, or a
+    later write), is skipped rather than overwritten. The check is on
+    ``said_at``, which a queued write sets to its own ``written_at``, so
+    several writes queued for one day still land in the order they were
+    made. The answer lists
     what was saved and what was skipped.
     """
     try:
@@ -432,14 +435,14 @@ def plans_write(request: HttpRequest) -> JsonResponse:
     user = current_user(request)
     written_at = _written_at(data.get("written_at"))
     changed_since = set(
-        PlanDay.objects.filter(user=user, date__in=days, updated_at__gt=written_at).values_list(
+        PlanDay.objects.filter(user=user, date__in=days, said_at__gt=written_at).values_list(
             "date", flat=True
         )
     )
     wanted = [day for day in days if is_plannable(day) and day not in changed_since]
     if wanted and resort is not None:
         record_day_planned(request, user)
-        update_plans(user, wanted, resort)
+        update_plans(user, wanted, resort, said_at=written_at)
     elif wanted:
         clear_plans(user, wanted)
     skipped = [day for day in days if day not in wanted]

@@ -76,6 +76,34 @@ def test_a_day_changed_since_the_write_is_kept(signed_in: Client, user: User) ->
     assert newer.resort != resort
 
 
+def test_writes_queued_for_one_day_land_in_order(
+    signed_in: Client, user: User, frozen: Any
+) -> None:
+    """Two edits made offline, sent later, leave the second one standing."""
+    verbier, zermatt = ResortFactory.create_batch(2)
+    first = (timezone.now() - datetime.timedelta(minutes=20)).isoformat()
+    second = (timezone.now() - datetime.timedelta(minutes=10)).isoformat()
+    write(signed_in, {"days": [str(DAY)], "resort": str(verbier.uuid), "written_at": first})
+    frozen.tick(datetime.timedelta(seconds=5))
+    response = write(
+        signed_in, {"days": [str(DAY)], "resort": str(zermatt.uuid), "written_at": second}
+    )
+    assert response.json()["saved"] == [str(DAY)]
+    plan = PlanDay.objects.get(user=user, date=DAY)
+    assert plan.resort == zermatt
+    assert plan.said_at.isoformat() == second
+
+
+def test_a_queued_clear_follows_a_queued_save(signed_in: Client, user: User) -> None:
+    resort = ResortFactory.create()
+    first = (timezone.now() - datetime.timedelta(minutes=20)).isoformat()
+    second = (timezone.now() - datetime.timedelta(minutes=10)).isoformat()
+    write(signed_in, {"days": [str(DAY)], "resort": str(resort.uuid), "written_at": first})
+    response = write(signed_in, {"days": [str(DAY)], "resort": None, "written_at": second})
+    assert response.json()["saved"] == [str(DAY)]
+    assert not PlanDay.objects.filter(user=user).exists()
+
+
 def test_a_write_from_the_future_counts_as_now(signed_in: Client, user: User) -> None:
     """A phone clock running fast can't claim a later time than the server's."""
     PlanDayFactory.create(user=user, date=DAY)
