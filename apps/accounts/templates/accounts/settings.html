@@ -76,7 +76,7 @@
       <li><a href="{% url 'public:terms' %}">Terms</a></li>
       <li><a href="{% url 'public:privacy' %}">Privacy</a></li>
     </ul>
-    <p class="small muted">© {% now "Y" %} Ultraniche</p>
+    <p class="small muted">© {% now "Y" %} ultraniche.ai</p>
   </section>
   <form method="post" action="{% url 'accounts:sign_out' %}" data-sign-out>
     {% csrf_token %}

@@ -17,7 +17,7 @@ def test_public_pages_end_with_the_footer(client: Client, name: str) -> None:
     footer = content[content.index('<footer class="site-footer"') : content.index("</footer>")]
     for link in LINKS:
         assert f'href="{reverse(link)}"' in footer
-    assert f"© {timezone.localdate().year} Ultraniche" in footer
+    assert f"© {timezone.localdate().year} ultraniche.ai" in footer
     assert "<img" not in footer
 
 
@@ -27,4 +27,4 @@ def test_the_account_page_lists_the_links(signed_in: Client) -> None:
     assert 'class="site-links"' in content
     for link in LINKS:
         assert f'href="{reverse(link)}"' in content
-    assert f"© {timezone.localdate().year} Ultraniche" in content
+    assert f"© {timezone.localdate().year} ultraniche.ai" in content
