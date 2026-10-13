@@ -7,7 +7,7 @@
  * the arrow keys move between them. Pasting the code into any box, or
  * iPhone's "From Messages/Mail" autofill (``one-time-code`` on the first
  * box), spreads it across all six. The hidden field always holds what the
- * boxes say, and a full code submits the form.
+ * boxes say, a full code submits the form, and a short one doesn't.
  */
 (function () {
   'use strict';
@@ -31,6 +31,7 @@
       box.inputMode = 'numeric';
       box.className = 'code-box';
       box.autocomplete = i === 0 ? 'one-time-code' : 'off';
+      box.required = input.required;
       // The first box takes the field's own label; the rest say where they are.
       if (i > 0) box.setAttribute('aria-label', 'Digit ' + (i + 1) + ' of ' + length);
       box.id = (input.id || 'code') + '-' + (i + 1);
@@ -94,7 +95,18 @@
       box.addEventListener('focus', () => box.select());
     });
 
-    // Start from whatever the field held (a code typed before this ran).
+    // The hidden field can't stop an empty or half-typed code being sent, so
+    // hold the form back and put the person in the first empty box.
+    if (form) {
+      form.addEventListener('submit', (event) => {
+        const empty = boxes.find((box) => !box.value);
+        if (!empty) return;
+        event.preventDefault();
+        empty.focus();
+      });
+    }
+
+        // Start from whatever the field held (a code typed before this ran).
     digitsOf(input.value)
       .slice(0, length)
       .split('')
