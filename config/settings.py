@@ -12,6 +12,7 @@ from urllib.parse import urlsplit
 
 import dj_database_url
 from decouple import Csv, config
+from django.core.exceptions import ImproperlyConfigured
 from mcp_auth.conf import oauth2_settings
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -128,6 +129,8 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = "config.urls"
+# Marks CSRF refusals so a refused keyed write isn't stored as answered.
+CSRF_FAILURE_VIEW = "apps.core.views.csrf_failure"
 
 TEMPLATES = [
     {
@@ -149,11 +152,15 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "config.wsgi.application"
 
-# DATABASE_URL (Postgres in production) wins; otherwise a local SQLite file.
+# DATABASE_URL (Postgres in production) wins; otherwise, in development
+# only, a local SQLite file. Production refuses to start without it: on
+# Render a SQLite file would vanish, with every write since, on the next deploy.
 if DATABASE_URL := config("DATABASE_URL", default=""):
     DATABASES = {
         "default": dj_database_url.parse(DATABASE_URL, conn_max_age=600, conn_health_checks=True)
     }
+elif not DEBUG:
+    raise ImproperlyConfigured("DATABASE_URL must be set when DJANGO_DEBUG is off.")
 else:
     DATABASES = {
         "default": {

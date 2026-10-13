@@ -5,6 +5,7 @@ from collections.abc import Callable, Iterator
 from types import ModuleType
 
 import pytest
+from django.core.exceptions import ImproperlyConfigured
 
 import config.settings
 
@@ -21,7 +22,10 @@ NAMES = (
     "DJANGO_CSRF_TRUSTED_ORIGINS",
     "FIVEBAR_DOMAIN",
     "RENDER",
+    "DATABASE_URL",
 )
+# Production needs a database URL; tests that aren't about it get this one.
+SQLITE = "sqlite:///settings-test.sqlite3"
 
 
 @pytest.fixture
@@ -31,7 +35,11 @@ def load(monkeypatch: pytest.MonkeyPatch) -> Iterator[Callable[..., ModuleType]]
         monkeypatch.delenv(name, raising=False)
 
     def _load(**env: str) -> ModuleType:
+        env.setdefault("DATABASE_URL", SQLITE)
         for key, value in env.items():
+            if key == "DATABASE_URL" and not value:
+                monkeypatch.delenv(key, raising=False)
+                continue
             monkeypatch.setenv(key, value)
         return importlib.reload(config.settings)
 
@@ -66,6 +74,14 @@ def test_production_needs_a_secret_key(load: Callable[..., ModuleType]) -> None:
     """With debug off there is no fallback key."""
     assert load(DJANGO_DEBUG="0").SECRET_KEY == ""
     assert load(DJANGO_DEBUG="1").SECRET_KEY.startswith("django-insecure")
+
+
+def test_production_needs_a_database_url(load: Callable[..., ModuleType]) -> None:
+    """Debug off with no DATABASE_URL stops at startup, never falls back to SQLite."""
+    with pytest.raises(ImproperlyConfigured, match="DATABASE_URL"):
+        load(DJANGO_DEBUG="0", DATABASE_URL="")
+    local = load(DJANGO_DEBUG="1", DATABASE_URL="")
+    assert local.DATABASES["default"]["ENGINE"] == "django.db.backends.sqlite3"
 
 
 def test_allowed_hosts_add_up(load: Callable[..., ModuleType]) -> None:

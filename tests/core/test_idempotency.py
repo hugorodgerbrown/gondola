@@ -6,6 +6,7 @@ from typing import Any
 
 import pytest
 from django.http import HttpRequest, HttpResponse, JsonResponse
+from django.middleware.csrf import get_token
 from django.test import Client, RequestFactory
 from django.urls import path
 
@@ -20,11 +21,16 @@ WRITES: list[dict[str, Any]] = []
 
 @login_required_json
 def write(request: HttpRequest) -> HttpResponse:
-    """Record the posted JSON and answer 201 with how many writes there are."""
+    """Record the posted JSON and answer 201 with how many writes there are; GET reads."""
     if request.method != "POST":
-        return JsonResponse({"writes": len(WRITES)})
+        # Hands out a CSRF token, as any page with a form does.
+        return JsonResponse({"writes": len(WRITES), "csrf": get_token(request)})
     WRITES.append(json.loads(request.body))
-    return JsonResponse({"writes": len(WRITES)}, status=201)
+    response = JsonResponse({"writes": len(WRITES)}, status=201)
+    response["Location"] = "/written/"
+    response["HX-Trigger"] = "written"
+    response.set_cookie("flash", "written")
+    return response
 
 
 urlpatterns = [path("write/", write)]
@@ -53,6 +59,35 @@ def test_replay_returns_first_response_without_running_view_again(signed_in: Cli
     assert first.status_code == second.status_code == 201
     assert second.content == first.content
     assert second["Idempotent-Replayed"] == "true"
+    assert len(WRITES) == 1
+
+
+def test_replay_keeps_the_headers_but_not_the_cookies(signed_in: Client) -> None:
+    """A replay is the same answer: its Location and HX-* headers come back, cookies don't."""
+    post(signed_in, {"text": "hello"})
+    replay = post(signed_in, {"text": "hello"})
+    assert replay["Location"] == "/written/"
+    assert replay["HX-Trigger"] == "written"
+    assert replay["Content-Type"] == "application/json"
+    assert "flash" not in replay.cookies
+
+
+def test_a_csrf_refusal_is_not_stored(user: Any) -> None:
+    """A write refused for a stale token runs once a fresh token comes with it."""
+    browser = Client(enforce_csrf_checks=True)
+    browser.force_login(user)
+    refused = post(browser, {"text": "hello"})
+    assert refused.status_code == 403
+    assert refused["X-CSRF-Failure"] == "1"
+    assert not IdempotencyRecord.objects.exists()
+    token = browser.get(URL).json()["csrf"]
+    accepted = browser.post(
+        URL,
+        json.dumps({"text": "hello"}),
+        content_type="application/json",
+        headers={"Idempotency-Key": "key-1", "X-CSRFToken": token},
+    )
+    assert accepted.status_code == 201
     assert len(WRITES) == 1
 
 
