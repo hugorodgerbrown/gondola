@@ -477,6 +477,9 @@ def test_map_page(sam: Client, crew: Crew) -> None:
     assert b"data-calendar" in response.content
     assert response.context["last_day"] == plans.last_plannable_day()
     assert b'id="plan-marks"' in response.content
+    # The site's top bar, with the one account link, sits above the map.
+    assert b'class="topbar"' in response.content
+    assert response.content.count(b'aria-label="Your account"') == 1
 
 
 def test_map_page_bad_date_is_today(sam: Client) -> None:

@@ -32,6 +32,7 @@
   --shadow-float: 0 1px 4px rgba(0, 0, 0, 0.12);
   --font-sans: "DM Sans", system-ui, -apple-system, sans-serif;
   --font-mono: "DM Mono", ui-monospace, monospace;
+  --topbar-height: 56px;
   --tabbar-height: 64px;
   --column: 560px;
 }
@@ -98,7 +99,7 @@ textarea {
   position: sticky;
   top: 0;
   z-index: 20;
-  height: 56px;
+  height: var(--topbar-height);
   padding: 0 8px 0 16px;
   display: flex;
   align-items: center;
@@ -434,11 +435,6 @@ textarea {
 .icon-button svg {
   width: 20px;
   height: 20px;
-}
-
-.icon-button--boxed {
-  background: var(--card);
-  border: 0.5px solid var(--rule-strong);
 }
 
 .link-button {
@@ -820,9 +816,10 @@ fieldset.field {
 
 /* --- Map ---------------------------------------------------------------- */
 
+/* Under the site's top bar, above the tab bar. */
 .map-page {
   position: fixed;
-  inset: 0 0 calc(var(--tabbar-height) + env(safe-area-inset-bottom)) 0;
+  inset: var(--topbar-height) 0 calc(var(--tabbar-height) + env(safe-area-inset-bottom)) 0;
   background: var(--map-ground);
 }
 
