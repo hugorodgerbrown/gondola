@@ -59,14 +59,14 @@ on the control that leads to the next page.
 
 ## Chapter 1: Your calendar
 
-**Page intro:** This is your calendar. Blue days are the days you're in a resort, and the people mark shows friends will be there too.
+**Page intro:** This is your calendar. A day you say you're in a resort turns blue, and the people mark shows friends will be there too.
 
-*Why:* The calendar is where people spend most of their time, and every mark on it carries meaning. The intro names the marks; each zoom explains one control. Press and hold has no hint on the page, so the tour is where people learn it.
+*Why:* The calendar is where people spend most of their time, and every mark on it carries meaning. The intro names the marks; a new account has none yet, so 1.1 has them tap the demo group, which fills the month with its pale days. Each zoom after explains one control. Press and hold has no hint on the page, so the tour is where people learn it.
 
 | Frame | Element | Advances on | Coach mark |
 |---|---|---|---|
-| 1.0 | Page intro | Next | This is your calendar. Blue days are the days you're in a resort, and the people mark shows friends will be there too. |
-| 1.1 | Resort chips | Next | Tap a resort to light up the days your friends will be there. |
+| 1.0 | Page intro | Next | This is your calendar. A day you say you're in a resort turns blue, and the people mark shows friends will be there too. |
+| 1.1 | Group chips | Tap the demo group | Tap a group to see, in pale, where its people will be on the days you haven't said. |
 | 1.2 | Several days | Next | Tap and hold a day to start selecting, then tap more days. Plan sets them all at once. |
 | 1.3 | Day panel | Next | Tap a day to see it here: your plans, and where each friend will be. |
 | 1.4 | Add plans | Tap Add plans | Add plans tells your groups where you'll be. |
@@ -106,7 +106,7 @@ on the control that leads to the next page.
 | Frame | Element | Advances on | Coach mark |
 |---|---|---|---|
 | 4.0 | Page intro | Next | The group's week at a glance. Everyone side by side, so you can see who overlaps where. |
-| 4.1 | Resort codes | Next | Each code is a resort: VERB is Verbier. Blank hasn't said. |
+| 4.1 | Resort codes | Next | Each code is a resort: VER is Verbier. Blank hasn't said. |
 | 4.2 | Map tab | Tap Map | Tap Map to see where your friends are on any day. |
 
 ## Chapter 5: The map
@@ -117,7 +117,7 @@ on the control that leads to the next page.
 
 | Frame | Element | Advances on | Coach mark |
 |---|---|---|---|
-| 5.0 | Page intro | Next | The map shows where your friends are skiing. On any day you pick. It's where you'll land each time you open Gondola. |
+| 5.0 | Page intro | Next | The map shows where your friends are skiing, on any day you pick. It's where you'll land each time you open Gondola. |
 | 5.1 | Day | Next | Change the day with the arrows, or tap the date for a calendar. |
 | 5.2 | Friends | Next | The number on a resort is how many friends are there that day. |
 | 5.3 | Pass | Next | Show only the resorts on your pass. |

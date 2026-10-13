@@ -82,11 +82,36 @@ def test_month_day_plan_words(crew: Crew) -> None:
     )
 
 
-def test_month_day_count_is_friends_with_you_or_at_the_highlight(crew: Crew) -> None:
+def test_month_day_count_is_friends_with_you_or_in_the_crowd(crew: Crew) -> None:
+    mine = plans.set_plan(crew.sam, crew.day, crew.verbier)
     day = month.MonthDay(
-        date=crew.day, in_month=True, is_today=False, plannable=True, with_me=2
+        date=crew.day,
+        in_month=True,
+        is_today=False,
+        plannable=True,
+        plan=mine,
+        with_me=2,
+        crowd=plans.ResortFriends(crew.zermatt, [crew.ben]),
     )
+    # Your day counts the friends with you.
     assert day.count == 2
-    day.highlight = "Verbier"
-    day.there = ["Anna"]
+    # An unsaid day counts the friends in the crowd, and names them.
+    day.plan = None
     assert day.count == 1
+    assert day.summary.endswith("most at Zermatt: Ben")
+    day.crowd = None
+    assert day.count == 0
+
+
+def test_a_pale_day_names_only_the_picked_groups_people(crew: Crew) -> None:
+    """With a group picked, the summary leaves out friends in other groups."""
+    day = month.MonthDay(
+        date=crew.day,
+        in_month=True,
+        is_today=False,
+        plannable=True,
+        friends=["Anna", "Ben", "Zoe"],
+        crowd=plans.ResortFriends(crew.zermatt, [crew.ben]),
+    )
+    assert "friends at resorts" not in day.summary
+    assert day.summary.endswith("most at Zermatt: Ben")

@@ -11,6 +11,7 @@ from freezegun import freeze_time
 
 from apps.groups.models import Group, PlanDay
 from apps.groups.services import plans
+from apps.groups.services.memberships import create_group, join_group
 from apps.groups.services.people import is_member
 from tests.factories import PassFactory
 from tests.groups.conftest import Crew
@@ -111,62 +112,72 @@ def test_plain_forms_keep_the_month(sam: Client, crew: Crew) -> None:
     assert sam.get(reverse("planning:calendar")).context["window_from"] is None
 
 
-def test_calendar_highlights_a_resort(sam: Client, crew: Crew) -> None:
-    """Chips list the month's resorts; one picked lights the days someone is there."""
+def test_a_group_shows_its_people_on_days_you_have_not_said(
+    sam: Client, crew: Crew
+) -> None:
+    """My calendar hides pale days; a group shows its people there, pale."""
     far = plans.today() + datetime.timedelta(days=60)
     first = far.replace(day=1).isoformat()
     plans.set_plan(crew.anna, far, crew.verbier)
     plans.set_plan(crew.ben, far, crew.zermatt)
     url = reverse("planning:calendar")
-    page = sam.get(url, {"from": first})
-    assert page.context["resorts"] == [crew.verbier, crew.zermatt]
-    assert page.context["highlight"] is None
-    # A chip keeps the selected day (here the month's first).
-    assert f'href="?day={first}&highlight={crew.verbier.uuid}"'.encode() in page.content
+    page = sam.get(url, {"day": far.isoformat()})
+    assert page.context["group"] is None
+    assert page.context["selected"].crowd is None
+    assert b"mday--friends" not in page.content
+    assert b">My calendar</a>" in page.content
+    picked = f'href="?day={far.isoformat()}&group={crew.group.uuid}"'
+    assert picked.encode() in page.content
 
-    lit = sam.get(url, {"day": far.isoformat(), "highlight": str(crew.verbier.uuid)})
-    assert lit.context["highlight"] == crew.verbier
-    assert b"month--highlight" in lit.content and b"mday--lit" in lit.content
-    assert b"Verbier in " not in lit.content  # no who's-there card
-    # The picked chip and All resorts clear it; the arrows, day links and
-    # selection keep it. The count is the friends at the resort.
-    assert lit.context["selected"].count == 1
-    assert f'aria-current="true" href="?day={far.isoformat()}"'.encode() in lit.content
-    back = f"from={first}&amp;highlight={crew.verbier.uuid}"
-    assert f'data-select-back="{back}"'.encode() in lit.content
+    shown = sam.get(url, {"day": far.isoformat(), "group": str(crew.group.uuid)})
+    assert shown.context["group"] == crew.group
+    selected = shown.context["selected"]
+    assert selected.crowd.resort == crew.verbier and selected.more == 1
+    assert selected.count == 1
+    assert b"mday--friends" in shown.content
+    assert f"{crew.verbier.display_code} …".encode() in shown.content
+    # The picked chip goes back to My calendar; the arrows, day links and
+    # selection keep the group.
+    current = f'aria-current="true" href="?day={far.isoformat()}"'
+    assert current.encode() in shown.content
+    back = f"from={first}&amp;group={crew.group.uuid}"
+    assert f'data-select-back="{back}"'.encode() in shown.content
     day_url = reverse("planning:day", kwargs={"day": far})
-    assert f'href="{day_url}?{back}"'.encode() in lit.content
-    assert f"&highlight={crew.verbier.uuid}".encode() in lit.content
+    assert f'href="{day_url}?{back}"'.encode() in shown.content
 
 
-def test_a_highlight_nobody_is_at_still_shows(sam: Client, crew: Crew) -> None:
-    page = sam.get(reverse("planning:calendar"), {"highlight": str(crew.zermatt.uuid)})
-    assert page.context["resorts"] == [crew.zermatt]
-    assert b"month--highlight" in page.content
-    assert b"mday--lit" not in page.content
+def test_a_group_cuts_the_panel_to_its_people(sam: Client, crew: Crew) -> None:
+    other = create_group(crew.sam, "Work")
+    olga = crew.outsider
+    join_group(other, olga)
+    plans.set_plan(crew.anna, crew.day, crew.verbier)
+    plans.set_plan(olga, crew.day, crew.zermatt)
+    url = reverse("planning:calendar")
+    day = crew.day.isoformat()
+    everyone = sam.get(url, {"day": day})
+    assert len(everyone.context["elsewhere"]) == 2
+    work = sam.get(url, {"day": day, "group": str(other.uuid)})
+    assert [e.resort for e in work.context["elsewhere"]] == [crew.zermatt]
+    assert work.context["selected"].crowd.names == "Olga"
 
 
 @pytest.mark.parametrize("value", ["nope", "00000000-0000-0000-0000-000000000000"])
-def test_a_bad_highlight_is_ignored(sam: Client, value: str) -> None:
-    page = sam.get(reverse("planning:calendar"), {"highlight": value})
+def test_a_group_you_are_not_in_is_ignored(sam: Client, crew: Crew, value: str) -> None:
+    page = sam.get(reverse("planning:calendar"), {"group": value})
     assert page.status_code == 200
-    assert page.context["highlight"] is None
+    assert page.context["group"] is None
 
 
-def test_saving_a_day_keeps_the_highlight(sam: Client, crew: Crew) -> None:
-    """The highlight rides through the sheet without clashing with its resort."""
-    highlighted = str(crew.verbier.uuid)
+def test_saving_a_day_keeps_the_group(sam: Client, crew: Crew) -> None:
+    """The group rides through the sheet and back to the calendar."""
+    picked = str(crew.group.uuid)
     day_url = reverse("planning:day", kwargs={"day": crew.day})
-    sheet = sam.get(day_url, {"highlight": highlighted})
-    hidden = f'type="hidden" name="highlight" value="{highlighted}"'
+    sheet = sam.get(day_url, {"group": picked})
+    hidden = f'type="hidden" name="group" value="{picked}"'
     assert hidden.encode() in sheet.content
-    saved = sam.post(
-        day_url,
-        {"resort": str(crew.zermatt.uuid), "highlight": highlighted},
-    )
+    saved = sam.post(day_url, {"resort": str(crew.zermatt.uuid), "group": picked})
     assert saved["Location"] == (
-        f"{reverse('planning:calendar')}?highlight={highlighted}"
-        f"&day={crew.day.isoformat()}"
+        f"{reverse('planning:calendar')}?group={picked}&day={crew.day.isoformat()}"
     )
     plan = PlanDay.objects.get(user=crew.sam, date=crew.day)
     assert plan.resort == crew.zermatt
@@ -188,15 +199,15 @@ def test_the_panel_shows_the_picked_day(sam: Client, crew: Crew) -> None:
     assert b"Friends out" in page.content
     assert b"Add plans" in page.content and b"Edit plans" not in page.content
     assert b"Meet-up" not in page.content
-    # Nobody is with Sam, so no day carries a friends mark.
-    assert b'class="mday__friends"' not in page.content
+    # My calendar: no pale day, whatever friends do.
+    assert page.context["selected"].crowd is None
     # A day with nothing on says so.
     empty = sam.get(url, {"day": (crew.day + datetime.timedelta(days=1)).isoformat()})
     assert b"No friends out this day." in empty.content
 
 
 def test_the_panel_splits_with_you_from_elsewhere(sam: Client, crew: Crew) -> None:
-    """The panel names the cell's friends: your resort's, or the highlighted one's."""
+    """The panel names the friends with you, then the rest."""
     plans.set_plan(crew.sam, crew.day, crew.verbier)
     plans.set_plan(crew.anna, crew.day, crew.verbier)
     plans.set_plan(crew.ben, crew.day, crew.zermatt)
@@ -207,14 +218,8 @@ def test_the_panel_splits_with_you_from_elsewhere(sam: Client, crew: Crew) -> No
     assert [e.resort for e in page.context["elsewhere"]] == [crew.zermatt]
     assert b"Elsewhere" in page.content
     assert b'<span class="muted">Ben</span>' in page.content
-    # Highlighting Zermatt counts Ben there, and Verbier becomes elsewhere.
-    lit = sam.get(
-        url, {"day": crew.day.isoformat(), "highlight": str(crew.zermatt.uuid)}
-    )
-    assert lit.context["selected"].count == 1
-    assert lit.context["here"].resort == crew.zermatt
-    assert b"<span>Ben at Zermatt</span>" in lit.content
-    assert [e.resort for e in lit.context["elsewhere"]] == [crew.verbier]
+    # Your own day never shows the crowd.
+    assert page.context["selected"].crowd is None
 
 
 def test_the_panel_without_friends_out(sam: Client, crew: Crew) -> None:
@@ -484,7 +489,7 @@ def test_map_pins_json(sam: Client, crew: Crew) -> None:
     response = sam.get(reverse("planning:map_pins"), {"date": crew.day.isoformat()})
     data = json.loads(response.content)
     verbier = next(p for p in data["pins"] if p["name"] == "Verbier")
-    assert verbier["friends"] == 1 and verbier["code"] == "VERB"
+    assert verbier["friends"] == 1 and verbier["code"] == "VER"
 
 
 def test_resort_sheet_and_plan_here(sam: Client, crew: Crew) -> None:
@@ -631,7 +636,7 @@ def test_board(sam: Client, crew: Crew) -> None:
     plans.set_plan(crew.ben, plans.today(), crew.zermatt)
     url = reverse("planning:board", kwargs={"group_uuid": crew.group.uuid})
     page = sam.get(url)
-    assert b"VERB" in page.content and b"ZERM" in page.content
+    assert b"VER" in page.content and b"ZER" in page.content
     week = sam.get(url, {"start": "2027-01-04"})
     assert week.context["board"].start == datetime.date(2027, 1, 4)
 
