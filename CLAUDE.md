@@ -51,6 +51,11 @@ Python 3.14 / Django 6.0, pinned in `pyproject.toml`.
 - Find a person's groups (and so their friends) through
   `Group.objects.for_user`: it is what shows the demo copy while they tour
   and hides demo groups otherwise. Querying memberships directly leaks one.
+- The MCP endpoint is `/mcp` (`apps/mcp`, ported from the Titan
+  template); auth is the shared `mcp-auth` app, pinned to a tag. A tool
+  runs as the token's user and reaches people only through their groups
+  (`friend_ids`, `Group.objects.for_user`). Any active account may connect
+  (`mcp_auth.policy.active_user`).
 - Product analytics are fivebar goals: queue one with
   `apps.core.analytics.record`, or `data-tally` on a clicked element.
 

@@ -91,9 +91,39 @@ apps/resorts/      Pass, Resort, the resort sheets, import_resorts, search
 apps/groups/       Group, Membership, PlanDay;
                    services/ (plans, board, map, evening email), views/, send_evening_emails, seed_demo,
                    seed_ui_test
+apps/tour/         the onboarding tour (docs/onboarding-tour.md)
+apps/mcp/          the MCP endpoint (/mcp) and its tools; auth is mcp-auth
 templates/         base.html and shared includes
 static/            app.css, app.js, map.js, vendored htmx and MapLibre
 tests/             mirrors apps/
+```
+
+## Connecting Claude (MCP)
+
+Gondola serves an MCP endpoint at `/mcp`, so Claude can read and change
+your days: add `https://gondola.ultraniche.ai/mcp` as a custom connector
+and sign in when asked. Signing in and tokens are the shared Titan
+[mcp-auth](https://github.com/hugorodgerbrown/mcp-auth) app (OAuth 2.1);
+any active account may connect. The tools:
+
+| Tool | Does |
+|------|------|
+| `find_resort` | Resorts by part of a name or code |
+| `my_days` | Your said days |
+| `set_days` | Put you in one resort on some days (also how a day moves) |
+| `clear_days` | Make days unsaid |
+| `my_groups` | Your groups and their members |
+| `whos_where` | Who's in which resort, day by day |
+| `where_is` | One friend's days |
+
+Locally, mint a token for the only superuser and call it with curl
+(mcp-auth 0.1.2's `--username` looks up a `username` field, which
+Gondola's email-keyed `User` doesn't have):
+
+```bash
+TOKEN=$(uv run python manage.py mint_mcp_token --commit -v 0)
+curl -s -X POST http://localhost:8000/mcp -H "Authorization: Bearer $TOKEN" \
+  -H 'Content-Type: application/json' -d '{"jsonrpc":"2.0","id":1,"method":"tools/list"}'
 ```
 
 See [CLAUDE.md](CLAUDE.md) for conventions.
