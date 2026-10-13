@@ -132,8 +132,8 @@ never names (docs/decisions/mcp-never-names-friends.md). The tools:
 | `my_days` | Your said days |
 | `set_days` | Put you in one resort on some days (also how a day moves) |
 | `clear_days` | Make days unsaid |
-| `my_groups` | Your groups: name, member count, whether you own it |
-| `whos_where` | How many friends will be in each resort, day by day, and where you are |
+| `my_groups` | Your groups: name, member count, whether you own it, and a link to the group in the app |
+| `whos_where` | How many friends will be in each resort, day by day, and where you are; each day links to the Calendar, where the names are |
 | `privacy_policy`, `terms_of_service`, `help` | The public pages, as Markdown |
 
 Locally, mint a token for the only superuser and call it with curl

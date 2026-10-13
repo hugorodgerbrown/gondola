@@ -27,8 +27,11 @@ INSTRUCTIONS = (
     "be in on which day. A day holds one resort, or is unsaid. The signed-in "
     "user can read and change their own days, and see how many of the people "
     "they share a group with will be in each resort on each day; friends are "
-    "counted, never named. Resolve a resort with find_resort before "
-    "set_days when the name is unclear. Dates are ISO (YYYY-MM-DD), Swiss time."
+    "counted, never named: names are withheld for privacy, and when you "
+    "answer about friends, tell the user so. When they want to know who, give them the "
+    "see_who link from the answer, which opens the app where the names are. "
+    "Resolve a resort with find_resort before set_days when the name is "
+    "unclear. Dates are ISO (YYYY-MM-DD), Swiss time."
 )
 
 PARSE_ERROR = -32700

@@ -22,14 +22,21 @@ About other people, a tool answers only with counts:
 - `where_is` ("where is Ben?") is removed: it can't be answered without
   naming someone.
 
-The user's own days are still read and written in full.
+The user's own days are still read and written in full. Every day in
+`whos_where`, and every group in `my_groups`, carries a `see_who` link into
+the app (the Calendar on that day, or the group's page), and the tool
+descriptions and server instructions tell the assistant to pass it on, so
+"who?" is one tap away, behind the user's own sign-in. Each such answer
+also says, in a `privacy` field, that names are withheld for privacy, and
+the instructions ask the assistant to tell the user so, so a missing name
+reads as a choice rather than a fault.
 
 ## Consequences
 
 - An assistant can answer "where's busy on Saturday?" or "how many of the
   Thursday crew are in Verbier next week?", but not "who's in Verbier?" or
-  "where is Ben?". The app itself still shows names; only the connector
-  doesn't.
+  "where is Ben?" itself. It hands over the link instead; whether it shows
+  that link is up to the assistant, which the descriptions only ask.
 - A count can still point at someone when the user already knows who is
   in a small group. That stays between the user and their own assistant;
   the count tells the assistant's company nothing about who that is.

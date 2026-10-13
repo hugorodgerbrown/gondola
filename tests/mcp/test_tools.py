@@ -155,9 +155,13 @@ def test_my_days_takes_a_range_and_skips_the_past(world: Any) -> None:
 def test_my_groups_counts_members_and_hides_demo_groups(world: Any) -> None:
     demo = GroupFactory.create(name="Demo", is_demo=True)
     MembershipFactory.create(group=demo, user=world["anna"])
-    assert my_groups(world["anna"], {}) == {
-        "groups": [{"name": "Thursday crew", "members": 2, "yours": True}]
+    (group,) = my_groups(world["anna"], {})["groups"]
+    assert {k: group[k] for k in ("name", "members", "yours")} == {
+        "name": "Thursday crew",
+        "members": 2,
+        "yours": True,
     }
+    assert group["see_who"].endswith(f"/app/groups/{world['group'].uuid}/")
     assert my_groups(world["ben"], {})["groups"][0]["yours"] is False
 
 
@@ -177,6 +181,7 @@ def test_whos_where_never_names_a_friend(world: Any) -> None:
         {"resort": "Zermatt", "code": "ZER", "friends": 1, "you": False}
     ]
     assert "Ben" not in str(result)
+    assert result["privacy"].startswith("Names are withheld for privacy")
     assert "Ben" not in str(my_groups(world["anna"], {}))
 
 
@@ -186,7 +191,7 @@ def test_whos_where_defaults_to_today_and_narrows(world: Any) -> None:
     assert whos_where(world["anna"], {})["days"][0]["date"] == "2026-12-01"
     args = {"from": "2026-12-01", "to": "2026-12-03", "group": "thursday"}
     assert len(whos_where(world["anna"], args)["days"]) == 1
-    assert whos_where(world["anna"], {**args, "resort": "Verbier"}) == {"days": []}
+    assert whos_where(world["anna"], {**args, "resort": "Verbier"})["days"] == []
 
 
 @pytest.mark.parametrize(("group", "message"), [("Nope", "no group called"), ("r", "could be")])
@@ -200,3 +205,11 @@ def test_whos_where_needs_one_of_your_groups(world: Any, group: str, message: st
 def test_whos_where_is_capped(world: Any) -> None:
     with pytest.raises(ToolError, match="at most 31"):
         whos_where(world["anna"], {"from": "2026-12-01", "to": "2027-01-31"})
+
+
+def test_whos_where_links_each_day_to_the_names_in_the_app(world: Any) -> None:
+    PlanDayFactory.create(user=world["ben"], date=DAY, resort=world["zermatt"])
+    (day,) = whos_where(world["anna"], {"dates": ["2026-12-20"]})["days"]
+    assert day["see_who"].endswith("/app/days/?day=2026-12-20")
+    (day,) = whos_where(world["anna"], {"dates": ["2026-12-20"], "group": "Thursday"})["days"]
+    assert day["see_who"].endswith(f"/app/days/?day=2026-12-20&group={world['group'].uuid}")

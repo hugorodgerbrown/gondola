@@ -22,8 +22,11 @@ from collections import defaultdict
 from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 from typing import Any
+from urllib.parse import urlencode, urljoin
 
+from django.conf import settings
 from django.db.models import Count
+from django.urls import reverse
 
 from apps.accounts.models import User
 from apps.groups.models import Group, PlanDay
@@ -221,15 +224,34 @@ def clear_days(user: User, args: dict[str, Any]) -> dict[str, Any]:
     return {"cleared": [d.isoformat() for d in cleared]}
 
 
+# Said in every answer that counts people, so the assistant can tell the user why.
+WITHHELD = (
+    "Names are withheld for privacy: Gondola never tells an assistant who is "
+    "where. Each see_who link opens the app, where the user can see who."
+)
+
+
+def _in_app(path: str, **query: str) -> str:
+    """Return an absolute link into the app, where the user can see names."""
+    return urljoin(settings.SITE_URL, path + (f"?{urlencode(query)}" if query else ""))
+
+
 def my_groups(user: User, args: dict[str, Any]) -> dict[str, Any]:
     """Return the user's groups: each one's name, size and whether they own it."""
     # Count from a fresh query: for_user's own join to memberships would count only the user.
     mine = Group.objects.for_user(user).values("pk")
     groups = Group.objects.filter(pk__in=mine).annotate(size=Count("memberships")).order_by("name")
     return {
+        "privacy": WITHHELD,
         "groups": [
-            {"name": g.name, "members": g.size, "yours": g.owner_id == user.pk} for g in groups
-        ]
+            {
+                "name": g.name,
+                "members": g.size,
+                "yours": g.owner_id == user.pk,
+                "see_who": _in_app(reverse("planning:group_detail", args=[g.uuid])),
+            }
+            for g in groups
+        ],
     }
 
 
@@ -246,10 +268,9 @@ def _group(user: User, query: str) -> Group:
     raise ToolError(f"{query!r} could be {', '.join(g.name for g in matches)}.")
 
 
-def _people(user: User, args: dict[str, Any]) -> set[int]:
-    """Return the ids whose days the call may show: the user and their friends."""
-    if "group" in args:
-        group = _group(user, _text(args, "group"))
+def _people(user: User, group: Group | None) -> set[int]:
+    """Return the ids whose days the call may count: the user and their friends."""
+    if group is not None:
         return set(group.memberships.values_list("user_id", flat=True))
     return friend_ids(user) | {user.pk}
 
@@ -268,7 +289,8 @@ def whos_where(user: User, args: dict[str, Any]) -> dict[str, Any]:
     Counts only: no friend is named, so nothing identifies anyone but the user.
     """
     days = _dates(args, limit=MAX_BOARD_DAYS, default=1)
-    plans = PlanDay.objects.filter(user_id__in=_people(user, args), date__in=days).select_related(
+    group = _group(user, _text(args, "group")) if "group" in args else None
+    plans = PlanDay.objects.filter(user_id__in=_people(user, group), date__in=days).select_related(
         "resort"
     )
     if "resort" in args:
@@ -281,6 +303,7 @@ def whos_where(user: User, args: dict[str, Any]) -> dict[str, Any]:
         else:
             spot.friends += 1
     return {
+        "privacy": WITHHELD,
         "days": [
             {
                 "date": day.isoformat(),
@@ -294,10 +317,15 @@ def whos_where(user: User, args: dict[str, Any]) -> dict[str, Any]:
                     }
                     for r, spot in board[day].items()
                 ],
+                "see_who": _in_app(
+                    reverse("planning:calendar"),
+                    day=day.isoformat(),
+                    **({"group": str(group.uuid)} if group else {}),
+                ),
             }
             for day in days
             if day in board
-        ]
+        ],
     }
 
 
@@ -385,7 +413,9 @@ TOOLS: dict[str, Tool] = {
             name="my_groups",
             description=(
                 "The user's groups: each one's name, how many members it has, "
-                "and whether the user owns it. Members are never named."
+                "and whether the user owns it. Members' names are withheld for "
+                "privacy: say so, and to see "
+                "who, give the user the group's see_who link."
             ),
             input_schema={"type": "object", "properties": {}},
             func=my_groups,
@@ -395,7 +425,10 @@ TOOLS: dict[str, Tool] = {
             description=(
                 f"How many of the user's friends (everyone in their groups) will "
                 f"be in each resort, day by day, and where the user will be "
-                f"(you: true). Friends are counted, never named. Today unless "
+                f"(you: true). Friends are counted; their names are withheld for "
+                f"privacy, so say so. Names are only "
+                f"in the app, so always give the user each day's see_who link "
+                f"to see who. Today unless "
                 f"dates or from/to are given; at most {MAX_BOARD_DAYS} days. "
                 f"Narrow it to one group or one resort."
             ),
