@@ -1948,10 +1948,6 @@ a.mday.mday--in.mday--picked:hover {
   pointer-events: none;
 }
 
-.launch-shell__icon {
-  border-radius: var(--radius-icon);
-}
-
 .launch-shell__spinner {
   width: 28px;
   height: 28px;

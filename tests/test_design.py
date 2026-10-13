@@ -223,6 +223,15 @@ def test_every_token_is_used() -> None:
     assert not unused, "remove unused tokens: " + ", ".join(unused)
 
 
+def test_every_token_read_is_declared() -> None:
+    """A var() naming no token is invalid, so the browser silently drops the declaration."""
+    read = set(re.findall(r"var\((--[\w-]+)", CSS))
+    undeclared = sorted(read - set(TOKENS))
+    assert not undeclared, "declare these on :root, or use a token that is: " + ", ".join(
+        undeclared
+    )
+
+
 def test_every_class_is_used() -> None:
     """No dead CSS: every class in app.css is put on an element somewhere."""
     unused = sorted(
