@@ -590,6 +590,14 @@ def test_invite_flow(client: Client, crew: Crew) -> None:
     assert client.get(url).status_code == 302  # members go to the group
 
 
+def test_invite_counts_members(client: Client, crew: Crew) -> None:
+    solo = create_group(crew.sam, "Solo")
+    page = client.get(reverse("planning:invite", kwargs={"token": solo.invite_token}))
+    assert b"You see the member's name and" in page.content
+    page = client.get(reverse("planning:invite", kwargs={"token": crew.group.invite_token}))
+    assert b"You see the 3 members' names and" in page.content
+
+
 def test_reset_invite_kills_old_link(client: Client, crew: Crew) -> None:
     old = crew.group.invite_token
     crew.group.reset_invite_token()
