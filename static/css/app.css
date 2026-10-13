@@ -2074,6 +2074,17 @@ a.mday.mday--in.mday--picked:hover {
   gap: var(--space-xs);
 }
 
+.site-footer__name {
+  font-size: var(--type-md);
+  font-weight: 600;
+  color: var(--text-1);
+  text-decoration: none;
+}
+
+.site-footer__tagline {
+  color: var(--text-2);
+}
+
 .site-footer__links {
   display: flex;
   flex-wrap: wrap;

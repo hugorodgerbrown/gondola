@@ -459,10 +459,10 @@
 
   <section class="heading" aria-labelledby="ds-footer">
     <span class="eyebrow" id="ds-footer">Site footer</span>
-    <p class="small muted">On every public page, and at the foot of the app's scrolling pages (includes/_footer.html). This page ends with the real one.</p>
+    <p class="small muted">On every public page, and at the foot of the app's scrolling pages ({% templatetag openblock %} site_footer {% templatetag closeblock %}, set in apps/public/conf.py). This page ends with the real one.</p>
     <div class="card">
       <footer class="site-footer">
-        <div class="site-footer__brand"><span class="title">Brand</span><p class="small muted">And a line about the app.</p></div>
+        <div class="site-footer__brand"><a class="site-footer__name" href="#ds-footer">The app's name</a><p class="site-footer__tagline">The tagline, from apps/public/conf.py.</p></div>
         <nav class="site-footer__links" aria-label="Sample"><a href="#ds-footer">Links</a><a href="#ds-footer">that wrap</a><a href="#ds-footer">44px to tap</a></nav>
         <p class="site-footer__legal">© The copyright line.</p>
       </footer>

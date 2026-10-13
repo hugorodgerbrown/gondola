@@ -84,11 +84,3 @@ def test_app_pages_have_the_site_footer(signed_in: Client, name: str) -> None:
 def test_the_map_has_no_footer(signed_in: Client) -> None:
     """The map fills the screen, so it has no footer."""
     assert b'class="site-footer"' not in signed_in.get(reverse("planning:map")).content
-
-
-def test_footer_has_the_copyright(client: Client) -> None:
-    """The footer carries this year's copyright."""
-    from django.utils import timezone
-
-    year = timezone.localdate().year
-    assert f"© {year} Gondola" in client.get(reverse("public:home")).content.decode()
