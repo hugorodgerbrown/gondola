@@ -23,7 +23,9 @@
   {% if plannable %}
     <div class="stack stack--tight" data-tour="resort-actions">
       {% if not info.my_plan or info.my_plan.resort_id != resort.pk %}
-        <form method="post" action="{% url 'planning:plan_here' resort.uuid %}" hx-post="{% url 'planning:plan_here' resort.uuid %}">
+        <form method="post" action="{% url 'planning:plan_here' resort.uuid %}" hx-post="{% url 'planning:plan_here' resort.uuid %}"
+              {% if not request.tour %}data-plan-write="set" data-days="{{ info.day|date:'Y-m-d' }}" data-resort="{{ resort.uuid }}" data-code="{{ resort.display_code }}"
+              data-plans-url="{% url 'planning:plans_write' %}" data-done="{% url 'planning:map' %}?date={{ info.day|date:'Y-m-d' }}"{% endif %}>
           {% csrf_token %}
           <input type="hidden" name="date" value="{{ info.day|date:'Y-m-d' }}">
           <button type="submit" class="button button--block">I'll be here</button>

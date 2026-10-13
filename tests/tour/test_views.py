@@ -154,6 +154,17 @@ def test_saving_a_day_moves_on_to_the_group(touring: Client, tourist: User) -> N
     assert not PlanDay.objects.filter(user=tourist).exists()
 
 
+def test_the_tour_sheets_post_as_forms_and_save_nothing(
+    touring: Client, tourist: User, resorts: dict[str, Resort]
+) -> None:
+    """In the tour the sheets skip the outbox, and its endpoint saves nothing either."""
+    sheet = touring.get(reverse("planning:day", kwargs={"day": today()}), headers=HTMX)
+    assert b"data-plan-write" not in sheet.content
+    body = {"days": [today().isoformat()], "resort": str(resorts["VERB"].uuid)}
+    touring.post(reverse("planning:plans_write"), json.dumps(body), content_type="application/json")
+    assert not PlanDay.objects.filter(user=tourist).exists()
+
+
 def test_any_other_post_stays_put_and_says_so(
     touring: Client, tourist: User, resorts: dict[str, Resort]
 ) -> None:
