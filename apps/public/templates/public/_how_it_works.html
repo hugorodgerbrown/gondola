@@ -1,0 +1,9 @@
+{# The three steps, on the front page and on an invite (invited: the first step is joining). #}
+  <section aria-labelledby="how">
+    <h2 id="how" class="visually-hidden">How it works</h2>
+    <ol class="trio">
+      {% if invited %}<li>{% include "includes/icons/plus.html" %}<strong>Join the group</strong><span>From this link</span></li>{% else %}<li>{% include "includes/icons/share.html" %}<strong>Share a link</strong><span>In your group chat</span></li>{% endif %}
+      <li>{% include "includes/icons/map.html" %}<strong>Pick a resort</strong><span>For the days you'll be there</span></li>
+      <li>{% include "includes/icons/people.html" %}<strong>See who's there</strong><span>And where the rest are</span></li>
+    </ol>
+  </section>

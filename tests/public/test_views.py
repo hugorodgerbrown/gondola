@@ -86,3 +86,11 @@ def test_the_app_logo_goes_to_the_front_page(signed_in: Client, name: str) -> No
     """The top-left mark links to the front page, the way to it from the app."""
     content = signed_in.get(reverse(name)).content.decode()
     assert f'class="topbar__brand" href="{reverse("public:home")}"' in content
+
+
+def test_the_chat_sample_names_no_friend(client: Client) -> None:
+    """The connector counts friends and never names them, so the sample doesn't either."""
+    content = client.get(reverse("public:home")).content.decode()
+    assert "2 friends on Saturday" in content
+    for name in ("Anna", "Ben", "Chloé", "Ella"):
+        assert name not in content

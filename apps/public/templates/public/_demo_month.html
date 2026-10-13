@@ -1,0 +1,24 @@
+{# A made-up month (DEMO_DAYS in views.py), drawn with the calendar's own day cells (groups/partials/day_cell.html), so it shows only what the app shows. #}
+  <figure class="demo-month">
+    <div class="month card" aria-hidden="true">
+      <p class="demo-month__title">{{ demo_month|date:"F Y" }}</p>
+      <div class="month__week month__week--head">
+        {% for name in "MTWTFSS" %}<span class="month__weekday">{{ name }}</span>{% endfor %}
+      </div>
+      {% for week in demo_weeks %}
+        <div class="month__week">
+          {% for day in week %}
+            {% if not day %}
+              <span class="mday mday--out"></span>
+            {% else %}
+              <span class="mday{% if day.kind %} mday--{{ day.kind }}{% endif %}{% if day.selected %} mday--selected{% endif %}">
+                <span class="mday__row"><span class="mday__date">{{ day.day }}</span>{% if day.friends == "user" %}<span class="mday__friends">{% include "includes/icons/user.html" %}</span>{% elif day.friends %}<span class="mday__friends">{% include "includes/icons/people.html" %}</span>{% endif %}</span>
+                <span class="mday__row">{% if day.code %}<span class="mday__resort">{{ day.code }}</span>{% endif %}</span>
+              </span>
+            {% endif %}
+          {% endfor %}
+        </div>
+      {% endfor %}
+    </div>
+    <figcaption class="small muted">Blue: you're in that resort. Pale blue: where your group will be on days you haven't said. The person icon means friends will be there too.<span class="visually-hidden"> In this January, you're in Verbier on the 2nd and 3rd and from the 9th to the 11th, Crans-Montana on the 14th, Saas-Fee on the 15th and Zermatt on the 23rd and 24th; your group will be in Champéry on the 12th and Verbier on the 13th, 30th and 31st.</span></figcaption>
+  </figure>

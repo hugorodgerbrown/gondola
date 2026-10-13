@@ -631,3 +631,15 @@ def test_calendar_marks_one_friend_or_several(sam: Client, crew: Crew) -> None:
     single, double = '<circle cx="12"', '<circle cx="9"'
     assert len(marks) == 2
     assert marks[0].startswith(single) and marks[1].startswith(double)
+
+
+def test_invite_explains_gondola(client: Client, crew: Crew) -> None:
+    """An invite tells someone new what Gondola is: the front page's month and steps."""
+    page = client.get(reverse("planning:invite", kwargs={"token": crew.group.invite_token}))
+    content = page.content.decode()
+    assert "Join Thursday crew" in content
+    assert "3 friends are planning their season" in content
+    assert 'class="demo-month"' in content
+    assert "Join the group" in content
+    assert "Share a link" not in content
+    assert content.count("Sign in to join") == 2

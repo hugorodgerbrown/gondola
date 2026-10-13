@@ -10,53 +10,23 @@
     <svg class="splash__ridge" viewBox="0 0 412 64" preserveAspectRatio="none" aria-hidden="true"><path d="M0 64V40l58-24 38 16 54-28 54 34 42-16 54 22 52-30 60 22v28z"/></svg>
   </section>
 
-  {# A made-up month (DEMO_DAYS in views.py), drawn with the calendar's own day cells (groups/partials/day_cell.html), so it shows only what the app shows. #}
-  <figure class="demo-month">
-    <div class="month card" aria-hidden="true">
-      <p class="demo-month__title">{{ demo_month|date:"F Y" }}</p>
-      <div class="month__week month__week--head">
-        {% for name in "MTWTFSS" %}<span class="month__weekday">{{ name }}</span>{% endfor %}
-      </div>
-      {% for week in demo_weeks %}
-        <div class="month__week">
-          {% for day in week %}
-            {% if not day %}
-              <span class="mday mday--out"></span>
-            {% else %}
-              <span class="mday{% if day.kind %} mday--{{ day.kind }}{% endif %}{% if day.selected %} mday--selected{% endif %}">
-                <span class="mday__row"><span class="mday__date">{{ day.day }}</span>{% if day.friends == "user" %}<span class="mday__friends">{% include "includes/icons/user.html" %}</span>{% elif day.friends %}<span class="mday__friends">{% include "includes/icons/people.html" %}</span>{% endif %}</span>
-                <span class="mday__row">{% if day.code %}<span class="mday__resort">{{ day.code }}</span>{% endif %}</span>
-              </span>
-            {% endif %}
-          {% endfor %}
-        </div>
-      {% endfor %}
-    </div>
-    <figcaption class="small muted">Blue: you're in that resort. Pale blue: where your group will be on days you haven't said. The person icon means friends will be there too.<span class="visually-hidden"> In this January, you're in Verbier on the 2nd and 3rd and from the 9th to the 11th, Crans-Montana on the 14th, Saas-Fee on the 15th and Zermatt on the 23rd and 24th; your group will be in Champéry on the 12th and Verbier on the 13th, 30th and 31st.</span></figcaption>
-  </figure>
+  {% include "public/_demo_month.html" %}
 
-  <section aria-labelledby="how">
-    <h2 id="how" class="visually-hidden">How it works</h2>
-    <ol class="trio">
-      <li>{% include "includes/icons/share.html" %}<strong>Share a link</strong><span>In your group chat</span></li>
-      <li>{% include "includes/icons/map.html" %}<strong>Pick a resort</strong><span>For the days you'll be there</span></li>
-      <li>{% include "includes/icons/people.html" %}<strong>See who's there</strong><span>And where the rest are</span></li>
-    </ol>
-  </section>
+  {% include "public/_how_it_works.html" %}
 
   <section class="card card--padded" aria-labelledby="ask">
     <span class="eyebrow">Or just ask</span>
     <h2 id="ask" class="title">Plan from your AI chat</h2>
-    <p class="lede">Connect Gondola to Claude and ask in plain words. It reads your group's calendar and fills in your days.</p>
+    <p class="lede">Connect Gondola to Claude and ask in plain words. It tells you how many friends will be where, and fills in your days. Names stay in the app.</p>
     <div class="chat">
       <p class="chat__you">Who's in Verbier next weekend?</p>
-      <p class="chat__reply">Anna and Chloé are there Saturday and Sunday. Ella's in Champéry, Ben's in Saas-Fee.</p>
+      <p class="chat__reply">2 friends on Saturday and 3 on Sunday. Gondola keeps names private: open your calendar to see who.</p>
       <p class="chat__you">Put me in Verbier those two days.</p>
       <p class="chat__reply">Done: you're in Verbier on 9 and 10 January.</p>
     </div>
     <span class="eyebrow">Try asking</span>
     <ul class="asks">
-      <li>Where's Ben skiing over New Year?</li>
+      <li>Where are my friends skiing over New Year?</li>
       <li>Put me in Zermatt from 2 to 6 February</li>
       <li>What have I got planned in January?</li>
       <li>Clear my days next week</li>
