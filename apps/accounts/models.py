@@ -198,6 +198,10 @@ class SignInRequest(BaseModel):
     keep short. The code is there because an installed iPhone app has its
     own cookies: a link opened from Mail signs in Safari, not the app, so
     the app's user types the code instead.
+
+    At most one request per address is open (unused) at a time, enforced by
+    the database, so only the newest email signs anyone in even when two
+    are asked for at once.
     """
 
     email = models.EmailField(db_index=True)
@@ -214,6 +218,13 @@ class SignInRequest(BaseModel):
         """Model metadata."""
 
         ordering = ["-created_at"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["email"],
+                condition=models.Q(used_at__isnull=True),
+                name="one_open_sign_in_request_per_email",
+            )
+        ]
 
     def to_string(self) -> str:
         """Return who it was for and whether it was used."""

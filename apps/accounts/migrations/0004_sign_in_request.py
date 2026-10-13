@@ -32,6 +32,13 @@ class Migration(migrations.Migration):
             options={
                 "ordering": ["-created_at"],
                 "abstract": False,
+                "constraints": [
+                    models.UniqueConstraint(
+                        condition=models.Q(("used_at__isnull", True)),
+                        fields=("email",),
+                        name="one_open_sign_in_request_per_email",
+                    )
+                ],
             },
         ),
     ]

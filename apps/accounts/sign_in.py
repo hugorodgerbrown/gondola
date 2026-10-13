@@ -15,7 +15,7 @@ import secrets
 from datetime import timedelta
 
 from django.conf import settings
-from django.db import transaction
+from django.db import IntegrityError, transaction
 from django.db.models import F
 from django.utils import timezone
 from django.utils.crypto import salted_hmac
@@ -44,14 +44,15 @@ def issue(email: str, next_url: str = "") -> tuple[SignInRequest, str, str]:
     """Create a sign-in request for ``email``; return it with its link token and code.
 
     Earlier unused requests for the same address stop working, so only the
-    newest email in someone's inbox signs them in.
+    newest email in someone's inbox signs them in. The database allows one
+    unused request per address: when two are issued at once, the loser of
+    that race retries, closing the winner's request in turn.
     """
     email = normalise_email(email)
     token = make_token()
     code = f"{secrets.randbelow(10**CODE_DIGITS):0{CODE_DIGITS}d}"
-    now = timezone.now()
-    with transaction.atomic():
-        SignInRequest.objects.for_email(email).live().update(used_at=now)
+    for attempt in range(3):
+        now = timezone.now()
         request = SignInRequest(
             email=email,
             token_hash=_hash_token(token),
@@ -59,8 +60,19 @@ def issue(email: str, next_url: str = "") -> tuple[SignInRequest, str, str]:
             expires_at=now + timedelta(seconds=settings.SIGN_IN_MAX_AGE_SECONDS),
         )
         request.code_hash = _hash_code(str(request.uuid), code)
-        request.save()
-    return request, token, code
+        try:
+            with transaction.atomic():
+                SignInRequest.objects.for_email(email).filter(used_at__isnull=True).update(
+                    used_at=now, updated_at=now
+                )
+                request.save()
+        except IntegrityError:
+            if attempt == 2:
+                raise
+            logger.info("accounts.sign_in.issue_race retry=%s", attempt + 1)
+            continue
+        return request, token, code
+    raise AssertionError("unreachable")  # pragma: no cover
 
 
 def _claim(request: SignInRequest) -> bool:
@@ -89,15 +101,21 @@ def redeem_token(token: str) -> SignInRequest | None:
 def redeem_code(request_uuid: str, code: str) -> SignInRequest | None:
     """Use up a code typed in the browser that asked for it.
 
-    Each wrong code counts; after ``SIGN_IN_MAX_CODE_ATTEMPTS`` the request
+    Each code tried counts; after ``SIGN_IN_MAX_CODE_ATTEMPTS`` the request
     stops accepting codes (its link still works).
     """
-    request = SignInRequest.objects.live().filter(uuid=request_uuid).first()
-    if request is None or request.code_attempts >= settings.SIGN_IN_MAX_CODE_ATTEMPTS:
+    # Spend an attempt before checking: one conditional update, so parallel
+    # guesses can't all read the same count and slip past the limit.
+    spent = (
+        SignInRequest.objects.live()
+        .filter(uuid=request_uuid, code_attempts__lt=settings.SIGN_IN_MAX_CODE_ATTEMPTS)
+        .update(code_attempts=F("code_attempts") + 1)
+    )
+    if not spent:
         return None
+    request = SignInRequest.objects.get(uuid=request_uuid)
     expected = _hash_code(str(request.uuid), code.strip())
     if not hmac.compare_digest(expected, request.code_hash):
-        SignInRequest.objects.filter(pk=request.pk).update(code_attempts=F("code_attempts") + 1)
         return None
     if not _claim(request):
         return None

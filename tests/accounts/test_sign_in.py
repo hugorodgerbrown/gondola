@@ -4,11 +4,12 @@ from datetime import timedelta
 from typing import Any
 
 import pytest
+from django.db import IntegrityError, transaction
 from django.utils import timezone
 
 from apps.accounts import sign_in
 from apps.accounts.models import SignInRequest, User
-from tests.factories import UserFactory
+from tests.factories import SignInRequestFactory, UserFactory
 
 pytestmark = pytest.mark.django_db
 
@@ -31,6 +32,39 @@ def test_a_new_request_ends_the_previous_one() -> None:
     assert sign_in.redeem_token(first_token) is None
     first.refresh_from_db()
     assert first.used_at is not None
+
+
+def test_one_open_request_per_address() -> None:
+    """The database refuses a second unused request for the same address."""
+    SignInRequestFactory.create(email="a@example.com")
+    with pytest.raises(IntegrityError), transaction.atomic():
+        SignInRequestFactory.create(email="a@example.com")
+    SignInRequestFactory.create(email="a@example.com", used_at=timezone.now())
+
+
+def test_issue_retries_when_a_parallel_request_wins(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Losing the race to another issue closes the winner's request and tries again."""
+    winner = SignInRequestFactory.create(email="a@example.com")
+    real_for_email = SignInRequest.objects.for_email
+    calls = iter([SignInRequest.objects.none(), None])
+
+    def for_email(email: str) -> Any:
+        # The first look misses the winner, as a parallel transaction would.
+        return next(calls) or real_for_email(email)
+
+    monkeypatch.setattr(SignInRequest.objects, "for_email", for_email)
+    request, token, _ = sign_in.issue("a@example.com")
+    winner.refresh_from_db()
+    assert winner.used_at is not None
+    assert sign_in.redeem_token(token) == request
+
+
+def test_issue_gives_up_after_repeated_races(monkeypatch: pytest.MonkeyPatch) -> None:
+    """A race that never clears is an error, not a loop."""
+    SignInRequestFactory.create(email="a@example.com")
+    monkeypatch.setattr(SignInRequest.objects, "for_email", lambda _: SignInRequest.objects.none())
+    with pytest.raises(IntegrityError):
+        sign_in.issue("a@example.com")
 
 
 def test_token_works_once() -> None:
@@ -71,6 +105,15 @@ def test_wrong_codes_run_out(settings: Any) -> None:
         assert sign_in.redeem_code(str(request.uuid), wrong) is None
     request.refresh_from_db()
     assert request.code_attempts == settings.SIGN_IN_MAX_CODE_ATTEMPTS
+    assert sign_in.redeem_code(str(request.uuid), code) is None
+
+
+def test_the_attempt_limit_is_checked_in_the_database(settings: Any) -> None:
+    """A guess is refused once the stored count is at the limit, whatever was read earlier."""
+    request, _, code = sign_in.issue("a@example.com")
+    SignInRequest.objects.filter(pk=request.pk).update(
+        code_attempts=settings.SIGN_IN_MAX_CODE_ATTEMPTS
+    )
     assert sign_in.redeem_code(str(request.uuid), code) is None
 
 
