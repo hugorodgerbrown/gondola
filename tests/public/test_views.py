@@ -64,6 +64,25 @@ def test_home_gives_the_mcp_connector_address(client: Client, settings: Any) -> 
     assert 'data-copy="https://gondola.example/mcp"' in content
 
 
-def test_home_signed_in_goes_to_the_map(signed_in: Client) -> None:
-    """Signed in, the front page opens the app."""
-    assert signed_in.get(reverse("public:home"))["Location"] == reverse("planning:map")
+def test_home_shows_when_signed_in(signed_in: Client) -> None:
+    """Signed in, the front page still shows, and its topbar offers the app."""
+    response = signed_in.get(reverse("public:home"))
+    assert response.status_code == 200
+    assert b"Start a group" in response.content
+    assert reverse("planning:map").encode() in response.content
+
+
+APP_PAGES = ["accounts:settings", "planning:calendar", "planning:group_list", "planning:map"]
+
+
+@pytest.mark.parametrize("name", APP_PAGES)
+def test_app_pages_have_no_footer(signed_in: Client, name: str) -> None:
+    """The app is an app, not a website: its links are on the account page."""
+    assert b'class="site-footer"' not in signed_in.get(reverse(name)).content
+
+
+@pytest.mark.parametrize("name", APP_PAGES)
+def test_the_app_logo_goes_to_the_front_page(signed_in: Client, name: str) -> None:
+    """The top-left mark links to the front page, the way to it from the app."""
+    content = signed_in.get(reverse(name)).content.decode()
+    assert f'class="topbar__brand" href="{reverse("public:home")}"' in content

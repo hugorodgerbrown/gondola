@@ -2050,18 +2050,52 @@ a.mday.mday--in.mday--picked:hover {
 /* --- Public pages: footer, prose (terms, privacy, help) ----------------- */
 
 .site-footer {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-lg);
   max-width: var(--column);
   margin: 0 auto;
   padding: var(--space-lg);
   padding-bottom: max(var(--space-lg), env(safe-area-inset-bottom));
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  border-top: 1px solid var(--rule);
   font-size: var(--type-sm);
 }
 
-.site-footer a {
+.site-footer__links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xs) var(--space-lg);
+}
+
+/* Links are 44px tall to tap, without spacing the row out. */
+.site-footer__links a {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  color: var(--text-1);
+}
+
+.site-footer__legal {
+  font-size: var(--type-xs);
   color: var(--text-2);
+}
+
+/* The same links on the app's account page, one to a row. */
+.site-links {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.site-links li + li {
+  border-top: 1px solid var(--rule);
+}
+
+.site-links a {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  color: var(--text-1);
 }
 
 .prose h1 {

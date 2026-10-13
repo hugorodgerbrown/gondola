@@ -10,7 +10,7 @@ from typing import Any
 
 from django.conf import settings
 from django.http import HttpRequest, HttpResponse
-from django.shortcuts import redirect, render
+from django.shortcuts import render
 from django.urls import reverse
 from django.views.decorators.http import require_GET
 
@@ -57,9 +57,11 @@ def _demo_day(day: int) -> dict[str, Any]:
 
 @require_GET
 def home(request: HttpRequest) -> HttpResponse:
-    """The front page: what Gondola is, and the way in. Signed in, the map."""
-    if request.user.is_authenticated:
-        return redirect("planning:map")
+    """The front page: what Gondola is, and the way in.
+
+    Signed in, it shows too (the account page links to it); its topbar then
+    offers the app, and Start a group goes straight to the groups.
+    """
     mcp_url = settings.SITE_URL + reverse("mcp")
     context = {"mcp_url": mcp_url, "demo_month": DEMO_MONTH, "demo_weeks": demo_weeks()}
     return render(request, "public/home.html", context)

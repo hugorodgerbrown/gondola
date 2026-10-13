@@ -66,6 +66,18 @@
       <button type="submit" class="button button--secondary button--block">Take the tour</button>
     </form>
   </section>
+  {# The app has no footer, so the website footer's links are here (Titan DESIGN.md, "The page frame"). #}
+  <section class="heading" aria-labelledby="about-heading">
+    <span class="eyebrow" id="about-heading">About {{ SITE_NAME }}</span>
+    <ul class="site-links">
+      <li><a href="{% url 'public:home' %}">About</a></li>
+      <li><a href="{% url 'public:help' %}">Help</a></li>
+      <li><a href="{% url 'public:home' %}#ask">Use with Claude</a></li>
+      <li><a href="{% url 'public:terms' %}">Terms</a></li>
+      <li><a href="{% url 'public:privacy' %}">Privacy</a></li>
+    </ul>
+    <p class="small muted">© {% now "Y" %} ultraniche.ai</p>
+  </section>
   <form method="post" action="{% url 'accounts:sign_out' %}" data-sign-out>
     {% csrf_token %}
     <button type="submit" class="button button--secondary button--block">Sign out</button>
