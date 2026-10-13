@@ -11,6 +11,7 @@ from urllib.parse import urlsplit
 
 import dj_database_url
 from decouple import Csv, config
+from mcp_auth.conf import oauth2_settings
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
@@ -41,6 +42,10 @@ INSTALLED_APPS = [
     "apps.resorts",
     "apps.groups",
     "apps.tour",
+    # Before mcp_auth so the project's own templates win.
+    "apps.mcp",
+    "mcp_auth",
+    "oauth2_provider",
 ]
 
 MIDDLEWARE = [
@@ -149,6 +154,22 @@ WEBAUTHN_ORIGINS: list[str] = config(
     default=f"{urlsplit(SITE_URL).scheme}://{urlsplit(SITE_URL).netloc}",
     cast=Csv(),
 )
+
+# OAuth 2.1 for the MCP endpoint, so Claude can add Gondola as a connector.
+# The shared Titan preset (mcp-auth): PKCE, rotating refresh tokens, DCR and
+# CIMD, held to Claude's callbacks and loopback. Who may connect is
+# apps/mcp/policy.py, and it only widens in a PR that says so.
+OAUTH2_PROVIDER = oauth2_settings(
+    resource_name=SITE_NAME,
+    scope_description="See your groups' plans and change your own days",
+)
+MCP_AUTH = {"CAN_CONNECT": "apps.mcp.policy.staff_only"}
+SILENCED_SYSTEM_CHECKS = [
+    # OAuth allows http redirect URIs because Claude Code and other local MCP
+    # clients sign in through a loopback port (RFC 8252); mcp_auth only
+    # accepts http for loopback.
+    "oauth2_provider.W008",
+]
 
 # Rate limits count per client address. Behind Render's proxy the client is
 # the last X-Forwarded-For entry; locally there is no proxy.

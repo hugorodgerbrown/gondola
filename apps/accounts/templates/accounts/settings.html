@@ -49,6 +49,13 @@
     </div>
     <p class="small muted" data-passkey-unsupported>This browser can't make passkeys.</p>
   </section>
+  {% if can_connect_apps %}
+    <section class="heading" aria-labelledby="apps-heading">
+      <span class="eyebrow" id="apps-heading">Connected apps</span>
+      <p class="small muted">Add {{ SITE_NAME }} to Claude as a connector at <strong>{{ request.scheme }}://{{ request.get_host }}{% url 'mcp' %}</strong>, then ask it where everyone is.</p>
+      <a class="button button--secondary button--block" href="{% url 'oauth2_provider:connected-apps' %}">See connected apps</a>
+    </section>
+  {% endif %}
   <section class="heading" aria-labelledby="tour-heading">
     <span class="eyebrow" id="tour-heading">Tour</span>
     <p class="small muted">A quick look round a made-up group, to see what everything does. Nothing is saved.</p>

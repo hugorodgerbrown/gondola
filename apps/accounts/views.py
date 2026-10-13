@@ -32,6 +32,7 @@ from django.http import HttpRequest, HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.views.decorators.http import require_GET, require_POST
+from mcp_auth.policy import can_connect
 
 from apps.core.ratelimit import client_ip, over_limit
 from apps.tour.session import after_welcome
@@ -150,6 +151,7 @@ def account_settings(request: HttpRequest) -> HttpResponse:
         {
             "form": form,
             "passkeys": Passkey.objects.for_user(current_user(request)),
+            "can_connect_apps": can_connect(request.user),
         },
     )
 
