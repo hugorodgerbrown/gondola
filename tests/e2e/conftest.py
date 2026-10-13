@@ -41,8 +41,8 @@ def signed_in_page(
     page.wait_for_url("**/sign-in/code/")
     code = re.search(r"^(\d{6})$", mailoutbox[-1].body, re.MULTILINE)
     assert code, mailoutbox[-1].body
+    # Six digit boxes: the whole code typed into the first fills them all and submits.
     page.get_by_label("Code").fill(code.group(1))
-    page.get_by_role("button", name="Sign in", exact=True).click()
     page.wait_for_url("**/app/days/")
     # The first load installs the worker; it takes control without a reload.
     # (evaluate, not wait_for_function: the page's CSP forbids the eval the latter uses.)

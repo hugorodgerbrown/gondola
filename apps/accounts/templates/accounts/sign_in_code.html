@@ -1,4 +1,5 @@
 {% extends "public_base.html" %}
+{% load static %}
 {% block title %}Check your email · {{ SITE_NAME }}{% endblock %}
 {% block content %}
   <div class="heading">
@@ -13,8 +14,10 @@
     {% endif %}
     <div class="field">
       <label for="sign-in-code">Code</label>
+      {# One field without JavaScript; code_input.js turns it into six digit boxes. #}
       <input id="sign-in-code" class="input input--code" type="text" name="code" inputmode="numeric"
-             pattern="[0-9 ]*" autocomplete="one-time-code" maxlength="20" required autofocus>
+             pattern="[0-9 ]*" autocomplete="one-time-code" maxlength="20" required autofocus
+             data-code-input data-code-length="6">
     </div>
     <button type="submit" class="button button--block">Sign in</button>
   </form>
@@ -27,4 +30,7 @@
   {% endif %}
   <p class="small muted">Using {{ SITE_NAME }} from your iPhone's home screen? Type the code: a link opens in Safari, which signs in Safari rather than the app.</p>
   <p class="small muted">Nothing arrived? Check spam, or <a href="{% url 'accounts:sign_in' %}">send another</a>.</p>
+{% endblock %}
+{% block scripts %}
+  <script src="{% static 'js/code_input.js' %}"></script>
 {% endblock %}
