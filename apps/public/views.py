@@ -14,7 +14,6 @@ from django.shortcuts import redirect, render
 from django.urls import reverse
 from django.views.decorators.http import require_GET
 
-
 # The front page's made-up month: day -> (kind, friends, resort code). "in" is
 # a day you said (blue); "friends" a day you haven't, where your group will be
 # (pale blue, "…" when some are elsewhere). Friends: "user" for one, "people"
@@ -41,21 +40,19 @@ DEMO_SELECTED = 9
 def demo_weeks() -> list[list[dict[str, Any] | None]]:
     """Return the demo month as weeks of days, Monday first; None pads a week."""
     weeks = calendar.Calendar().monthdayscalendar(DEMO_MONTH.year, DEMO_MONTH.month)
-    return [
-        [
-            None
-            if not day
-            else {
-                "day": day,
-                "kind": DEMO_DAYS.get(day, ("", "", ""))[0],
-                "friends": DEMO_DAYS.get(day, ("", "", ""))[1],
-                "code": DEMO_DAYS.get(day, ("", "", ""))[2],
-                "selected": day == DEMO_SELECTED,
-            }
-            for day in week
-        ]
-        for week in weeks
-    ]
+    return [[_demo_day(day) if day else None for day in week] for week in weeks]
+
+
+def _demo_day(day: int) -> dict[str, Any]:
+    """Return one day of the demo month, as the template draws it."""
+    kind, friends, code = DEMO_DAYS.get(day, ("", "", ""))
+    return {
+        "day": day,
+        "kind": kind,
+        "friends": friends,
+        "code": code,
+        "selected": day == DEMO_SELECTED,
+    }
 
 
 @require_GET
