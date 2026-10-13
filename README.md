@@ -122,9 +122,9 @@ Gondola serves an MCP endpoint at `/mcp`, so Claude can read and change
 your days: add `https://gondola.ultraniche.ai/mcp` as a custom connector
 and sign in when asked. Signing in and tokens are the shared Titan
 [mcp-auth](https://github.com/hugorodgerbrown/mcp-auth) app (OAuth 2.1);
-any active account may connect. A tool runs as the signed-in person and
-sees what they see in the app: their own days, and the names and days of
-everyone in their groups. Writes only ever change their own days. The tools:
+any active account may connect. A tool runs as the signed-in person: it
+reads and writes their own days, but about everyone else it only counts,
+never names (docs/decisions/mcp-never-names-friends.md). The tools:
 
 | Tool | Does |
 |------|------|
@@ -132,9 +132,8 @@ everyone in their groups. Writes only ever change their own days. The tools:
 | `my_days` | Your said days |
 | `set_days` | Put you in one resort on some days (also how a day moves) |
 | `clear_days` | Make days unsaid |
-| `my_groups` | Your groups and their members |
-| `whos_where` | Who's in which resort, day by day |
-| `where_is` | One friend's days |
+| `my_groups` | Your groups: name, member count, whether you own it, and a link to the group in the app |
+| `whos_where` | How many friends will be in each resort, day by day, and where you are; each day links to the Calendar, where the names are |
 | `privacy_policy`, `terms_of_service`, `help` | The public pages, as Markdown |
 
 Locally, mint a token for the only superuser and call it with curl
