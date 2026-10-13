@@ -1790,13 +1790,229 @@ a.mday.mday--in.mday--picked:hover {
 
 /* --- Front page ---------------------------------------------------------- */
 
-.hero-picture {
-  display: block;
+/* The blue splash, bled to the column's edges, with a ridge into the page. */
+.splash {
+  position: relative;
+  margin: calc(-1 * var(--space-xl)) calc(-1 * var(--space-lg)) 0;
+  padding: var(--space-3xl) var(--space-xl) calc(var(--space-4xl) + var(--space-3xl));
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  background: var(--accent);
+  color: var(--on-accent);
+  overflow: hidden;
+}
+
+.splash .eyebrow {
+  color: inherit;
+  opacity: 0.75;
+}
+
+.splash__title {
+  font-size: var(--type-2xl);
+  line-height: 1.15;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.splash__lede {
+  font-size: var(--type-md);
+  opacity: 0.9;
+}
+
+.splash__note {
+  font-size: var(--type-sm);
+  text-align: center;
+  opacity: 0.75;
+}
+
+.splash__ridge {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
   width: 100%;
-  height: auto;
-  border-radius: var(--radius-card);
+  height: 64px;
+  fill: var(--ground);
+}
+
+/* A primary button on a filled colour. */
+.button--light {
+  background: var(--card);
+  color: var(--text-1);
+}
+
+.button--light:hover {
+  color: var(--text-1);
+}
+
+/* The front page's fortnight: the calendar's own cells, lifted over the splash. */
+.demo-month {
+  position: relative;
+  margin: calc(-1 * (var(--space-4xl) + var(--space-2xl))) 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.demo-month .month {
+  padding: var(--space-lg) var(--space-md) var(--space-md);
+  gap: var(--space-sm);
+  box-shadow: var(--shadow-overlay);
+}
+
+.demo-month .month__week {
+  gap: var(--space-sm);
+}
+
+.demo-month__title {
+  font-size: var(--type-lg);
+  font-weight: 600;
+  padding: 0 var(--space-xs) var(--space-xs);
+}
+
+/* How it works, in three tiles. */
+.trio {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-sm);
+}
+
+.trio li {
+  padding: var(--space-md) var(--space-sm);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  background: var(--card);
   border: 1px solid var(--rule);
-  box-shadow: var(--shadow-float);
+  border-radius: var(--radius-card);
+}
+
+.trio svg {
+  width: 22px;
+  height: 22px;
+  margin-bottom: var(--space-xs);
+  color: var(--accent);
+}
+
+.trio strong {
+  font-size: var(--type-sm);
+}
+
+.trio span {
+  font-size: var(--type-xs);
+  color: var(--text-2);
+}
+
+/* A made-up exchange with an AI chat, over the MCP connector. */
+.chat {
+  padding: var(--space-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  background: var(--sunk);
+  border-radius: var(--radius-control);
+  font-size: var(--type-sm);
+}
+
+.chat__you,
+.chat__reply {
+  max-width: 85%;
+  padding: var(--space-sm) var(--space-md);
+}
+
+.chat__you {
+  align-self: flex-end;
+  border-radius: var(--radius-card) var(--radius-card) var(--radius-tag) var(--radius-card);
+  background: var(--text-1);
+  color: var(--on-accent);
+}
+
+.chat__reply {
+  border-radius: var(--radius-card) var(--radius-card) var(--radius-card) var(--radius-tag);
+  background: var(--card);
+  border: 1px solid var(--rule);
+}
+
+/* Things to ask: quoted, not chips, since nothing here is tapped. */
+.asks {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.asks li {
+  padding-left: var(--space-md);
+  border-left: 2px solid var(--accent);
+}
+
+.asks li::before {
+  content: "\201C";
+}
+
+.asks li::after {
+  content: "\201D";
+}
+
+/* An address to copy, with its copy button. The button's icon turns to a
+   tick for a moment once copied (app.js). */
+.copy-field {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
+.copy-field .invite-link {
+  flex: 1;
+  min-width: 0;
+}
+
+.copy-field svg {
+  width: 20px;
+  height: 20px;
+  display: block;
+}
+
+.copy-field__done,
+[data-copied] .copy-field__copy {
+  display: none;
+}
+
+[data-copied] .copy-field__done {
+  display: block;
+  color: var(--accent);
+}
+
+/* Three numbers in a row. */
+.facts {
+  padding: var(--space-md) var(--space-sm);
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  text-align: center;
+}
+
+.facts strong {
+  display: block;
+  font-size: var(--type-xl);
+  font-weight: 600;
+}
+
+.facts span {
+  font-size: var(--type-xs);
+  color: var(--text-2);
+}
+
+@media (min-width: 720px) {
+  .splash {
+    margin: 0;
+    border-radius: var(--radius-card);
+  }
 }
 
 /* --- Small utilities (templates carry no style attributes: the CSP) ----- */
@@ -1829,10 +2045,6 @@ a.mday.mday--in.mday--picked:hover {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-.hero-figure {
-  margin: 0;
 }
 
 /* --- Public pages: footer, prose (terms, privacy, help) ----------------- */

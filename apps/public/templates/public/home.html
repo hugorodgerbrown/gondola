@@ -1,21 +1,84 @@
 {% extends "public_base.html" %}
-{% load static %}
 {% block content %}
-  <section class="hero">
+  {% url 'planning:group_list' as groups_url %}
+  <section class="splash">
     <span class="eyebrow">For skiing with friends</span>
-    <h1 class="title title--large">Who's skiing where, and when</h1>
-    <p class="lede lede--large">On a season pass your friends could be at any of a hundred resorts. Say which resort you'll be in on which days, and see where your group will be over the coming weeks, without digging back through the group chat.</p>
+    <h1 class="splash__title">Ski the same mountain.</h1>
+    <p class="splash__lede">Say which resort you'll be in. See which friends will be there, weeks before the group chat works it out.</p>
+    <a class="button button--block button--light" href="{% url 'accounts:sign_in' %}?next={{ groups_url|urlencode:'' }}">Start a group</a>
+    <p class="splash__note">Free. Sign in with your email, no password.</p>
+    <svg class="splash__ridge" viewBox="0 0 412 64" preserveAspectRatio="none" aria-hidden="true"><path d="M0 64V40l58-24 38 16 54-28 54 34 42-16 54 22 52-30 60 22v28z"/></svg>
   </section>
-  <figure class="hero-figure">
-    <img class="hero-picture" src="{% static 'img/home-calendar.png' %}" width="568" height="792" alt="A month on the calendar: the days you'll be in a resort, which friends will be there with you, and where the others are">
+
+  {# A made-up month (DEMO_DAYS in views.py), drawn with the calendar's own day cells (groups/partials/day_cell.html), so it shows only what the app shows. #}
+  <figure class="demo-month">
+    <div class="month card" aria-hidden="true">
+      <p class="demo-month__title">{{ demo_month|date:"F Y" }}</p>
+      <div class="month__week month__week--head">
+        {% for name in "MTWTFSS" %}<span class="month__weekday">{{ name }}</span>{% endfor %}
+      </div>
+      {% for week in demo_weeks %}
+        <div class="month__week">
+          {% for day in week %}
+            {% if not day %}
+              <span class="mday mday--out"></span>
+            {% else %}
+              <span class="mday{% if day.kind %} mday--{{ day.kind }}{% endif %}{% if day.selected %} mday--selected{% endif %}">
+                <span class="mday__row"><span class="mday__date">{{ day.day }}</span>{% if day.friends == "user" %}<span class="mday__friends">{% include "includes/icons/user.html" %}</span>{% elif day.friends %}<span class="mday__friends">{% include "includes/icons/people.html" %}</span>{% endif %}</span>
+                <span class="mday__row">{% if day.code %}<span class="mday__resort">{{ day.code }}</span>{% endif %}</span>
+              </span>
+            {% endif %}
+          {% endfor %}
+        </div>
+      {% endfor %}
+    </div>
+    <figcaption class="small muted">Blue: you're in that resort. Pale blue: where your group will be on days you haven't said. The person icon means friends will be there too.<span class="visually-hidden"> In this January, you're in Verbier on the 2nd and 3rd and from the 9th to the 11th, Crans-Montana on the 14th, Saas-Fee on the 15th and Zermatt on the 23rd and 24th; your group will be in Champéry on the 12th and Verbier on the 13th, 30th and 31st.</span></figcaption>
   </figure>
-  <section class="card card--padded">
-    <span class="eyebrow">How it works</span>
-    <ol class="steps">
-      <li>Start a group and send the invite link to your group chat.</li>
-      <li>Everyone fills in their days: which resort they'll be in.</li>
-      <li>Your calendar shows which friends will be in your resort and where the others are, so meeting up is one message in your group chat.</li>
+
+  <section aria-labelledby="how">
+    <h2 id="how" class="visually-hidden">How it works</h2>
+    <ol class="trio">
+      <li>{% include "includes/icons/share.html" %}<strong>Share a link</strong><span>In your group chat</span></li>
+      <li>{% include "includes/icons/map.html" %}<strong>Pick a resort</strong><span>For the days you'll be there</span></li>
+      <li>{% include "includes/icons/people.html" %}<strong>See who's there</strong><span>And where the rest are</span></li>
     </ol>
-    <a class="button button--block" href="{% url 'accounts:sign_in' %}">Get started with your email</a>
+  </section>
+
+  <section class="card card--padded" aria-labelledby="ask">
+    <span class="eyebrow">Or just ask</span>
+    <h2 id="ask" class="title">Plan from your AI chat</h2>
+    <p class="lede">Connect Gondola to Claude and ask in plain words. It reads your group's calendar and fills in your days.</p>
+    <div class="chat">
+      <p class="chat__you">Who's in Verbier next weekend?</p>
+      <p class="chat__reply">Anna and Chloé are there Saturday and Sunday. Ella's in Champéry, Ben's in Saas-Fee.</p>
+      <p class="chat__you">Put me in Verbier those two days.</p>
+      <p class="chat__reply">Done: you're in Verbier on 9 and 10 January.</p>
+    </div>
+    <span class="eyebrow">Try asking</span>
+    <ul class="asks">
+      <li>Where's Ben skiing over New Year?</li>
+      <li>Put me in Zermatt from 2 to 6 February</li>
+      <li>What have I got planned in January?</li>
+      <li>Clear my days next week</li>
+    </ul>
+    <p class="small muted" id="mcp-url-label">Add this as a connector in Claude, or any app that takes MCP connectors, then sign in:</p>
+    <div class="copy-field">
+      <code class="invite-link mono small" aria-labelledby="mcp-url-label">{{ mcp_url }}</code>
+      <button type="button" class="icon-button" data-copy="{{ mcp_url }}" aria-label="Copy the address" data-copied-label="Copied" data-tally="Connector address copied">
+        <span class="copy-field__copy">{% include "includes/icons/copy.html" %}</span>
+        <span class="copy-field__done">{% include "includes/icons/check.html" %}</span>
+      </button>
+    </div>
+  </section>
+
+  <div class="card facts">
+    <p><strong>200+</strong><span>Swiss resorts</span></p>
+    <p><strong>1 link</strong><span>to join a group</span></p>
+    <p><strong>0</strong><span>passwords</span></p>
+  </div>
+
+  <section class="stack centred">
+    <h2 class="title">Your season, in one place</h2>
+    <a class="button button--block" href="{% url 'accounts:sign_in' %}?next={{ groups_url|urlencode:'' }}">Start a group</a>
   </section>
 {% endblock %}
