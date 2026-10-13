@@ -54,8 +54,8 @@ Python 3.14 / Django 6.0, pinned in `pyproject.toml`.
 - The MCP endpoint is `/mcp` (`apps/mcp`, ported from the Titan
   template); auth is the shared `mcp-auth` app, pinned to a tag. A tool
   runs as the token's user and reaches people only through their groups
-  (`friend_ids`, `Group.objects.for_user`). Who may connect (`apps/mcp/policy.py`) only widens in a PR
-  that says so.
+  (`friend_ids`, `Group.objects.for_user`). Any active account may connect
+  (`mcp_auth.policy.active_user`).
 - Product analytics are fivebar goals: queue one with
   `apps.core.analytics.record`, or `data-tally` on a clicked element.
 

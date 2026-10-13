@@ -157,13 +157,13 @@ WEBAUTHN_ORIGINS: list[str] = config(
 
 # OAuth 2.1 for the MCP endpoint, so Claude can add Gondola as a connector.
 # The shared Titan preset (mcp-auth): PKCE, rotating refresh tokens, DCR and
-# CIMD, held to Claude's callbacks and loopback. Who may connect is
-# apps/mcp/policy.py, and it only widens in a PR that says so.
+# CIMD, held to Claude's callbacks and loopback. Any active account may
+# connect: a token only ever does what that person can do in the app.
 OAUTH2_PROVIDER = oauth2_settings(
     resource_name=SITE_NAME,
     scope_description="See your groups' plans and change your own days",
 )
-MCP_AUTH = {"CAN_CONNECT": "apps.mcp.policy.staff_only"}
+MCP_AUTH = {"CAN_CONNECT": "mcp_auth.policy.active_user"}
 SILENCED_SYSTEM_CHECKS = [
     # OAuth allows http redirect URIs because Claude Code and other local MCP
     # clients sign in through a loopback port (RFC 8252); mcp_auth only

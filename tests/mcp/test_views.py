@@ -1,7 +1,6 @@
 """Tests for apps/mcp/views.py: the shared auth contract, then the protocol."""
 
 import json
-from types import SimpleNamespace
 from typing import Any
 
 import pytest
@@ -9,7 +8,6 @@ from django.test import Client
 from mcp_auth.testing import MCPAuthContract
 
 from apps.mcp import views
-from apps.mcp.policy import staff_only
 from apps.mcp.tools import TOOLS
 from tests.factories import UserFactory
 
@@ -20,12 +18,12 @@ class TestMCPAuth(MCPAuthContract):
     mcp_path = "/mcp"
 
     def make_allowed_user(self, django_user_model: Any) -> Any:
-        """A user who may connect: staff."""
-        return UserFactory.create(is_staff=True)
+        """A user who may connect: any active account."""
+        return UserFactory.create()
 
     def make_refused_user(self, django_user_model: Any) -> Any:
-        """A signed-in user who may not connect."""
-        return UserFactory.create()
+        """A user who may not connect: an inactive account."""
+        return UserFactory.create(is_active=False)
 
 
 def test_initialize_and_list_tools() -> None:
@@ -48,18 +46,11 @@ def test_writes_are_not_read_only() -> None:
     assert writers == {"set_days", "clear_days"}
 
 
-def test_staff_only_policy() -> None:
-    """Only active staff may connect."""
-    assert staff_only(SimpleNamespace(is_active=True, is_staff=True))
-    assert not staff_only(SimpleNamespace(is_active=True, is_staff=False))
-    assert not staff_only(SimpleNamespace(is_active=False, is_staff=True))
-
-
 def call_endpoint(
     client: Client, body: Any, headers: dict[str, str] | None = None
 ) -> Any:
-    """POST ``body`` to /mcp with a valid bearer token for a staff user."""
-    token = TestMCPAuth().token_for(UserFactory.create(is_staff=True))
+    """POST ``body`` to /mcp with a valid bearer token for an ordinary user."""
+    token = TestMCPAuth().token_for(UserFactory.create())
     return client.post(
         "/mcp",
         body if isinstance(body, str) else json.dumps(body),
@@ -141,9 +132,12 @@ def test_endpoint_refuses_anonymous_calls(client: Client) -> None:
 
 
 @pytest.mark.django_db
-def test_endpoint_refuses_a_non_staff_token(client: Client) -> None:
-    """A token for someone the policy refuses gets no tools."""
-    token = TestMCPAuth().token_for(UserFactory.create())
+def test_endpoint_refuses_a_deactivated_account(client: Client) -> None:
+    """Deactivating an account cuts its connected clients off at once."""
+    user = UserFactory.create()
+    token = TestMCPAuth().token_for(user)
+    user.is_active = False
+    user.save()
     response = client.post(
         "/mcp",
         json.dumps(rpc("ping", {})),
@@ -154,20 +148,18 @@ def test_endpoint_refuses_a_non_staff_token(client: Client) -> None:
 
 
 @pytest.mark.django_db
-@pytest.mark.parametrize(("is_staff", "shown"), [(True, True), (False, False)])
-def test_account_page_offers_connected_apps_to_staff(
-    client: Client, is_staff: bool, shown: bool
-) -> None:
-    """The account page links to connected apps only for those who may connect."""
-    client.force_login(UserFactory.create(is_staff=is_staff))
+def test_account_page_offers_connected_apps(client: Client) -> None:
+    """Everyone's account page says how to connect and links to their apps."""
+    client.force_login(UserFactory.create())
     page = client.get("/account/").content.decode()
-    assert ("/oauth/connected/" in page) is shown
+    assert "/oauth/connected/" in page
+    assert "/mcp" in page
 
 
 @pytest.mark.django_db
 def test_connected_apps_page_uses_the_site_layout(client: Client) -> None:
     """mcp-auth's pages render inside Gondola's own layout."""
-    client.force_login(UserFactory.create(is_staff=True))
+    client.force_login(UserFactory.create())
     page = client.get("/oauth/connected/").content.decode()
     assert "Connected apps" in page
     assert "topbar" in page

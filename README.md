@@ -104,7 +104,7 @@ Gondola serves an MCP endpoint at `/mcp`, so Claude can read and change
 your days: add `https://gondola.ultraniche.ai/mcp` as a custom connector
 and sign in when asked. Signing in and tokens are the shared Titan
 [mcp-auth](https://github.com/hugorodgerbrown/mcp-auth) app (OAuth 2.1);
-staff only for now (`apps/mcp/policy.py`). The tools:
+any active account may connect. The tools:
 
 | Tool | Does |
 |------|------|
