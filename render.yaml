@@ -13,7 +13,7 @@
 # for this app goes there. Nothing secret lives in this file.
 #
 # Unlike the template there is no daily clean-up job: expired idempotency
-# records are purged on each deploy instead. Run `send_evening_emails
+# records and sign-in requests are purged on each deploy instead. Run `send_evening_emails
 # --commit` by hand (Render shell) when wanted.
 #
 # uv is pinned: the build runs with the service's secrets in its environment,
@@ -31,7 +31,8 @@ services:
     preDeployCommand: >-
       uv run --no-sync python manage.py migrate --noinput &&
       uv run --no-sync python manage.py import_resorts --commit &&
-      uv run --no-sync python manage.py purge_idempotency_records --commit
+      uv run --no-sync python manage.py purge_idempotency_records --commit &&
+      uv run --no-sync python manage.py purge_sign_in_requests --commit
     startCommand: uv run --no-sync gunicorn config.wsgi --bind 0.0.0.0:$PORT --access-logfile -
     # Answers 200 while the process is up; no sign-in, no database query.
     # (/healthz also reads the database; titan checks it after a deploy.)

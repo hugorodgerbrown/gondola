@@ -8,11 +8,12 @@ What is on by default, and what checks it.
 | CSP: this origin, plus Google Fonts, the basemap's hosts and `blob:` for the map, and `https://fiveb.ar` while `FIVEBAR_DOMAIN` is set; no inline script or style, no eval | `SECURE_CSP` | `tests/test_security.py`, `tests/core/test_analytics.py` |
 | Clickjacking, sniffing, referrer, COOP headers | settings + middleware | `tests/test_security.py` |
 | CSRF on every form and outbox write (token read at send time) | Django + `outbox.js` | `tests/core/test_views.py` |
-| No passwords for people: sign-in by single-use emailed link, or a passkey; staff passwords are validated | `apps/accounts/` | `tests/accounts/` |
-| Sign-in links are signed, expire in 30 minutes and stop working once any link is used | `apps/accounts/services.py` | `tests/accounts/test_services.py` |
-| Rate limits on sign-in emails and passkey challenges | `apps/core/ratelimit.py` | `tests/accounts/test_views.py`, `test_passkeys.py` |
+| No passwords for people: sign-in by a single-use emailed link or code, or a passkey; staff passwords are validated | `apps/accounts/` | `tests/accounts/` |
+| Sign-in links and codes are stored only as hashes, expire in 30 minutes, work once, and only the newest email's work; a code works only in the browser that asked for it, for five tries | `apps/accounts/sign_in.py` | `tests/accounts/test_sign_in.py`, `test_views.py` |
+| Rate limits on sign-in emails, codes and passkey challenges | `apps/core/ratelimit.py` | `tests/accounts/test_views.py`, `test_passkeys.py` |
 | Passkeys require user verification; challenges are single-use | `apps/accounts/passkeys.py` | `tests/accounts/test_passkeys.py`, `tests/e2e/test_passkey.py` |
-| Post-sign-in redirects stay on this site | `apps/accounts/services.py: safe_next` | `tests/accounts/test_services.py` |
+| Post-sign-in redirects stay on this site | `apps/core/redirects.py: safe_next` | `tests/core/test_redirects.py` |
+| The admin has no password form: staff sign in like everyone else | `admin_login` | `tests/accounts/test_views.py` |
 | Signing out drops cached pages on the device | `pwa.js` (`data-sign-out`) | by hand |
 | Each keyed write runs at most once, per user, per body | `apps/core/idempotency.py` | `tests/core/test_idempotency.py` |
 | Signed-out writes get 401, never a redirect | `login_required_json` | `tests/core/test_decorators.py` |
@@ -34,6 +35,6 @@ What is on by default, and what checks it.
    mail clients need inline styles).
 4. Every outbox endpoint is `@login_required_json`. A sheet fragment asked
    for without htmx gets a whole page (`apps/core/http.py`).
-5. A sign-in link is never logged.
+5. A sign-in link or code is never logged.
 6. Who may connect an MCP client (`MCP_AUTH` in `config/settings.py`) is a
    product decision, changed only in a PR that says so.

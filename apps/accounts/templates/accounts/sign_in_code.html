@@ -1,0 +1,36 @@
+{% extends "public_base.html" %}
+{% load static %}
+{% block title %}Check your email · {{ SITE_NAME }}{% endblock %}
+{% block content %}
+  <div class="heading">
+    <span class="eyebrow">Sign in</span>
+    <h1 class="title">Check your email</h1>
+    <p class="lede">We sent a link and a code to {% if email %}<strong>{{ email }}</strong>{% else %}your address{% endif %}. Open the link, or type the code here. Both work once, for {{ minutes }} minutes.</p>
+  </div>
+  {# One field without JavaScript; code_input.js turns it into six digit boxes. #}
+  {# nosemgrep: python.django.security.django-no-csrf-token.django-no-csrf-token -- it has one #}
+  <form method="post" action="{% url 'accounts:sign_in_code' %}" class="card card--padded" novalidate>
+    {% csrf_token %}
+    {% if form.errors %}
+      <ul class="errors">{% for error in form.non_field_errors %}<li>{{ error }}</li>{% endfor %}{% for error in form.code.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+    {% endif %}
+    <div class="field">
+      <label for="sign-in-code">Code</label>
+      <input id="sign-in-code" class="input input--code" type="text" name="code" inputmode="numeric" data-code-input
+             pattern="[0-9 ]*" autocomplete="one-time-code" maxlength="20" required autofocus data-code-length="6">
+    </div>
+    <button type="submit" class="button button--block">Sign in</button>
+  </form>
+  {% if debug_link %}
+    <div class="card card--padded">
+      <span class="eyebrow">Development only</span>
+      {# nosemgrep: generic.html-templates.security.var-in-href.var-in-href -- built by the server, DEBUG only #}
+      <a class="button button--block" href="{{ debug_link }}">Open the sign-in link</a>
+    </div>
+  {% endif %}
+  <p class="small muted">Using {{ SITE_NAME }} from your iPhone's home screen? Type the code: a link opens in Safari, which signs in Safari rather than the app.</p>
+  <p class="small muted">Nothing arrived? Check spam, or <a href="{% url 'accounts:sign_in' %}">send another</a>.</p>
+{% endblock %}
+{% block scripts %}
+  <script src="{% static 'js/code_input.js' %}"></script>
+{% endblock %}

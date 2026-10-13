@@ -20,8 +20,8 @@ from django.http import HttpRequest, HttpResponse
 from django.shortcuts import redirect, render
 from django.views.decorators.http import require_GET, require_POST
 
-from apps.accounts.services import safe_next
 from apps.core.analytics import record
+from apps.core.redirects import safe_next
 from apps.groups.views.helpers import current_user
 
 from . import session
@@ -33,7 +33,7 @@ from .script import WELCOME, WELCOME_TITLE
 @require_GET
 def offer(request: HttpRequest) -> HttpResponse:
     """Show the welcome and offer the tour."""
-    next_url = safe_next(request.GET.get("next"), request)
+    next_url = safe_next(request, request.GET.get("next"))
     record(request, "Tour offered")
     return render(
         request,
@@ -47,7 +47,7 @@ def offer(request: HttpRequest) -> HttpResponse:
 def start(request: HttpRequest) -> HttpResponse:
     """Make the person's demo copy and open chapter 1."""
     user = current_user(request)
-    next_url = safe_next(request.POST.get("next"), request)
+    next_url = safe_next(request, request.POST.get("next"))
     try:
         group = create_demo(user)
     except DemoUnavailable:

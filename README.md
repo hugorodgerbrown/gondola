@@ -9,7 +9,7 @@ group chat. An email the evening before sums up tomorrow.
 | Screen | URL | What it does |
 |---|---|---|
 | Front page | `/` | Explains the app; signed-in people go to the map |
-| Sign in | `/sign-in/` | Emails a one-time link; no passwords. First sign-in asks for a name |
+| Sign in | `/sign-in/` | Emails a link and a six-digit code, either usable once; or a passkey. No passwords. First sign-in asks for a name |
 | Map | `/app/map/?date=&pass=` | Every resort as a pin, friend counts for the day, pass filter. Tap a pin for the resort sheet: who's there, plan your day here |
 | Calendar | `/app/days/` | A month at a time. Tap a day for who's with you and who's elsewhere; Add plans picks a resort (friends' first, then search) |
 | Groups | `/app/groups/` | Your groups; start one |
@@ -95,7 +95,7 @@ config/            settings.py (one module, env-driven), urls, wsgi/asgi
 apps/core/         BaseModel, idempotency, tokens, health checks, the move to /app/
 apps/public/       the front page, terms, privacy, help
 apps/pwa/          manifest, service worker (/app/sw.js), offline page, launch screen
-apps/accounts/     User, emailed sign-in links, the account page
+apps/accounts/     User, sign-in by emailed link and code, passkeys, the account page
 apps/resorts/      Pass, Resort, the resort sheets, import_resorts, search
 apps/groups/       Group, Membership, PlanDay;
                    services/ (plans, board, map, evening email), views/, send_evening_emails, seed_demo,

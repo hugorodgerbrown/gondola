@@ -1,10 +1,13 @@
 """Tests for apps/accounts/models.py."""
 
+from datetime import timedelta
+
 import pytest
 from django.core.exceptions import ValidationError
+from django.utils import timezone
 
-from apps.accounts.models import User, normalise_email
-from tests.factories import UserFactory
+from apps.accounts.models import SignInRequest, User, normalise_email
+from tests.factories import SignInRequestFactory, UserFactory
 
 pytestmark = pytest.mark.django_db
 
@@ -71,3 +74,20 @@ def test_querysets() -> None:
     assert set(User.objects.active()) == {keen, opted_out}
     assert list(User.objects.wants_evening_email()) == [keen]
     assert inactive not in User.objects.wants_evening_email()
+
+
+def test_sign_in_request_querysets() -> None:
+    live = SignInRequestFactory.create(email="a@example.com")
+    used = SignInRequestFactory.create(used_at=timezone.now())
+    old = SignInRequestFactory.create(expires_at=timezone.now() - timedelta(minutes=1))
+    assert list(SignInRequest.objects.live()) == [live]
+    assert list(SignInRequest.objects.expired()) == [old]
+    assert list(SignInRequest.objects.for_email(" A@Example.com")) == [live]
+    assert used not in SignInRequest.objects.live()
+
+
+def test_sign_in_request_to_string() -> None:
+    request = SignInRequestFactory.create(email="a@example.com")
+    assert str(request) == "Sign-in for a@example.com (unused)"
+    request.used_at = timezone.now()
+    assert request.to_string() == "Sign-in for a@example.com (used)"

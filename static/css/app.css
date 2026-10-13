@@ -488,6 +488,39 @@ fieldset.field {
   font-size: 16px;
 }
 
+.input--code {
+  font-family: var(--font-mono);
+  font-size: 22px;
+  letter-spacing: 0.3em;
+  text-align: center;
+}
+
+/* The sign-in code as six boxes (static/js/code_input.js). */
+.code-boxes {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.code-box {
+  width: 100%;
+  height: 56px;
+  padding: 0;
+  border: 1px solid var(--rule-strong);
+  border-radius: var(--radius-control);
+  background: var(--card);
+  font-family: var(--font-mono);
+  font-size: 24px;
+  text-align: center;
+  caret-color: var(--accent);
+}
+
+.code-box:focus {
+  border-color: var(--accent);
+  outline: 2px solid var(--accent);
+  outline-offset: -1px;
+}
+
 .input--search {
   padding-left: 38px;
   background: var(--card)

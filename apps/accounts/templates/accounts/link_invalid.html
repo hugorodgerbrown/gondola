@@ -3,8 +3,12 @@
 {% block content %}
   <div class="heading">
     <span class="eyebrow">Link</span>
-    <h1 class="title">{{ reason }}</h1>
-    <p class="lede">Links work once, for 30 minutes. Ask for a new one and use the newest email.</p>
+    {% if reason %}
+      <h1 class="title">{{ reason }}</h1>
+    {% else %}
+      <h1 class="title">This sign-in link has expired</h1>
+      <p class="lede">Links work once, for {{ minutes }} minutes, and only the newest email's link works. Ask for a new one.</p>
+    {% endif %}
   </div>
-  <a class="button" href="{% url 'accounts:sign_in' %}">Send a new link</a>
+  <a class="button" href="{% url 'accounts:sign_in' %}">{% if reason %}Sign in{% else %}Send a new link{% endif %}</a>
 {% endblock %}

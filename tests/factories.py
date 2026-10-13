@@ -8,9 +8,10 @@ from __future__ import annotations
 import datetime
 
 import factory
+from django.utils import timezone
 from factory.django import DjangoModelFactory
 
-from apps.accounts.models import Passkey, User
+from apps.accounts.models import Passkey, SignInRequest, User
 from apps.groups.models import Group, Membership, PlanDay
 from apps.resorts.models import Pass, Resort
 
@@ -27,6 +28,20 @@ class UserFactory(DjangoModelFactory[User]):
     email = factory.Sequence(lambda n: f"skier{n}@example.com")
     display_name = factory.Sequence(lambda n: f"Skier {n}")
     password = factory.django.Password("password")
+
+
+class SignInRequestFactory(DjangoModelFactory[SignInRequest]):
+    """Build a live ``SignInRequest``. Use ``apps.accounts.sign_in.issue`` for a usable token."""
+
+    class Meta:
+        """Factory metadata."""
+
+        model = SignInRequest
+
+    email = factory.Sequence(lambda n: f"signin{n}@example.com")
+    token_hash = factory.Sequence(lambda n: f"{n:064x}")
+    code_hash = "0" * 64
+    expires_at = factory.LazyFunction(lambda: timezone.now() + datetime.timedelta(minutes=30))
 
 
 class PasskeyFactory(DjangoModelFactory[Passkey]):

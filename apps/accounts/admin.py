@@ -16,7 +16,7 @@ from django.http import HttpRequest
 from apps.groups.services.testers import set_testers, sync_tester
 
 from .forms import EmailUserChangeForm, EmailUserCreationForm
-from .models import Passkey, User
+from .models import Passkey, SignInRequest, User
 
 
 @admin.register(User)
@@ -97,3 +97,17 @@ class PasskeyAdmin(admin.ModelAdmin):
         "updated_at",
     ]
     exclude = ["public_key"]
+
+
+@admin.register(SignInRequest)
+class SignInRequestAdmin(admin.ModelAdmin):
+    """Who asked to sign in and whether they did. The hashes stay hidden."""
+
+    list_display = ["email", "created_at", "expires_at", "used_at", "code_attempts"]
+    search_fields = ["email"]
+    fields = ("email", "next_url", "created_at", "expires_at", "used_at", "code_attempts")
+    readonly_fields = ("email", "next_url", "created_at", "expires_at", "used_at", "code_attempts")
+
+    def has_add_permission(self, request: HttpRequest) -> bool:
+        """Requests are made by the sign-in form only."""
+        return False

@@ -10,10 +10,11 @@ from django import forms
 from django.contrib.auth.forms import UserChangeForm, UserCreationForm
 
 from .models import User, normalise_email
+from .sign_in import CODE_DIGITS
 
 
 class SignInForm(forms.Form):
-    """Ask for the email address to send a sign-in link to."""
+    """Ask for the email address to send a sign-in link and code to."""
 
     email = forms.EmailField(
         label="Email",
@@ -30,6 +31,16 @@ class SignInForm(forms.Form):
     def clean_email(self) -> str:
         """Return the email lowercased."""
         return normalise_email(self.cleaned_data["email"])
+
+
+class CodeForm(forms.Form):
+    """The six-digit code from the sign-in email."""
+
+    code = forms.RegexField(regex=rf"^\s*\d{{{CODE_DIGITS}}}\s*$", max_length=20)
+
+    def clean_code(self) -> str:
+        """Drop the spaces people paste with it."""
+        return str(self.cleaned_data["code"]).strip()
 
 
 class ProfileForm(forms.ModelForm):
