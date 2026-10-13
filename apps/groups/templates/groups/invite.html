@@ -11,7 +11,7 @@
   <section class="splash">
     <span class="eyebrow">{{ group.owner }} invited you</span>
     <h1 class="splash__title">Join {{ group.name }}</h1>
-    <p class="splash__lede">{{ member_count }} {% if member_count == 1 %}friend is{% else %}friends are{% endif %} planning their season on {{ SITE_NAME }}. Say which resort you'll be in, and see who'll be there with you.</p>
+    <p class="splash__lede">{{ group.owner }} {% if member_count == 1 %}is{% else %}and {{ others }} other{{ others|pluralize }} are{% endif %} planning their season on {{ SITE_NAME }}. Say which resort you'll be in, and see who'll be there with you.</p>
     {% include "groups/_invite_action.html" with light=True %}
     {% if not user.is_authenticated %}<p class="splash__note">Free. Just your email, no password.</p>{% endif %}
     <svg class="splash__ridge" viewBox="0 0 412 64" preserveAspectRatio="none" aria-hidden="true"><path d="M0 64V40l58-24 38 16 54-28 54 34 42-16 54 22 52-30 60 22v28z"/></svg>
