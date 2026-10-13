@@ -4,7 +4,8 @@
  * Opens the bottom sheet when HTMX swaps a fragment into it, closes it on
  * a close button or a tap on the backdrop, and wires share buttons to the
  * phone's share sheet (falling back to copying the link). ``onSwipe`` turns
- * a sideways swipe into "previous" or "next", for the month calendars.
+ * a sideways swipe into "previous" or "next", for the month calendars,
+ * whose Left and Right arrow keys step a month as well.
  * An open "…" row menu closes on a tap anywhere else. The service worker,
  * the offline banner and clearing cached pages at sign-out are pwa.js's;
  * this file only retires Gondola's first worker (``retireRootWorker``).
@@ -157,6 +158,33 @@
       function () { go(element.dataset.swipeNext); }
     );
   });
+
+  // Calendar: the Left and Right arrow keys step a month too. Not while
+  // typing, with a modifier held (Alt+Left is the browser's Back), or with
+  // a sheet or a popup calendar open, whose own keys come first.
+  function steppingKey(event) {
+    if (event.defaultPrevented || event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) {
+      return false;
+    }
+    const target = event.target;
+    if (target && target.closest && target.closest("input, textarea, select, [contenteditable]")) {
+      return false;
+    }
+    return !document.querySelector("dialog[open], [role='dialog']:not([hidden])");
+  }
+
+  const month = document.querySelector("[data-swipe-previous], [data-swipe-next]");
+  if (month) {
+    document.addEventListener("keydown", function (event) {
+      const url = {
+        ArrowLeft: month.dataset.swipePrevious,
+        ArrowRight: month.dataset.swipeNext,
+      }[event.key];
+      if (!url || !steppingKey(event)) return;
+      event.preventDefault();
+      location.href = url;
+    });
+  }
 
   // Gondola's first service worker was registered at /sw.js for the whole
   // site, with its own caches. A phone that installed it still has both:
