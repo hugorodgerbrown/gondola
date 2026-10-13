@@ -1856,7 +1856,19 @@ a.mday.mday--in.mday--picked:hover {
 }
 
 .demo-month .month {
+  padding: var(--space-lg) var(--space-md) var(--space-md);
+  gap: var(--space-sm);
   box-shadow: var(--shadow-overlay);
+}
+
+.demo-month .month__week {
+  gap: var(--space-sm);
+}
+
+.demo-month__title {
+  font-size: var(--type-lg);
+  font-weight: 600;
+  padding: 0 var(--space-xs) var(--space-xs);
 }
 
 /* How it works, in three tiles. */

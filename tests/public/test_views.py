@@ -43,6 +43,7 @@ def test_home_shows_what_the_app_does(client: Client) -> None:
     assert b"Start a group" in response.content
     assert b"<title>Gondola</title>" in response.content
     assert b"demo-month" in response.content
+    assert b"January 2027" in response.content
     assert b"mday--in" in response.content
     # Public: no service worker, no outbox.
     assert b"pwa.js" not in response.content
