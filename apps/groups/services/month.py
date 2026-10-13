@@ -1,13 +1,15 @@
 """
 apps/groups/services/month.py — the calendar, one month at a time.
 
-One month at a time, weeks starting Monday. Each day carries what the
-viewer said about it and what their groups are up to: which friends are
-in town somewhere, and how many of them in the viewer's resort (the
-calendar marks one or several).
+One month at a time, weeks starting Monday. By default the calendar is
+about the viewer: each day carries their plan and how many friends will be
+with them.
 
-With one resort highlighted, each day also says which friends are there,
-and whether the viewer is, so the calendar can pick those days out.
+A group picked from the chips adds one more answer: on the days the viewer
+hasn't said, where that group's people will be. Such a day carries the
+resort most of them are in, and whether others are elsewhere. The
+viewer's own days never change, so the group only shows or hides those
+pale days.
 """
 
 from __future__ import annotations
@@ -18,11 +20,10 @@ from collections import defaultdict
 from dataclasses import dataclass, field
 
 from apps.accounts.models import User
-from apps.resorts.models import Resort
 
-from ..models import PlanDay
+from ..models import Group, PlanDay
 from .people import visible_friend_plans
-from .plans import is_plannable, join_names, last_plannable_day, today
+from .plans import ResortFriends, is_plannable, join_names, last_plannable_day, today
 
 
 @dataclass
@@ -36,16 +37,10 @@ class MonthDay:
     plan: PlanDay | None = None
     friends: list[str] = field(default_factory=list)
     with_me: int = 0
-    # The highlighted resort's name, if one is; the friends there that day;
-    # and whether you are.
-    highlight: str = ""
-    there: list[str] = field(default_factory=list)
-    me_there: bool = False
-
-    @property
-    def lit(self) -> bool:
-        """Return whether anyone is at the highlighted resort that day."""
-        return self.me_there or bool(self.there)
+    # On a day without your plan, with a group picked: the resort most of
+    # its people are in (and them), and how many other resorts they're at.
+    crowd: ResortFriends | None = None
+    more: int = 0
 
     @property
     def friends_out(self) -> int:
@@ -54,8 +49,13 @@ class MonthDay:
 
     @property
     def count(self) -> int:
-        """Return the friends the day marks: where you are (or at the highlight)."""
-        return len(self.there) if self.highlight else self.with_me
+        """Return the friends the day marks.
+
+        On your days, the friends with you; on the others, those in the crowd.
+        """
+        if self.plan is not None:
+            return self.with_me
+        return len(self.crowd.friends) if self.crowd is not None else 0
 
     @property
     def plan_words(self) -> str:
@@ -71,12 +71,15 @@ class MonthDay:
             parts.append("today")
         plan = self.plan
         parts.append("no plan" if plan is None else plan.describe())
-        if self.friends:
+        # A pale day speaks for the picked group alone, as the square shows.
+        if self.friends and self.crowd is None:
             parts.append(f"friends at resorts: {join_names(self.friends)}")
         if self.with_me:
             parts.append(f"{self.with_me} with you")
-        if self.there:
-            parts.append(f"at {self.highlight}: {join_names(self.there)}")
+        if self.crowd is not None:
+            parts.append(f"most at {self.crowd.resort.name}: {self.crowd.names}")
+            if self.more:
+                parts.append("others elsewhere")
         return ", ".join(parts)
 
 
@@ -111,13 +114,32 @@ def month_dates(first: datetime.date) -> list[datetime.date]:
     ]
 
 
+def _crowd(plans: list[PlanDay]) -> tuple[ResortFriends | None, int]:
+    """Return the resort most of ``plans``' people are in, and the others' count.
+
+    Ties go to the resort first by name.
+    """
+    by_resort: dict[int, ResortFriends] = {}
+    for plan in plans:
+        entry = by_resort.setdefault(plan.resort_id, ResortFriends(plan.resort))
+        entry.friends.append(plan.user)
+    if not by_resort:
+        return None, 0
+    crowd = min(
+        by_resort.values(),
+        key=lambda e: (-len(e.friends), e.resort.name.lower()),
+    )
+    crowd.friends.sort(key=lambda f: f.to_string().lower())
+    return crowd, len(by_resort) - 1
+
+
 def build_month(
-    viewer: User, first: datetime.date, highlight: Resort | None = None
+    viewer: User, first: datetime.date, group: Group | None = None
 ) -> Month:
     """Return ``viewer``'s calendar for the month starting ``first``.
 
-    ``highlight`` is a resort to pick out: each day then names the friends
-    there and says whether the viewer is.
+    With ``group``, a day without the viewer's plan shows where that
+    group's people will be.
     """
     first = month_start(first)
     weeks_of_dates = calendar.Calendar(firstweekday=0).monthdatescalendar(
@@ -132,14 +154,20 @@ def build_month(
     }
     friends: dict[datetime.date, list[str]] = defaultdict(list)
     with_me: dict[datetime.date, int] = defaultdict(int)
-    there: dict[datetime.date, list[str]] = defaultdict(list)
+    free: dict[datetime.date, list[PlanDay]] = defaultdict(list)
+    members = (
+        set(group.memberships.values_list("user_id", flat=True))
+        if group is not None
+        else set()
+    )
     for plan in visible_friend_plans(viewer, dates):
         friends[plan.date].append(plan.user.to_string())
-        if highlight is not None and plan.resort_id == highlight.pk:
-            there[plan.date].append(plan.user.to_string())
+        if plan.date not in mine and plan.user_id in members:
+            free[plan.date].append(plan)
         own = mine.get(plan.date)
         if own is not None and own.resort_id == plan.resort_id:
             with_me[plan.date] += 1
+    crowds = {day: _crowd(free[day]) for day in dates}
     now = today()
     weeks = [
         [
@@ -151,11 +179,8 @@ def build_month(
                 plan=mine.get(day),
                 friends=sorted(friends[day], key=str.lower),
                 with_me=with_me[day],
-                highlight=highlight.name if highlight is not None else "",
-                there=sorted(there[day], key=str.lower),
-                me_there=highlight is not None
-                and day in mine
-                and mine[day].resort_id == highlight.pk,
+                crowd=crowds[day][0],
+                more=crowds[day][1],
             )
             for day in week
         ]

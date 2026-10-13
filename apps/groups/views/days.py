@@ -4,14 +4,15 @@ apps/groups/views/days.py — the calendar, and the sheet for one day.
 The calendar is about you: a month, this month by default; arrows step a
 month (``?from=``, any day in it) as far as plans can be made. A day shows
 which resort you'll be in and whether friends will be there too. Chips
-above it highlight one resort (``?highlight=``): the days anyone is there
-stand out, and the friends shown are the ones there instead.
+above it pick one of your groups (``?group=``): the days you haven't said
+then show, pale, where that group's people will be. Your own days never
+change.
 
 Tapping a day selects it (``?day=``) and fills the panel below the month:
-where you are, the friends with you (the highlighted resort's while one
-is picked), where the others are, and Add plans or
-Edit plans, which opens a sheet with one answer: where you'll be (the
-resorts friends picked first, then a search over every resort).
+where you are, the friends with you (in the picked group, if one is),
+where the others are, and Add plans or Edit plans, which opens a sheet with one
+answer: where you'll be (the resorts friends picked first, then a search
+over every resort).
 
 Pressing and holding a day starts selecting: tap more days (or drag
 across a run), then one sheet puts them all in one resort (``?days=``).
@@ -23,7 +24,6 @@ import datetime
 from urllib.parse import urlencode
 
 from django.contrib.auth.decorators import login_required
-from django.core.exceptions import ValidationError
 from django.http import Http404, HttpRequest, HttpResponse
 from django.shortcuts import render
 from django.urls import reverse
@@ -37,12 +37,10 @@ from apps.resorts.search import search_resorts
 
 from ..forms import DayForm
 from ..models import Group, PlanDay
-from ..services.highlight import resorts_in_play
 from ..services.month import (
     Month,
     MonthDay,
     build_month,
-    month_dates,
     month_start,
 )
 from ..services.plans import (
@@ -77,18 +75,16 @@ MAX_SELECTED_DAYS = 62
 def calendar(request: HttpRequest) -> HttpResponse:
     """Show a month of days: the person's plans and their groups' activity."""
     user = current_user(request)
-    highlight = _highlight(request)
+    groups = list(Group.objects.for_user(user).order_by("name"))
+    group = _group(request, groups)
     picked = _picked_day(request)
-    month = build_month(user, picked or parse_day(request.GET.get("from")), highlight)
-    resorts = resorts_in_play(user, month_dates(month.first))
-    if highlight is not None and highlight not in resorts:
-        resorts.insert(0, highlight)
+    month = build_month(user, picked or parse_day(request.GET.get("from")), group)
     window_from = _later_month(month.first)
-    back = _back(window_from, highlight)
+    back = _back(window_from, group)
     selected = _selected(month, picked)
-    here_resort = highlight or (selected.plan.resort if selected.plan else None)
+    here_resort = selected.plan.resort if selected.plan else None
     here, elsewhere = _split_friends(
-        friends_by_resort(user, selected.date), here_resort
+        _in_group(friends_by_resort(user, selected.date), group), here_resort
     )
     return render(
         request,
@@ -97,17 +93,16 @@ def calendar(request: HttpRequest) -> HttpResponse:
             "month": month,
             "today": today(),
             "selected": selected,
-            # The resort the day's number counts, its friends, and the rest.
+            # Your resort that day, the friends with you, and the rest.
             "here_resort": here_resort,
             "here": here,
             "elsewhere": elsewhere,
             # Only a later month needs carrying through a plain form post.
             "window_from": window_from,
             "back_query": urlencode(back),
-            "groups": list(Group.objects.for_user(user).order_by("name")),
+            "groups": groups,
             "max_selected": MAX_SELECTED_DAYS,
-            "resorts": resorts,
-            "highlight": highlight,
+            "group": group,
         },
     )
 
@@ -147,21 +142,28 @@ def _split_friends(
     return here, elsewhere
 
 
+def _in_group(entries: list[ResortFriends], group: Group | None) -> list[ResortFriends]:
+    """Return ``entries`` cut to ``group``'s people, if a group is picked."""
+    if group is None:
+        return entries
+    members = set(group.memberships.values_list("user_id", flat=True))
+    kept = []
+    for entry in entries:
+        friends = [f for f in entry.friends if f.pk in members]
+        if friends:
+            kept.append(ResortFriends(entry.resort, friends))
+    return kept
+
+
 def _later_month(first: datetime.date) -> datetime.date | None:
     """Return ``first`` if it is a month after this one, else ``None``."""
     return first if first > today().replace(day=1) else None
 
 
-def _highlight(request: HttpRequest) -> Resort | None:
-    """Return the resort the calendar highlights (``highlight=<uuid>``), if any."""
-    # Not "resort": that's the day sheet's own answer to where you'll be.
-    value = request.POST.get("highlight") or request.GET.get("highlight")
-    if not value:
-        return None
-    try:
-        return Resort.objects.filter(uuid=value).first()
-    except ValidationError:
-        return None
+def _group(request: HttpRequest, groups: list[Group]) -> Group | None:
+    """Return the group the calendar shows (``group=<uuid>``), if one of ``groups``."""
+    value = request.POST.get("group") or request.GET.get("group")
+    return next((g for g in groups if str(g.uuid) == value), None)
 
 
 def _window_from(request: HttpRequest) -> datetime.date | None:
@@ -170,21 +172,21 @@ def _window_from(request: HttpRequest) -> datetime.date | None:
     return _later_month(month_start(parse_day(value))) if value else None
 
 
-def _back(
-    window_from: datetime.date | None, highlight: Resort | None
-) -> dict[str, str]:
-    """Return what takes the calendar back to how it was: the month and resort."""
+def _back(window_from: datetime.date | None, group: Group | None) -> dict[str, str]:
+    """Return what takes the calendar back to how it was: the month and group."""
     back = {}
     if window_from is not None:
         back["from"] = window_from.isoformat()
-    if highlight is not None:
-        back["highlight"] = str(highlight.uuid)
+    if group is not None:
+        back["group"] = str(group.uuid)
     return back
 
 
 def _request_back(request: HttpRequest) -> dict[str, str]:
     """Return the calendar state a sheet was opened from."""
-    return _back(_window_from(request), _highlight(request))
+    user = current_user(request)
+    groups = list(Group.objects.for_user(user))
+    return _back(_window_from(request), _group(request, groups))
 
 
 def _calendar_url(back: dict[str, str], days: list[datetime.date] | None = None) -> str:

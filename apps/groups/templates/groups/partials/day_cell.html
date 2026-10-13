@@ -1,14 +1,14 @@
-{# One day of the calendar: blue if you're in a resort, the date with a friends mark top right (one person for one friend with you, two for more), and the resort code along the bottom. Needs day, selected and highlight. #}
-{% with plan=day.plan %}
+{# One day of the calendar: blue if you're in a resort, the date with a friends mark top right (one person for one friend with you, two for more), and the resort code along the bottom. With a group picked, a day you haven't said is pale blue when its people are out: the code of the resort most of them are in, and an ellipsis if others are elsewhere (the panel names them). Needs day, selected and group. #}
+{% with plan=day.plan crowd=day.crowd %}
   {% if day.plannable %}
     <a data-date="{{ day.date|date:'Y-m-d' }}"
-       class="mday{% if plan %} mday--in{% endif %}{% if day.date == selected.date %} mday--selected{% endif %}{% if day.lit %} mday--lit{% endif %}"
-       href="?day={{ day.date|date:'Y-m-d' }}{% if highlight %}&highlight={{ highlight.uuid }}{% endif %}"
-       hx-get="?day={{ day.date|date:'Y-m-d' }}{% if highlight %}&highlight={{ highlight.uuid }}{% endif %}"
+       class="mday{% if plan %} mday--in{% elif crowd %} mday--friends{% endif %}{% if day.date == selected.date %} mday--selected{% endif %}"
+       href="?day={{ day.date|date:'Y-m-d' }}{% if group %}&group={{ group.uuid }}{% endif %}"
+       hx-get="?day={{ day.date|date:'Y-m-d' }}{% if group %}&group={{ group.uuid }}{% endif %}"
        hx-select="#day-panel" hx-target="#day-panel" hx-swap="outerHTML" hx-replace-url="true"
        {% if day.date == selected.date %}aria-current="date" {% endif %}aria-label="{{ day.summary }}">
   {% else %}
-    <span class="mday mday--past{% if day.lit %} mday--lit{% endif %}{% if plan %} mday--in{% endif %}" aria-label="{{ day.summary }}">
+    <span class="mday mday--past{% if plan %} mday--in{% elif crowd %} mday--friends{% endif %}" aria-label="{{ day.summary }}">
   {% endif %}
     <span class="mday__row" aria-hidden="true">
       <span class="mday__date">{{ day.date.day }}</span>
@@ -17,7 +17,7 @@
       {% endif %}
     </span>
     <span class="mday__row" aria-hidden="true">
-      {% if plan.resort %}<span class="mday__resort">{{ plan.resort.display_code }}</span>{% endif %}
+      {% if plan %}<span class="mday__resort">{{ plan.resort.display_code }}</span>{% elif crowd %}<span class="mday__resort">{{ crowd.resort.display_code }}{% if day.more %} …{% endif %}</span>{% endif %}
     </span>
   {% if day.plannable %}</a>{% else %}</span>{% endif %}
 {% endwith %}
