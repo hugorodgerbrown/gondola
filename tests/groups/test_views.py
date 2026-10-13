@@ -638,8 +638,15 @@ def test_invite_explains_gondola(client: Client, crew: Crew) -> None:
     page = client.get(reverse("planning:invite", kwargs={"token": crew.group.invite_token}))
     content = page.content.decode()
     assert "Join Thursday crew" in content
-    assert "3 friends are planning their season" in content
+    assert f"{crew.group.owner} and 2 others are planning their season" in content
     assert 'class="demo-month"' in content
     assert "Join the group" in content
     assert "Share a link" not in content
     assert content.count("Sign in to join") == 2
+
+
+def test_invite_names_who_is_planning(client: Client, crew: Crew) -> None:
+    """A group of one says who: "Sam is planning", not "1 friend"."""
+    solo = create_group(crew.sam, "Solo")
+    content = client.get(reverse("planning:invite", kwargs={"token": solo.invite_token})).content
+    assert f"{crew.sam} is planning their season".encode() in content

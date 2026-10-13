@@ -139,12 +139,14 @@ def invite(request: HttpRequest, token: str) -> HttpResponse:
     user = request.user
     if isinstance(user, User) and is_member(group, user):
         return redirect("planning:group_detail", group_uuid=group.uuid)
+    member_count = group.memberships.count()
     return render(
         request,
         "groups/invite.html",
         {
             "group": group,
-            "member_count": group.memberships.count(),
+            "member_count": member_count,
+            "others": member_count - 1,
             "demo_month": DEMO_MONTH,
             "demo_weeks": demo_weeks(),
         },
