@@ -101,7 +101,9 @@ raising the limit; a limit changes here, for every app, or not at all.
 
 - **No dead CSS.** Every class in `app.css` is put on an element by a
   template, a script or Python. A class built from a prefix
-  (`chip--{{ kind }}`) counts for every class with that prefix.
+  (`chip--{{ kind }}`) counts for every class with that prefix. The
+  design page doesn't count: it shows everything. A class a framework adds
+  (Django's `errorlist`) is listed in `apps/design/conf.py`.
 - **No dead tokens.** Every token is read by the CSS or a script.
 - Delete a component's CSS in the same change that removes its last use.
 

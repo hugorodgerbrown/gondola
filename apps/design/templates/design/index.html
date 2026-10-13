@@ -18,7 +18,7 @@
         <li class="ds-token">
           <span class="ds-swatch" data-token="{{ token.name }}" data-paint="background"></span>
           <code class="mono">{{ token.name }}</code>
-          <span class="row__note">{{ token.value }}</span>
+          <span class="row__note"><span data-token-value="{{ token.name }}">{{ token.value }}</span></span>
         </li>
       {% endfor %}
     </ul>
@@ -30,7 +30,7 @@
       {% for token in families.type %}
         <li class="row">
           <span class="row__main"><span data-token="{{ token.name }}" data-paint="size">Verbier</span></span>
-          <span class="row__note mono">{{ token.name }} · {{ token.value }}</span>
+          <span class="row__note mono">{{ token.name }} · <span data-token-value="{{ token.name }}">{{ token.value }}</span></span>
         </li>
       {% endfor %}
     </ul>
@@ -42,7 +42,7 @@
       {% for token in families.space %}
         <li class="row">
           <span class="row__main"><span class="ds-bar" data-token="{{ token.name }}" data-paint="width"></span></span>
-          <span class="row__note mono">{{ token.name }} · {{ token.value }}</span>
+          <span class="row__note mono">{{ token.name }} · <span data-token-value="{{ token.name }}">{{ token.value }}</span></span>
         </li>
       {% endfor %}
     </ul>
@@ -55,13 +55,26 @@
         <li class="ds-token">
           <span class="ds-corner" data-token="{{ token.name }}" data-paint="radius"></span>
           <code class="mono">{{ token.name }}</code>
-          <span class="row__note">{{ token.value }}</span>
+          <span class="row__note"><span data-token-value="{{ token.name }}">{{ token.value }}</span></span>
         </li>
       {% endfor %}
       {% for token in families.shadow %}
         <li class="ds-token">
           <span class="ds-depth" data-token="{{ token.name }}" data-paint="shadow"></span>
           <code class="mono">{{ token.name }}</code>
+          <span class="row__note"><span data-token-value="{{ token.name }}">{{ token.value }}</span></span>
+        </li>
+      {% endfor %}
+    </ul>
+  </section>
+
+  <section class="heading" aria-labelledby="ds-other">
+    <span class="eyebrow" id="ds-other">Fonts and layout</span>
+    <ul class="list card">
+      {% for token in families.other %}
+        <li class="row">
+          <span class="row__main mono">{{ token.name }}</span>
+          <span class="row__note"><span data-token-value="{{ token.name }}">{{ token.value }}</span></span>
         </li>
       {% endfor %}
     </ul>

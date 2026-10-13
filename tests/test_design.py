@@ -12,7 +12,7 @@ import pytest
 from django.conf import settings
 
 from apps.design import stylesheet
-from apps.design.conf import NOT_ON_PAGE
+from apps.design.conf import ADDED_BY_FRAMEWORKS, NOT_ON_PAGE
 
 BASE = Path(settings.BASE_DIR)
 
@@ -69,13 +69,18 @@ def family(name: str) -> list[stylesheet.Token]:
 
 
 def source_files() -> list[Path]:
-    """Every file that can put a class on the page: templates, scripts, Python."""
+    """Every file that can put a class on a screen: templates, scripts, Python.
+
+    The design page (apps/design) is left out: it shows every component, so
+    counting it would keep a component alive after its last real use.
+    """
     files = sorted((BASE / "templates").rglob("*.html"))
     files += sorted((BASE / "apps").glob("*/templates/**/*.html"))
     files += sorted((BASE / "static" / "js").rglob("*.js"))
     files += sorted((BASE / "static" / "vendor").rglob("*.js"))
     files += sorted(p for p in (BASE / "apps").rglob("*.py") if "migrations" not in p.parts)
-    return files
+    design = BASE / "apps" / "design"
+    return [path for path in files if design not in path.parents and path.name != "design.js"]
 
 
 SOURCES = "\n".join(path.read_text() for path in source_files())
@@ -125,7 +130,9 @@ def script_and_template_files() -> list[Path]:
 @pytest.mark.parametrize("path", script_and_template_files(), ids=lambda p: p.name)
 def test_scripts_and_templates_have_no_colour_literals(path: Path) -> None:
     """Colours live in app.css; a script reads a token with getComputedStyle."""
-    match = re.search(r"#[0-9a-fA-F]{6}\b|\brgba?\(", path.read_text())
+    # Named colours (white, red) are left out: they're ordinary words in copy.
+    literal = r"#[0-9a-fA-F]{3,8}\b|\b(?:rgba?|hsla?|hwb|lab|lch|oklab|oklch)\("
+    match = re.search(literal, path.read_text())
     assert not match, f"colour literal {match.group(0) if match else ''}"
 
 
@@ -209,14 +216,20 @@ def test_every_token_is_used() -> None:
     """A token nothing reads is a decision nobody made."""
     readers = CSS + SOURCES
     unused = [
-        name for name in TOKENS if f"var({name}" not in readers and f'"{name}"' not in readers
+        name
+        for name in TOKENS
+        if not re.search(rf"var\({re.escape(name)}\b|[\"']{re.escape(name)}[\"']", readers)
     ]
     assert not unused, "remove unused tokens: " + ", ".join(unused)
 
 
 def test_every_class_is_used() -> None:
     """No dead CSS: every class in app.css is put on an element somewhere."""
-    unused = sorted(name for name in stylesheet.class_names(CSS) if not is_used(name))
+    unused = sorted(
+        name
+        for name in stylesheet.class_names(CSS)
+        if not name.startswith("ds-") and name not in ADDED_BY_FRAMEWORKS and not is_used(name)
+    )
     assert not unused, "remove dead CSS: " + ", ".join(unused)
 
 

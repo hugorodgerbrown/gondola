@@ -37,8 +37,7 @@ def test_staff_see_every_token(staff: Client) -> None:
     assert response.status_code == 200
     page = response.content.decode()
     for token in stylesheet.tokens(stylesheet.read()).values():
-        if token.family != "other":
-            assert f'data-token="{token.name}"' in page
+        assert f'data-token-value="{token.name}"' in page
 
 
 def test_the_account_page_links_staff_to_it(staff: Client) -> None:
