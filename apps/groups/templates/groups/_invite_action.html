@@ -1,0 +1,9 @@
+{# The invite's one action: Join when signed in, else sign in first. light: on the blue splash. #}
+{% if user.is_authenticated %}
+  <form method="post" action="{% url 'planning:join' group.invite_token %}">
+    {% csrf_token %}
+    <button type="submit" class="button button--block{% if light %} button--light{% endif %}">Join {{ group.name }}</button>
+  </form>
+{% else %}
+  <a class="button button--block{% if light %} button--light{% endif %}" href="{% url 'accounts:sign_in' %}?next={{ request.path|urlencode }}">Sign in to join</a>
+{% endif %}

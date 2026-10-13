@@ -17,6 +17,7 @@ from django.urls import reverse
 from django.views.decorators.http import require_POST
 
 from apps.accounts.models import User
+from apps.public.views import DEMO_MONTH, demo_weeks
 from apps.tour.session import after_join
 
 from ..forms import GroupForm
@@ -131,7 +132,7 @@ def remove(request: HttpRequest, group_uuid: str, user_uuid: str) -> HttpRespons
 
 
 def invite(request: HttpRequest, token: str) -> HttpResponse:
-    """Show an invite: what the group is, and a Join button."""
+    """Show an invite: the front page's story of Gondola, around a Join button."""
     group = Group.objects.real().select_related("owner").filter(invite_token=token).first()
     if group is None:
         return render(request, "groups/invite_invalid.html", status=404)
@@ -141,7 +142,12 @@ def invite(request: HttpRequest, token: str) -> HttpResponse:
     return render(
         request,
         "groups/invite.html",
-        {"group": group, "member_count": group.memberships.count()},
+        {
+            "group": group,
+            "member_count": group.memberships.count(),
+            "demo_month": DEMO_MONTH,
+            "demo_weeks": demo_weeks(),
+        },
     )
 
 
