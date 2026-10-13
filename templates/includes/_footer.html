@@ -1,7 +1,11 @@
-{# The website's footer, drawn by {% site_footer %} (apps/public/templatetags/site_footer.py) from apps/public/conf.py: DESIGN.md, "The website has a footer; the app has its links". #}
+{# The website's footer: links and the copyright, nothing else (Titan DESIGN.md, "The page frame"). Pages under /app/ have none: the account page lists the same links. #}
 <footer class="site-footer">
   <nav class="site-footer__links" aria-label="Site">
-    {% for label, url in links %}<a href="{{ url }}">{{ label }}</a>{% endfor %}
+    <a href="{% url 'public:home' %}">About</a>
+    <a href="{% url 'public:help' %}">Help</a>
+    <a href="{% url 'public:home' %}#ask">Use with Claude</a>
+    <a href="{% url 'public:terms' %}">Terms</a>
+    <a href="{% url 'public:privacy' %}">Privacy</a>
   </nav>
-  <p class="site-footer__legal">© {{ year }} {{ holder }}. All rights reserved.</p>
+  <p class="site-footer__legal">© {% now "Y" %} Ultraniche</p>
 </footer>

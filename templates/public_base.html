@@ -1,4 +1,4 @@
-{% load static site_footer %}<!doctype html>
+{% load static %}<!doctype html>
 {# The public pages: the front page, terms, privacy, help, signing in and invite links. No service worker, no outbox. #}
 <html lang="en-GB">
   <head>
@@ -23,7 +23,7 @@
       {% include "includes/messages.html" %}
       {% block content %}{% endblock %}
     </main>
-    {% site_footer %}
+    {% include "includes/_footer.html" %}
     <script src="{% static 'vendor/htmx.min.js' %}"></script>
     <script src="{% static 'js/app.js' %}"></script>
     {% block scripts %}{% endblock %}
