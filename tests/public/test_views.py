@@ -64,6 +64,15 @@ def test_home_gives_the_mcp_connector_address(client: Client, settings: Any) -> 
     assert 'data-copy="https://gondola.example/mcp"' in content
 
 
-def test_home_signed_in_goes_to_the_map(signed_in: Client) -> None:
-    """Signed in, the front page opens the app."""
-    assert signed_in.get(reverse("public:home"))["Location"] == reverse("planning:map")
+def test_home_shows_when_signed_in(signed_in: Client) -> None:
+    """Signed in, the front page still shows, and its topbar offers the app."""
+    response = signed_in.get(reverse("public:home"))
+    assert response.status_code == 200
+    assert b"Start a group" in response.content
+    assert reverse("planning:map").encode() in response.content
+
+
+def test_account_page_links_to_the_front_page(signed_in: Client) -> None:
+    """The account page is the way from the app to the front page."""
+    content = signed_in.get(reverse("accounts:settings")).content.decode()
+    assert f'href="{reverse("public:home")}"' in content
