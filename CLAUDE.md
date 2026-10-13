@@ -59,9 +59,12 @@ apps/resorts/    the Swiss resorts, imported from apps/resorts/data
 apps/groups/     groups, plan days, the calendar, board and map
 apps/tour/       the onboarding tour on a private demo group
 apps/mcp/        the MCP endpoint (/mcp) and its tools; auth is mcp-auth
+apps/design/     the design page (/app/design/, staff only): every token
+                 and every component state (DESIGN.md)
 templates/       base.html (the app, /app/), public_base.html, includes
 static/js/       plain JavaScript, classic scripts, no build step
-static/css/      app.css: tokens on :root, components below
+static/css/      app.css: the design system, tokens on :root and
+                 components below (DESIGN.md)
 docs/            pwa, security, performance, testing, onboarding-tour,
                  decisions/
 .claude/skills/  writing the Titan docs kept in Linear (research, user
@@ -115,8 +118,10 @@ Never run a bare `pytest`; use `uv run`. Dependencies: `uv add` /
   [docs/pwa.md](docs/pwa.md#scope).
 - No inline `<script>`, `style=` or `on*=` in templates (emails aside): the
   CSP blocks them and `tests/test_security.py` fails the build.
-- Style with the tokens in `static/css/app.css`; add a component class
-  there rather than one-off values.
+- Follow [DESIGN.md](DESIGN.md) on every UI change: check the design
+  page (`/app/design/`, staff only) first, use tokens and never raw
+  values, show every new component and state on the page, and delete dead
+  CSS. `tests/test_design.py` enforces it.
 - Add any new static file the shell needs offline to
   `apps/pwa/conf.py: PRECACHE_STATIC` (it has a byte budget).
 

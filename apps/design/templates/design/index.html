@@ -1,0 +1,414 @@
+{% extends "base.html" %}
+{% load static %}
+{# Gondola's design system (DESIGN.md): every token, read from app.css, and every component in each of its states, with the markup the screens use. A component added to app.css goes here in the same change; tests/test_design.py fails until it does. #}
+{% block title %}Design system · {{ SITE_NAME }}{% endblock %}
+{% block content %}
+  <div class="heading">
+    <span class="eyebrow">Gondola</span>
+    <h1 class="title title--large">Design system</h1>
+    <p class="lede">Tokens read from static/css/app.css, and every component in each of its states. The rules are in DESIGN.md.</p>
+  </div>
+
+  {# --- Tokens ------------------------------------------------------------ #}
+
+  <section class="heading" aria-labelledby="ds-colour">
+    <span class="eyebrow" id="ds-colour">Colour</span>
+    <ul class="ds-grid card card--padded">
+      {% for token in families.colour %}
+        <li class="ds-token">
+          <span class="ds-swatch" data-token="{{ token.name }}" data-paint="background"></span>
+          <code class="mono">{{ token.name }}</code>
+          <span class="row__note">{{ token.value }}</span>
+        </li>
+      {% endfor %}
+    </ul>
+  </section>
+
+  <section class="heading" aria-labelledby="ds-type">
+    <span class="eyebrow" id="ds-type">Type</span>
+    <ul class="list card">
+      {% for token in families.type %}
+        <li class="row">
+          <span class="row__main"><span data-token="{{ token.name }}" data-paint="size">Verbier</span></span>
+          <span class="row__note mono">{{ token.name }} · {{ token.value }}</span>
+        </li>
+      {% endfor %}
+    </ul>
+  </section>
+
+  <section class="heading" aria-labelledby="ds-space">
+    <span class="eyebrow" id="ds-space">Space</span>
+    <ul class="list card">
+      {% for token in families.space %}
+        <li class="row">
+          <span class="row__main"><span class="ds-bar" data-token="{{ token.name }}" data-paint="width"></span></span>
+          <span class="row__note mono">{{ token.name }} · {{ token.value }}</span>
+        </li>
+      {% endfor %}
+    </ul>
+  </section>
+
+  <section class="heading" aria-labelledby="ds-shape">
+    <span class="eyebrow" id="ds-shape">Shape and depth</span>
+    <ul class="ds-grid card card--padded">
+      {% for token in families.radius %}
+        <li class="ds-token">
+          <span class="ds-corner" data-token="{{ token.name }}" data-paint="radius"></span>
+          <code class="mono">{{ token.name }}</code>
+          <span class="row__note">{{ token.value }}</span>
+        </li>
+      {% endfor %}
+      {% for token in families.shadow %}
+        <li class="ds-token">
+          <span class="ds-depth" data-token="{{ token.name }}" data-paint="shadow"></span>
+          <code class="mono">{{ token.name }}</code>
+        </li>
+      {% endfor %}
+    </ul>
+  </section>
+
+  {# --- Text ---------------------------------------------------------------- #}
+
+  <section class="heading" aria-labelledby="ds-text">
+    <span class="eyebrow" id="ds-text">Text</span>
+    <div class="card card--padded">
+      <div class="heading">
+        <span class="eyebrow">Eyebrow · a label over a heading</span>
+        <p class="title title--large">Title, large</p>
+        <p class="title"><a class="title__link" href="#ds-text">Title, as a link</a></p>
+        <p class="lede">Lede: the line under a page's title.</p>
+        <p class="lede lede--large">Lede, large: on the front page.</p>
+      </div>
+      <p>Body text. <span class="muted">Muted.</span> <span class="small">Small.</span> <span class="mono">MONO 28 NOV</span></p>
+      <p class="help">Help: a note under a field.</p>
+      <p class="meta">Meta: secondary text on public pages.</p>
+      <p class="centred small muted">Centred.</p>
+      <p><span class="visually-hidden">Read by screen readers only. </span><button type="button" class="link-button">A link button</button></p>
+    </div>
+  </section>
+
+  {# --- Buttons ------------------------------------------------------------- #}
+
+  <section class="heading" aria-labelledby="ds-buttons">
+    <span class="eyebrow" id="ds-buttons">Buttons</span>
+    <div class="card card--padded">
+      <div class="ds-row">
+        <button type="button" class="button">Primary</button>
+        <button type="button" class="button button--secondary">Secondary</button>
+        <button type="button" class="button button--danger">Danger</button>
+        <button type="button" class="button" disabled>Disabled</button>
+      </div>
+      <div class="ds-row">
+        <button type="button" class="button button--small">Small</button>
+        <button type="button" class="button button--secondary button--small">Small secondary</button>
+      </div>
+      <button type="button" class="button button--block">Block</button>
+      <div class="actions">
+        <button type="button" class="button button--small">Actions share a row</button>
+        <button type="button" class="button button--secondary button--small no-shrink">No shrink</button>
+      </div>
+      <div class="ds-row">
+        <button type="button" class="icon-button" aria-label="Icon button">{% include "includes/icons/chevron-left.html" %}</button>
+        <span class="icon-button icon-button--off" aria-hidden="true">{% include "includes/icons/chevron-right.html" %}</span>
+        <span class="row__note">Icon button, and off</span>
+      </div>
+    </div>
+  </section>
+
+  {# --- Forms --------------------------------------------------------------- #}
+
+  <section class="heading" aria-labelledby="ds-forms">
+    <span class="eyebrow" id="ds-forms">Forms</span>
+    <div class="card card--padded">
+      <div class="field">
+        <label for="ds-name">Your name</label>
+        <input class="input" id="ds-name" type="text" value="Tess">
+        <p class="help">Your groups see this.</p>
+      </div>
+      <div class="field">
+        <label for="ds-group">With an error</label>
+        <ul class="errors"><li>That name is too long.</li></ul>
+        <input class="input" id="ds-group" type="text" value="The Thursday morning powder crew" aria-invalid="true">
+      </div>
+      <div class="field">
+        <label for="ds-code">Code, as one field</label>
+        <input class="input input--code" id="ds-code" type="text" value="123456">
+      </div>
+      <fieldset class="field">
+        <legend>Code, as six boxes</legend>
+        <div class="code-boxes">
+          <input class="code-box" type="text" value="4" aria-label="Digit 1">
+          <input class="code-box" type="text" value="7" aria-label="Digit 2">
+          <input class="code-box" type="text" aria-label="Digit 3">
+          <input class="code-box" type="text" aria-label="Digit 4">
+          <input class="code-box" type="text" aria-label="Digit 5">
+          <input class="code-box" type="text" aria-label="Digit 6">
+        </div>
+      </fieldset>
+      <div class="search-field">
+        <span class="search-field__icon">{% include "includes/icons/search.html" %}</span>
+        <input class="input input--search" type="search" placeholder="Search resorts" aria-label="Search resorts">
+      </div>
+      <label class="check"><span class="row__main"><span>A switch, on</span><span class="small muted">A checkbox in a .check row.</span></span><input type="checkbox" checked></label>
+      <label class="check"><span>A switch, off</span><input type="checkbox"></label>
+      <div class="choices" role="radiogroup" aria-label="Resort" data-clearable>
+        <label class="choice"><input type="radio" name="ds-resort" checked><span class="choice__main"><span class="choice__title">Verbier</span><span class="choice__meta">Picked: tap again to clear</span></span><span class="choice__count">Anna, Tom</span></label>
+        <label class="choice"><input type="radio" name="ds-resort"><span class="choice__main"><span class="choice__title">Saas-Fee</span><span class="choice__meta">Valais</span></span></label>
+      </div>
+    </div>
+  </section>
+
+  {# --- Cards and lists ----------------------------------------------------- #}
+
+  <section class="heading" aria-labelledby="ds-lists">
+    <span class="eyebrow" id="ds-lists">Cards and lists</span>
+    <div class="heading-row">
+      <p class="title">A heading row</p>
+      <button type="button" class="icon-button" aria-label="Close">{% include "includes/icons/close.html" %}</button>
+    </div>
+    <ul class="list card">
+      <li>
+        <a class="row row--link" href="#ds-lists">
+          <span class="row__main"><span class="row__label">A row that links</span><span class="row__note">5 members · you own it</span></span>
+          <span class="icon-button" aria-hidden="true">{% include "includes/icons/chevron-right.html" %}</span>
+        </a>
+      </li>
+      <li class="row">
+        <span class="row__main"><span>A row with a tag and a menu</span></span>
+        <span class="tag">Owner</span>
+        <span class="tag tag--accent">Accent</span>
+        <details class="row-menu" open>
+          <summary class="icon-button" aria-label="More">{% include "includes/icons/more.html" %}</summary>
+          <div class="row-menu__panel">
+            <button type="button" class="row-menu__item">An action</button>
+            <button type="button" class="row-menu__item row-menu__item--danger">Remove Anna</button>
+          </div>
+        </details>
+      </li>
+    </ul>
+    <nav class="tiles" aria-label="Tiles">
+      <a class="card tile" href="#ds-lists"><strong>Who's where</strong><span class="small muted">A tile</span></a>
+      <a class="card tile" href="#ds-lists"><strong>Calendar</strong><span class="small muted">Two to a row</span></a>
+    </nav>
+    <div class="card empty"><p>Empty: nothing here yet, and what to do about it.</p></div>
+    <code class="mono small invite-link">https://gondola.ultraniche.ai/i/an-invite-link-cut-short-with-an-ellipsis</code>
+    <div class="stack stack--tight">
+      <p class="small muted">A tight stack…</p>
+      <p class="small muted">…of things.</p>
+    </div>
+  </section>
+
+  {# --- Messages ------------------------------------------------------------ #}
+
+  <section class="heading" aria-labelledby="ds-messages">
+    <span class="eyebrow" id="ds-messages">Messages</span>
+    <ul class="messages">
+      <li class="message">Saved three days in Verbier.</li>
+      <li class="message message--error">Couldn't save. Try again.</li>
+    </ul>
+    <p class="notice">A notice: something to know, not an error.</p>
+  </section>
+
+  {# --- Calendar ------------------------------------------------------------ #}
+
+  <section class="heading" aria-labelledby="ds-calendar">
+    <span class="eyebrow" id="ds-calendar">Calendar</span>
+    <div class="month-head">
+      <p class="title title--large">November 2026</p>
+      <nav class="month-head__nav" aria-label="Month">
+        <span class="icon-button icon-button--off" aria-hidden="true">{% include "includes/icons/chevron-left.html" %}</span>
+        <a class="icon-button" href="#ds-calendar" aria-label="Next month">{% include "includes/icons/chevron-right.html" %}</a>
+      </nav>
+    </div>
+    <nav class="chips month-groups" aria-label="Show">
+      <a class="chip" aria-current="true" href="#ds-calendar">My calendar</a>
+      <a class="chip" href="#ds-calendar">Thursday crew</a>
+    </nav>
+    <div class="month card">
+      <div class="month__week" aria-hidden="true">{% for name in "MTWTFSS" %}<span class="month__weekday">{{ name }}</span>{% endfor %}</div>
+      <div class="month__week">
+        <span class="mday mday--out"></span>
+        <span class="mday mday--past mday--in"><span class="mday__row"><span class="mday__date">1</span></span><span class="mday__row"><span class="mday__resort">VER</span></span></span>
+        <a class="mday" href="#ds-calendar"><span class="mday__row"><span class="mday__date">2</span></span><span class="mday__row"></span></a>
+        <a class="mday mday--in" href="#ds-calendar"><span class="mday__row"><span class="mday__date">3</span></span><span class="mday__row"><span class="mday__resort">VER</span></span></a>
+        <a class="mday mday--in" href="#ds-calendar"><span class="mday__row"><span class="mday__date">4</span><span class="mday__friends">{% include "includes/icons/people.html" %}</span></span><span class="mday__row"><span class="mday__resort">VER</span></span></a>
+        <a class="mday mday--friends" href="#ds-calendar"><span class="mday__row"><span class="mday__date">5</span><span class="mday__friends">{% include "includes/icons/user.html" %}</span></span><span class="mday__row"><span class="mday__resort">CHA …</span></span></a>
+        <a class="mday mday--in mday--selected" href="#ds-calendar" aria-current="date"><span class="mday__row"><span class="mday__date">6</span></span><span class="mday__row"><span class="mday__resort">SAA</span></span></a>
+      </div>
+      <div class="month__week">
+        <a class="mday mday--selected" href="#ds-calendar"><span class="mday__row"><span class="mday__date">7</span></span><span class="mday__row"></span></a>
+        <a class="mday mday--in mday--pending" href="#ds-calendar"><span class="mday__row"><span class="mday__date">8</span></span><span class="mday__row"><span class="mday__resort">VER</span></span></a>
+        <a class="mday mday--pending" href="#ds-calendar"><span class="mday__row"><span class="mday__date">9</span></span><span class="mday__row"></span></a>
+        <a class="mday mday--in mday--failed" href="#ds-calendar"><span class="mday__row"><span class="mday__date">10</span></span><span class="mday__row"><span class="mday__resort">VER</span></span></a>
+      </div>
+    </div>
+    <dl class="legend">
+      <dt>1</dt><dd>Past</dd>
+      <dt>2</dt><dd>Unsaid</dd>
+      <dt>3–4</dt><dd>In a resort; with friends</dd>
+      <dt>5</dt><dd>Unsaid, but the picked group is out</dd>
+      <dt>6–7</dt><dd>Selected: the day the panel shows</dd>
+      <dt>8–9</dt><dd>Waiting to send: saved, cleared</dd>
+      <dt>10</dt><dd>The server refused it</dd>
+    </dl>
+    <p class="eyebrow">Selecting several days</p>
+    <div class="month card month--selecting">
+      <div class="month__week">
+        <a class="mday" href="#ds-calendar"><span class="mday__row"><span class="mday__date">16</span></span></a>
+        <a class="mday mday--picked" href="#ds-calendar"><span class="mday__row"><span class="mday__date">17</span></span></a>
+        <a class="mday mday--in mday--picked" href="#ds-calendar"><span class="mday__row"><span class="mday__date">18</span></span><span class="mday__row"><span class="mday__resort">VER</span></span></a>
+        <a class="mday mday--in" href="#ds-calendar"><span class="mday__row"><span class="mday__date">19</span></span><span class="mday__row"><span class="mday__resort">VER</span></span></a>
+      </div>
+    </div>
+    <div class="select-bar ds-static" role="region" aria-label="Selected days">
+      <button type="button" class="button button--secondary button--small">Cancel</button>
+      <span class="select-bar__count">2 DAYS</span>
+      <button type="button" class="button button--small">Plan</button>
+    </div>
+    <section class="day-panel" aria-label="The selected day">
+      <div class="day-panel__head">
+        <p class="day-panel__title">6 November</p>
+        <a class="button button--small button--secondary" href="#ds-calendar">Edit plans</a>
+      </div>
+      <p class="day-panel__mine"><span class="day-panel__swatch" aria-hidden="true"></span>In Saas-Fee</p>
+      <p class="day-panel__here">{% include "includes/icons/people.html" %}<span>Anna and Chloé</span></p>
+      <div class="day-panel__others">
+        <span class="eyebrow">Elsewhere</span>
+        <ul class="day-panel__friends"><li><span class="day-panel__resort">Verbier</span> <span class="muted">Ben</span></li></ul>
+      </div>
+    </section>
+  </section>
+
+  {# --- Sheet --------------------------------------------------------------- #}
+
+  <section class="heading" aria-labelledby="ds-sheet">
+    <span class="eyebrow" id="ds-sheet">Sheet</span>
+    <div class="sheet ds-static">
+      <div class="sheet__body">
+        <span class="sheet__grip" aria-hidden="true"></span>
+        <div class="heading-row">
+          <div class="heading"><span class="eyebrow">Calendar</span><p class="title">Saturday 28 November</p></div>
+          <button type="button" class="icon-button" aria-label="Close">{% include "includes/icons/close.html" %}</button>
+        </div>
+        <p class="small muted">A sheet opens from the bottom, over the page.</p>
+        <div class="friend-line"><span>Anna</span><span class="small muted">Verbier</span></div>
+        <div class="friend-line"><span>You</span><span class="small muted">Saas-Fee</span></div>
+      </div>
+    </div>
+  </section>
+
+  {# --- Who's where ----------------------------------------------------------- #}
+
+  <section class="heading" aria-labelledby="ds-board">
+    <span class="eyebrow" id="ds-board">Who's where</span>
+    <div class="card board">
+      <table>
+        <thead>
+          <tr>
+            <th scope="col" class="board__name" aria-label="Person"></th>
+            <th scope="col"><a href="#ds-board"><span>Fri</span><span>13</span></a></th>
+            <th scope="col" class="is-today"><a href="#ds-board"><span>Sat</span><span>14</span></a></th>
+            <th scope="col"><a href="#ds-board"><span>Sun</span><span>15</span></a></th>
+            <th scope="col"><a href="#ds-board"><span>Mon</span><span>16</span></a></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="board__me"><th scope="row" class="board__name">You</th><td>VER</td><td>VER</td><td></td><td>CHA</td></tr>
+          <tr><th scope="row" class="board__name">Anna</th><td>VER</td><td>SAA</td><td>SAA</td><td></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="pager"><a href="#ds-board">← 6–13 Oct</a><a href="#ds-board">20–26 Oct →</a></div>
+  </section>
+
+  {# --- Map ------------------------------------------------------------------- #}
+
+  <section class="heading" aria-labelledby="ds-map">
+    <span class="eyebrow" id="ds-map">Map</span>
+    <div class="ds-stage">
+      <div class="map-bar">
+        <nav class="float" aria-label="Day">
+          <a class="icon-button" href="#ds-map" aria-label="Previous day">{% include "includes/icons/chevron-left.html" %}</a>
+          <button type="button" class="float__label float__label--button" aria-expanded="true">{% include "includes/icons/calendar.html" %}<span>Today · Tue 13 Oct</span></button>
+          <a class="icon-button" href="#ds-map" aria-label="Next day">{% include "includes/icons/chevron-right.html" %}</a>
+        </nav>
+      </div>
+      <div class="calendar ds-static">
+        <div class="calendar__header">
+          <button type="button" class="icon-button calendar__step" disabled aria-label="Previous month">{% include "includes/icons/chevron-left.html" %}</button>
+          <p class="calendar__title">October 2026</p>
+          <button type="button" class="icon-button calendar__step" aria-label="Next month">{% include "includes/icons/chevron-right.html" %}</button>
+        </div>
+        <table class="calendar__grid">
+          <thead><tr><th class="calendar__weekday">Mo</th><th class="calendar__weekday">Tu</th><th class="calendar__weekday">We</th><th class="calendar__weekday">Th</th><th class="calendar__weekday">Fr</th><th class="calendar__weekday">Sa</th><th class="calendar__weekday">Su</th></tr></thead>
+          <tbody>
+            <tr>
+              <td><button type="button" class="calendar__day" disabled>12</button></td>
+              <td><button type="button" class="calendar__day calendar__day--today calendar__day--selected">13<span class="calendar__mark"></span></button></td>
+              <td><button type="button" class="calendar__day">14</button></td>
+              <td><button type="button" class="calendar__day">15<span class="calendar__mark"></span></button></td>
+              <td><button type="button" class="calendar__day calendar__day--today">16</button></td>
+              <td><button type="button" class="calendar__day">17</button></td>
+              <td><button type="button" class="calendar__day">18</button></td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="calendar__footer"><button type="button" class="button button--secondary calendar__today">Today</button></div>
+      </div>
+      <div class="map-search">
+        <span class="map-search__icon">{% include "includes/icons/search.html" %}</span>
+        <input class="map-search__input" type="search" value="Sa" aria-label="Find a resort">
+        <ul class="map-search__list ds-static" role="listbox" aria-label="Resorts">
+          <li class="map-search__option" role="option" aria-selected="true"><span class="map-search__name">Saas-Fee</span><span class="map-search__canton">VS</span></li>
+          <li class="map-search__option" role="option" aria-selected="false"><span class="map-search__name">Samnaun</span><span class="map-search__canton">GR</span></li>
+          <li class="map-search__empty">No resort matches</li>
+        </ul>
+      </div>
+      <nav class="chips" aria-label="Pass">
+        <a class="chip" aria-current="true" href="#ds-map">All resorts</a>
+        <a class="chip" href="#ds-map"><span class="chip__swatch chip__swatch--pass-magic-pass" aria-hidden="true"></span>Magic Pass</a>
+      </nav>
+      <p class="map-hint">A hint over the map: friends show up here once you're in a group.</p>
+      <div class="ds-row">
+        <button type="button" class="pin"><span class="pin__dot"></span><span class="pin__name">Anzère</span></button>
+        <button type="button" class="pin pin--friends"><span class="pin__dot"><span class="pin__count">3</span></span><span class="pin__name">Verbier</span></button>
+        <button type="button" class="pin pin--mine pin--friends"><span class="pin__dot"></span><span class="pin__name">Zermatt</span></button>
+        <button type="button" class="pin pin--pass-magic-pass"><span class="pin__dot"></span><span class="pin__name">Leysin</span></button>
+        <button type="button" class="pin pin--pass-magic-pass pin--friends"><span class="pin__dot"></span><span class="pin__name">Champéry</span></button>
+        <button type="button" class="pin pin--friends pin--selected"><span class="pin__dot"></span><span class="pin__name">Saas-Fee</span></button>
+      </div>
+    </div>
+  </section>
+
+  {# --- Public pages and the tour -------------------------------------------- #}
+
+  <section class="heading" aria-labelledby="ds-public">
+    <span class="eyebrow" id="ds-public">Public pages</span>
+    <div class="card card--padded">
+      <div class="hero">
+        <p class="title title--large">Who's skiing where</p>
+        <p class="lede lede--large">The hero, on the front page.</p>
+      </div>
+      <figure class="hero-figure"><img class="hero-picture" src="{% static 'img/home-calendar.png' %}" width="568" height="792" alt="The front page's picture of a month on the calendar"></figure>
+      <ol class="steps"><li>Steps: numbered,</li><li>with room between.</li></ol>
+      <div class="prose">
+        <h1>Prose</h1>
+        <h2>Terms, privacy and help</h2>
+        <p>Headings and paragraphs with room between them.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="heading" aria-labelledby="ds-tour">
+    <span class="eyebrow" id="ds-tour">Tour</span>
+    <div class="tour-bar ds-static"><span><strong>Demo</strong> · nothing is saved</span><button type="button" class="tour-bar__end">End tour</button></div>
+    <section class="tour-card tour-card--centred ds-static" aria-label="A coach mark">
+      <p class="tour-card__title title">A coach mark</p>
+      <p class="tour-card__text">Points at one part of the screen and says what it does.</p>
+      <p class="tour-card__note small muted">A note under it.</p>
+      <div class="tour-card__actions"><span class="small muted">2 of 7</span><button type="button" class="button button--small">Next</button></div>
+    </section>
+    <section class="tour-welcome card card--padded stack"><p class="title">The tour's welcome</p><p class="small muted">Offered after a first sign-in.</p></section>
+  </section>
+{% endblock %}
+{% block scripts %}<script src="{% static 'js/design.js' %}"></script>{% endblock %}

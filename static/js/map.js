@@ -12,18 +12,23 @@
   const SWITZERLAND = [[5.9, 45.8], [10.5, 47.85]];
   const STYLE_TIMEOUT_MS = 4000;
 
+  // The fallback map's colours are the stylesheet's tokens (DESIGN.md).
+  function token(name) {
+    return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+  }
+
   function fallbackStyle(outlineUrl) {
     return {
       version: 8,
       sources: { ch: { type: "geojson", data: outlineUrl } },
       layers: [
-        { id: "ground", type: "background", paint: { "background-color": "#e9e7e1" } },
-        { id: "ch-fill", type: "fill", source: "ch", paint: { "fill-color": "#f7f5f0" } },
+        { id: "ground", type: "background", paint: { "background-color": token("--map-ground") } },
+        { id: "ch-fill", type: "fill", source: "ch", paint: { "fill-color": token("--sunk") } },
         {
           id: "ch-line",
           type: "line",
           source: "ch",
-          paint: { "line-color": "rgba(0,0,0,0.25)", "line-width": 1.2 },
+          paint: { "line-color": token("--rule-strong"), "line-width": 1.2 },
         },
       ],
     };
