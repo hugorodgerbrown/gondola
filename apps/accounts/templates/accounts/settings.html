@@ -1,17 +1,22 @@
 {% extends "base.html" %}
 {% load static %}
-{% block title %}Your account · {{ SITE_NAME }}{% endblock %}
+{% block title %}Account · {{ SITE_NAME }}{% endblock %}
 {% block content %}
-  <div class="heading">
-    <span class="eyebrow">{{ user.email }}</span>
-    <h1 class="title">Your account</h1>
-  </div>
+  <section class="card card--padded" aria-labelledby="account-heading">
+    <h1 class="title" id="account-heading">Account</h1>
+    <p class="heading"><span class="small muted">Signed in as</span><strong>{{ user.email }}</strong></p>
+    <form method="post" action="{% url 'accounts:sign_out' %}" data-sign-out>
+      {% csrf_token %}
+      <button type="submit" class="button button--secondary button--block">Sign out</button>
+    </form>
+  </section>
   {# nosemgrep: python.django.security.django-no-csrf-token.django-no-csrf-token -- it has one #}
-  <form method="post" class="card card--padded">
+  <form method="post" class="card card--padded" aria-labelledby="details-heading">
     {% csrf_token %}
+    <h2 class="card__title" id="details-heading">Your name</h2>
     {% if form.errors %}<ul class="errors">{% for error in form.display_name.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
     <div class="field">
-      <label for="{{ form.display_name.id_for_label }}">Your name</label>
+      <label class="visually-hidden" for="{{ form.display_name.id_for_label }}">Your name</label>
       {{ form.display_name }}
     </div>
     <label class="check" for="{{ form.evening_email_enabled.id_for_label }}">
@@ -20,70 +25,53 @@
     </label>
     <button type="submit" class="button button--block">Save</button>
   </form>
-  <section class="heading" aria-labelledby="passkeys-heading" data-passkey-register
+  <section class="card card--padded" aria-labelledby="passkeys-heading" data-passkey-register
            data-options-url="{% url 'accounts:passkey_register_options' %}"
            data-register-url="{% url 'accounts:passkey_register' %}">
-    <span class="eyebrow" id="passkeys-heading">Passkeys</span>
-    <p class="small muted">A passkey signs you in with Face ID, a fingerprint or your device PIN, with no email to wait for.</p>
+    <h2 class="card__title" id="passkeys-heading">Passkeys</h2>
+    <p>A passkey signs you in with Face ID, a fingerprint or your device PIN, with no email to wait for.</p>
     {% if passkeys %}
-      <ul class="list card">
+      <ul class="list">
         {% for passkey in passkeys %}
-          <li class="row">
+          <li class="row row--flush">
             <span class="row__main">
-              <span>{{ passkey.name }}</span>
+              <span class="row__label">{{ passkey.name }}</span>
               <span class="row__note">Added {{ passkey.created_at|date:"j M Y" }}{% if passkey.last_used_at %} · last used {{ passkey.last_used_at|date:"j M Y" }}{% endif %}{% if passkey.backed_up %} · synced{% endif %}</span>
             </span>
             <form method="post" action="{% url 'accounts:passkey_delete' passkey.uuid %}">
               {% csrf_token %}
-              <button type="submit" class="icon-button" aria-label="Remove {{ passkey.name }}">{% include "includes/icons/close.html" %}</button>
+              <button type="submit" class="button button--secondary button--small" aria-label="Remove {{ passkey.name }}">Remove</button>
             </form>
           </li>
         {% endfor %}
       </ul>
-    {% else %}
-      <p class="small muted">You haven't added a passkey yet.</p>
     {% endif %}
     {# Shown by passkeys.js only where the browser supports passkeys. #}
-    <div class="stack" data-passkey-controls hidden>
-      <button type="button" class="button button--secondary button--block" data-passkey-button>Add a passkey</button>
+    <div class="stack stack--tight" data-passkey-controls hidden>
+      <button type="button" class="button button--block" data-passkey-button>Add a passkey</button>
       <p class="errors" data-passkey-error role="alert" hidden></p>
     </div>
     <p class="small muted" data-passkey-unsupported>This browser can't make passkeys.</p>
   </section>
   {% if can_connect_apps %}
-    <section class="heading" aria-labelledby="apps-heading">
-      <span class="eyebrow" id="apps-heading">Connected apps</span>
-      <p class="small muted">Add {{ SITE_NAME }} to Claude as a connector at <strong>{{ request.scheme }}://{{ request.get_host }}{% url 'mcp' %}</strong>, then ask it where everyone is.</p>
+    <section class="card card--padded" aria-labelledby="apps-heading">
+      <h2 class="card__title" id="apps-heading">Claude</h2>
+      <p>Add {{ SITE_NAME }} to Claude as a connector, at <strong>{{ request.scheme }}://{{ request.get_host }}{% url 'mcp' %}</strong>, then ask it where everyone is.</p>
       <a class="button button--secondary button--block" href="{% url 'oauth2_provider:connected-apps' %}">See connected apps</a>
     </section>
   {% endif %}
-  <section class="heading" aria-labelledby="tour-heading">
-    <span class="eyebrow" id="tour-heading">Tour</span>
-    <p class="small muted">A quick look round a made-up group, to see what everything does. Nothing is saved.</p>
+  <section class="card card--padded" aria-labelledby="tour-heading">
+    <h2 class="card__title" id="tour-heading">Tour</h2>
+    <p>A quick look round a made-up group, to see what everything does. Nothing is saved.</p>
     <form method="post" action="{% url 'tour:start' %}">
       {% csrf_token %}
       <input type="hidden" name="next" value="{% url 'accounts:settings' %}">
       <button type="submit" class="button button--secondary button--block">Take the tour</button>
     </form>
   </section>
-  {# The app has no footer, so the website footer's links are here (Titan DESIGN.md, "The page frame"). #}
-  <section class="heading" aria-labelledby="about-heading">
-    <span class="eyebrow" id="about-heading">About {{ SITE_NAME }}</span>
-    <ul class="site-links">
-      <li><a href="{% url 'public:home' %}">About</a></li>
-      <li><a href="{% url 'public:help' %}">Help</a></li>
-      <li><a href="{% url 'public:home' %}#ask">Use with Claude</a></li>
-      <li><a href="{% url 'public:terms' %}">Terms</a></li>
-      <li><a href="{% url 'public:privacy' %}">Privacy</a></li>
-    </ul>
-    <p class="small muted">© {% now "Y" %} ultraniche.ai</p>
-  </section>
-  <form method="post" action="{% url 'accounts:sign_out' %}" data-sign-out>
-    {% csrf_token %}
-    <button type="submit" class="button button--secondary button--block">Sign out</button>
-  </form>
-  {% if user.is_staff %}<a class="small muted" href="{% url 'design:index' %}">Design system</a>{% endif %}
-  <a class="small muted" href="{% url 'accounts:delete' %}">Delete your account</a>
+  <p class="small"><a class="muted" href="{% url 'accounts:delete' %}">Delete your account</a>{% if user.is_staff %} · <a class="muted" href="{% url 'design:index' %}">Design system</a>{% endif %}</p>
+  {# Pages under /app/ have no footer, so the website's footer ends this one (Titan DESIGN.md, "The page frame"). #}
+  {% include "includes/_footer.html" with flush=True %}
 {% endblock %}
 {% block scripts %}
   <script src="{% static 'js/webauthn_json.js' %}"></script>

@@ -17,11 +17,11 @@ class SignInForm(forms.Form):
     """Ask for the email address to send a sign-in link and code to."""
 
     email = forms.EmailField(
-        label="Email",
+        label="Email address",
         widget=forms.EmailInput(
             attrs={
                 "class": "input",
-                "autocomplete": "email webauthn",
+                "autocomplete": "email",
                 "placeholder": "you@example.com",
                 "autofocus": True,
             }

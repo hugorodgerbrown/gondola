@@ -91,6 +91,7 @@
         <p class="title"><a class="title__link" href="#ds-text">Title, as a link</a></p>
         <p class="lede">Lede: the line under a page's title.</p>
       </div>
+      <p class="card__title">Card title: a card's own heading</p>
       <p>Body text. <span class="muted">Muted.</span> <span class="small">Small.</span> <span class="mono">MONO 28 NOV</span></p>
       <p class="help">Help: a note under a field.</p>
       <p class="meta">Meta: secondary text on public pages.</p>
@@ -198,6 +199,18 @@
         </details>
       </li>
     </ul>
+    <div class="card card--padded">
+      <p class="card__title">A padded card with flush rows</p>
+      <ul class="list">
+        <li class="row row--flush">
+          <span class="row__main"><span class="row__label">Passkey on iPhone</span><span class="row__note">Added 9 Oct 2026 · synced</span></span>
+          <button type="button" class="button button--secondary button--small">Remove</button>
+        </li>
+        <li class="row row--flush">
+          <span class="row__main"><span class="row__label">Passkey on Mac</span><span class="row__note">Lined up with the card's text</span></span>
+        </li>
+      </ul>
+    </div>
     <nav class="tiles" aria-label="Tiles">
       <a class="card tile" href="#ds-lists"><strong>Who's where</strong><span class="small muted">A tile</span></a>
       <a class="card tile" href="#ds-lists"><strong>Calendar</strong><span class="small muted">Two to a row</span></a>
@@ -454,17 +467,17 @@
 
   <section class="heading" aria-labelledby="ds-footer">
     <span class="eyebrow" id="ds-footer">Site footer and links</span>
-    <p class="small muted">The website's pages end with the footer (includes/_footer.html). The app has none: the account page lists the same links.</p>
+    <p class="small muted">The website's pages end with the footer (includes/_footer.html). The app has none: the account page ends with it, flush with its cards.</p>
     <div class="card">
       <footer class="site-footer">
         <nav class="site-footer__links" aria-label="Sample"><a href="#ds-footer">Links</a><a href="#ds-footer">that wrap</a><a href="#ds-footer">44px to tap</a></nav>
         <p class="site-footer__legal">© The copyright line.</p>
       </footer>
     </div>
-    <ul class="site-links">
-      <li><a href="#ds-footer">The same links</a></li>
-      <li><a href="#ds-footer">one to a row</a></li>
-    </ul>
+    <footer class="site-footer site-footer--flush">
+      <nav class="site-footer__links" aria-label="Sample, flush"><a href="#ds-footer">Flush</a><a href="#ds-footer">on the account page</a></nav>
+      <p class="site-footer__legal">© The copyright line.</p>
+    </footer>
   </section>
 
   <section class="heading" aria-labelledby="ds-tour">

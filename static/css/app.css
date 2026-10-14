@@ -290,6 +290,13 @@ textarea {
   gap: var(--space-md);
 }
 
+/* A card's own heading, under the page's title: "Passkeys", "Have a passkey?". */
+.card__title {
+  font-size: var(--type-lg);
+  line-height: 28px;
+  font-weight: 600;
+}
+
 .list {
   list-style: none;
   margin: 0;
@@ -306,6 +313,12 @@ textarea {
   gap: var(--space-md);
   min-height: 48px;
   padding: var(--space-sm) var(--space-lg);
+}
+
+/* A row in a padded card lines up with the card's other content. */
+.row--flush {
+  padding-left: 0;
+  padding-right: 0;
 }
 
 .row--link {
@@ -2069,22 +2082,11 @@ a.mday.mday--in.mday--picked:hover {
   color: var(--text-2);
 }
 
-/* The same links on the app's account page, one to a row. */
-.site-links {
-  list-style: none;
+/* The footer ending the account page, lined up with its cards. */
+.site-footer--flush {
   margin: 0;
-  padding: 0;
-}
-
-.site-links li + li {
-  border-top: 1px solid var(--rule);
-}
-
-.site-links a {
-  min-height: 44px;
-  display: flex;
-  align-items: center;
-  color: var(--text-1);
+  padding-left: 0;
+  padding-right: 0;
 }
 
 .prose h1 {
