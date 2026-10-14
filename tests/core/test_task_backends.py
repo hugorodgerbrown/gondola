@@ -29,6 +29,12 @@ def note_thread() -> None:
 
 
 @task()
+def note_caller() -> None:
+    """Record the thread this task ran on, at once."""
+    seen["caller"] = threading.current_thread()
+
+
+@task()
 def fail() -> None:
     """Fail, as a send to an unreachable mail relay would."""
     raise ConnectionRefusedError("mail relay unreachable")
@@ -87,6 +93,18 @@ def test_a_failed_task_is_logged(caplog: pytest.LogCaptureFixture) -> None:
     [record] = [r for r in caplog.records if r.levelno == logging.ERROR]
     assert record.exc_info
     assert "mail relay unreachable" in caplog.text
+
+
+def test_a_task_past_the_limit_runs_in_the_caller(monkeypatch: pytest.MonkeyPatch) -> None:
+    """With every thread slot taken, the task runs before enqueue returns, on no new thread."""
+    monkeypatch.setattr("apps.core.task_backends._slots", threading.BoundedSemaphore(1))
+    held = note_thread.enqueue()
+    result = note_caller.enqueue()
+    assert result.status == TaskResultStatus.SUCCESSFUL
+    assert seen["caller"] is threading.current_thread()
+    assert [t.name for t in started] == [f"task-{held.id}"]
+    release.set()
+    join(f"task-{held.id}")
 
 
 @pytest.mark.django_db
