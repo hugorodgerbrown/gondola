@@ -2082,11 +2082,22 @@ a.mday.mday--in.mday--picked:hover {
   color: var(--text-2);
 }
 
-/* The footer ending the account page, lined up with its cards. */
-.site-footer--flush {
+/* The same links on the app's account page, which has no footer: in a
+   row that wraps, 44px tall to tap. */
+.site-links {
+  list-style: none;
   margin: 0;
-  padding-left: 0;
-  padding-right: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 var(--space-lg);
+}
+
+.site-links a {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  color: var(--text-1);
 }
 
 .prose h1 {

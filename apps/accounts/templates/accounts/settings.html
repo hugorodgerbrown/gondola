@@ -70,8 +70,17 @@
     </form>
   </section>
   <p class="small"><a class="muted" href="{% url 'accounts:delete' %}">Delete your account</a>{% if user.is_staff %} · <a class="muted" href="{% url 'design:index' %}">Design system</a>{% endif %}</p>
-  {# Pages under /app/ have no footer, so the website's footer ends this one (Titan DESIGN.md, "The page frame"). #}
-  {% include "includes/_footer.html" with flush=True %}
+  {# The app has no footer, so the website footer's links are here, as the page's own content (Titan DESIGN.md, "The page frame"). #}
+  <section class="stack stack--tight" aria-label="About {{ SITE_NAME }}">
+    <ul class="site-links">
+      <li><a href="{% url 'public:home' %}">About</a></li>
+      <li><a href="{% url 'public:help' %}">Help</a></li>
+      <li><a href="{% url 'public:home' %}#ask">Use with Claude</a></li>
+      <li><a href="{% url 'public:terms' %}">Terms</a></li>
+      <li><a href="{% url 'public:privacy' %}">Privacy</a></li>
+    </ul>
+    <p class="small muted">© {% now "Y" %} ultraniche.ai</p>
+  </section>
 {% endblock %}
 {% block scripts %}
   <script src="{% static 'js/webauthn_json.js' %}"></script>

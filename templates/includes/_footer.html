@@ -1,5 +1,5 @@
-{# The website's footer: links and the copyright, nothing else (Titan DESIGN.md, "The page frame"). Pages under /app/ have none: the account page ends with it, flush with its cards. #}
-<footer class="site-footer{% if flush %} site-footer--flush{% endif %}">
+{# The website's footer: links and the copyright, nothing else (Titan DESIGN.md, "The page frame"). Pages under /app/ have none: the account page lists the same links. #}
+<footer class="site-footer">
   <nav class="site-footer__links" aria-label="Site">
     <a href="{% url 'public:home' %}">About</a>
     <a href="{% url 'public:help' %}">Help</a>
