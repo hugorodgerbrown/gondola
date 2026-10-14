@@ -44,8 +44,8 @@ e2e = [
 ]
 dev = [
     "pre-commit>=4.6.1,<5",
-    "tox>=4.52.1,<5",
-    "tox-uv>=1.0,<2",
+    "tox>=4.65.3,<5",
+    "tox-uv>=1.37.0,<2",
     {include-group = "test"},
     {include-group = "lint"},
     {include-group = "types"},
