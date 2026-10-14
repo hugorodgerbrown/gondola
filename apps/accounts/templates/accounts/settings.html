@@ -40,7 +40,7 @@
             </span>
             <form method="post" action="{% url 'accounts:passkey_delete' passkey.uuid %}">
               {% csrf_token %}
-              <button type="submit" class="button button--secondary button--small" aria-label="Remove {{ passkey.name }}">Remove</button>
+              <button type="submit" class="button button--secondary" aria-label="Remove {{ passkey.name }}">Remove</button>
             </form>
           </li>
         {% endfor %}
