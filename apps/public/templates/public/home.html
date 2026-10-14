@@ -5,15 +5,14 @@
 {% block content %}
   {% url 'planning:group_list' as groups_url %}
   {# Signed in, the page changes its offer, not its shape: both actions open the app. #}
-  {% if user.is_authenticated %}{% url 'planning:map' as action_url %}{% else %}{% url 'accounts:sign_in' as sign_in_url %}{% endif %}
   <section class="splash">
     <span class="eyebrow">For skiing with friends</span>
     <h1 class="splash__title">Ski the same mountain.</h1>
     <p class="splash__lede">Say which resort you'll be in. See which friends will be there, weeks before the group chat works it out.</p>
     {% if user.is_authenticated %}
-      <a class="button button--block button--light" href="{{ action_url }}">Open the app</a>
+      <a class="button button--block button--light" href="{% url 'planning:map' %}">Open the app</a>
     {% else %}
-      <a class="button button--block button--light" href="{{ sign_in_url }}?next={{ groups_url|urlencode:'' }}">Start a group</a>
+      <a class="button button--block button--light" href="{% url 'accounts:sign_in' %}?next={{ groups_url|urlencode:'' }}">Start a group</a>
       <p class="splash__note">Free. Sign in with your email, no password.</p>
     {% endif %}
     <svg class="splash__ridge" viewBox="0 0 412 64" preserveAspectRatio="none" aria-hidden="true"><path d="M0 64V40l58-24 38 16 54-28 54 34 42-16 54 22 52-30 60 22v28z"/></svg>
@@ -62,9 +61,9 @@
   <section class="stack centred">
     <h2 class="title">Your season, in one place</h2>
     {% if user.is_authenticated %}
-      <a class="button button--block" href="{{ action_url }}">Open the app</a>
+      <a class="button button--block" href="{% url 'planning:map' %}">Open the app</a>
     {% else %}
-      <a class="button button--block" href="{{ sign_in_url }}?next={{ groups_url|urlencode:'' }}">Start a group</a>
+      <a class="button button--block" href="{% url 'accounts:sign_in' %}?next={{ groups_url|urlencode:'' }}">Start a group</a>
     {% endif %}
   </section>
 {% endblock %}
