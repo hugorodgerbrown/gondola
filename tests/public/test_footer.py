@@ -24,6 +24,7 @@ def test_public_pages_end_with_the_footer(client: Client, name: str) -> None:
 def test_the_account_page_lists_the_links(signed_in: Client) -> None:
     """The app has no footer, so its links and the copyright are on the account page."""
     content = signed_in.get(reverse("accounts:settings")).content.decode()
+    assert "<footer" not in content
     assert 'class="site-links"' in content
     for link in LINKS:
         assert f'href="{reverse(link)}"' in content
