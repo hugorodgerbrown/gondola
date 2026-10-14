@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load static %}
+{% load static site_footer %}
 {% block title %}Account · {{ SITE_NAME }}{% endblock %}
 {% block content %}
   <section class="card card--padded" aria-labelledby="account-heading">
@@ -70,16 +70,9 @@
     </form>
   </section>
   <p class="small"><a class="muted" href="{% url 'accounts:delete' %}">Delete your account</a>{% if user.is_staff %} · <a class="muted" href="{% url 'design:index' %}">Design system</a>{% endif %}</p>
-  {# The app has no footer, so the website footer's links are here, as the page's own content (Titan DESIGN.md, "The page frame"). #}
+  {# The app has no footer, so the website's links are here, as the page's own content (Titan DESIGN.md §8). #}
   <section class="stack stack--tight" aria-label="About {{ SITE_NAME }}">
-    <ul class="site-links">
-      <li><a href="{% url 'public:home' %}">About</a></li>
-      <li><a href="{% url 'public:help' %}">Help</a></li>
-      <li><a href="{% url 'public:home' %}#ask">Use with Claude</a></li>
-      <li><a href="{% url 'public:terms' %}">Terms</a></li>
-      <li><a href="{% url 'public:privacy' %}">Privacy</a></li>
-    </ul>
-    <p class="small muted">© {% now "Y" %} ultraniche.ai</p>
+    {% site_links %}
   </section>
 {% endblock %}
 {% block scripts %}

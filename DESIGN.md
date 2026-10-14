@@ -5,8 +5,8 @@ file is the part they share: the rules every one of those design systems
 follows. It comes from the
 [django-titan-template](https://github.com/hugorodgerbrown/django-titan-template);
 change it there, not here, so `copier update` keeps every app on the same
-rules. `tests/test_design.py` checks each rule it can, and fails the build
-when one is broken.
+rules. `tests/test_design.py` and `tests/design/` check each rule they can,
+and fail the build when one is broken.
 
 ## 1. There is a design system, and it is in the code
 
@@ -115,3 +115,99 @@ raising the limit; a limit changes here, for every app, or not at all.
 - Focus is visible on everything that takes it.
 - Colour is never the only signal: a state also changes a shape, an icon
   or a word.
+
+## 8. The website has a footer; the app has its links
+
+Every public page (`public_base.html`) ends with the site footer, the
+`{% site_footer %}` tag: links to at least Help, Terms and Privacy, then
+`© <this year> <holder>. All rights reserved.` Nothing else: the header
+already names the site.
+
+The installed app (`base.html`, under `/app/`) has no footer: it is an
+app, not a website. Its account page, behind the header's account link,
+lists the same links and copyright with `{% site_links %}`.
+
+The holder and the links are set in `apps/public/conf.py`; the markup and
+styles are the shared component. `tests/public/test_footer.py` checks both.
+
+## 9. The top-left mark always goes home
+
+The site's name or icon at the top left links to the front page
+(`public:home`) on every page, public or signed in. Nothing else (the
+app's first screen, the account page) takes that place; the app's own
+navigation does that job.
+
+## 10. Mobile first
+
+A Titan app is used on a phone, in one hand, more than anywhere else.
+Design every screen for that first; a wider screen gets more room, never
+more features.
+
+- **The base styles are the phone's.** A wider screen is added with
+  `@media (min-width: …)`; nothing is taken away with `max-width`.
+- **Nothing hides behind hover.** A phone has none, so anything shown on
+  hover is also there, or one tap away, without it. Hover only tints.
+- **Fit the screen.** Every page has the viewport meta from
+  `_head.html`, and an edge fixed to the screen keeps clear of the notch
+  and the home bar with `env(safe-area-inset-*)`.
+- Tap targets are 44px (section 7), and the main action on a screen sits
+  where a thumb reaches it.
+
+## 11. Design for offline
+
+The signal drops in a lift, a tunnel or on a train. The app (everything
+under `/app/`) carries on without it.
+
+- **The shell opens offline.** Every script and stylesheet a page under
+  `/app/` loads is precached (`apps/pwa/conf.py: PRECACHE_STATIC`). One
+  that only works with the network anyway (passkeys) is listed in
+  `apps/design/conf.py: NEEDS_NETWORK` with the reason.
+- **Writes never fail for want of a signal.** They go through the outbox:
+  saved on the device, shown as waiting, sent when the network is back.
+- **Say what's offline.** The page frame has the offline banner. Something
+  that can't work offline says so where it is, rather than failing
+  silently or spinning.
+- **Nothing a page needs comes from another origin.** No third-party
+  fonts, scripts or stylesheets: they wouldn't be there offline, and the
+  CSP blocks them. Analytics are the one exception, and a page works
+  without them.
+
+## 12. The front page
+
+Every Titan app's front page (`public/home.html`) has the same anatomy, so
+a visitor who has seen one knows where to look on the next. Gondola's is
+the model. From top to bottom:
+
+| # | Section | | What it holds |
+| --- | --- | --- | --- |
+| 1 | Header | required | The icon and name, linking home (§9), and one link on the right: **Sign in**, or **Open the app** when signed in. No avatar and no menu: the account page is inside the app, and the other pages are in the footer. |
+| 2 | Proposition | required | An eyebrow if it helps, then the H1, which is the promise, not the app's name (the header already says that). One sentence of lede, then **one** primary action named for the first job ("Start a group", not "Create an account"). Under it, a note that removes the doubt ("Free. Sign in with your email, no password."). |
+| 3 | The product, live | required | The app's own component, drawn by the real CSS with demo data, and a one-line caption saying how to read it. |
+| 4 | How it works | optional | Three tiles, each an icon, a verb and one line. |
+| 5 | From your AI chat | required with MCP | An eyebrow and H2, then a short sample chat (ask, answer, act) and "Try asking" with three or four prompts. Then the `/mcp` address with a copy button, a link to the steps on the help page, and what stays private, said plainly. |
+| 6 | Facts | optional | Three true numbers, each removing a doubt ("0 passwords"). |
+| 7 | Closing action | required | The promise in other words, and the same primary action again, for whoever scrolled to the end. |
+| 8 | Footer | required | §8. Any data credit a source asks for sits above the copyright. |
+
+The rules behind it:
+
+- **One way in.** Signing in creates the account, so there is no separate
+  sign-up button. The primary action goes to sign in with `?next=` set to
+  the first job's page; "Sign in" lives in the header only.
+- **Signed in, the page changes its offer, not its shape.** The header link
+  and both primary actions become **Open the app**.
+- **Show the product, never a picture of it.** Demo data, not live data: a
+  live feed can be empty (no trains at 3am) or wrong, and a screenshot
+  goes stale, blurs on a phone and doesn't work in dark mode.
+- **The connector steps live on the help page**, in the "Use it from
+  Claude or ChatGPT" section (`#use-with-ai`) that every Titan app shares.
+  The front page links there and to nothing else for setup; the footer
+  links there as "Use with Claude".
+- **Every public page unfurls.** `public_base.html` sets the Open Graph and
+  Twitter tags, but not `og:url`: the chat already has the link, and a
+  sign-in link's address is its token. A page names its own `share_title` and `share_description`
+  blocks; the front page uses the promise and the lede. The share card,
+  `static/img/share-card.png`, is 1200×630 and shows the proposition and
+  the product side by side, so a link pasted in a chat looks like the
+  page it opens. `bin/make-icons` draws a placeholder; replace it before
+  launch.

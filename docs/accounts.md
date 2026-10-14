@@ -34,6 +34,7 @@ Titan template; the differences are at the bottom.
 | `apps/accounts/services.py` | The evening email's opt-out link |
 | `apps/core/redirects.py` | `safe_next`: only same-site paths survive |
 | `static/js/passkeys.js`, `webauthn_json.js` | The browser side of both ceremonies |
+| `static/js/code_input.js` | The code as six digit boxes; a pasted or autofilled code fills them all |
 | `apps/core/ratelimit.py` | Cache-backed limits on emails, codes and passkey challenges |
 
 ## Signing in by email
@@ -54,6 +55,11 @@ Titan template; the differences are at the bottom.
   request's uuid, so a code is useless in another browser, and five wrong
   codes (`SIGN_IN_MAX_CODE_ATTEMPTS`) end it. That is what makes six digits
   enough.
+- **Six boxes, one field.** `code_input.js` shows the code as six digit
+  boxes: typing moves on, Backspace goes back, and pasting the code (or
+  iPhone's one-time-code autofill) into any box fills all six and submits.
+  Underneath it is still the one `code` field, which is all a browser
+  without JavaScript sees.
 - **The link page needs a click.** Mail scanners open links to check them;
   a link that signed in on GET would be used up before the person saw it.
 - **No enumeration.** The form answers the same whether or not the address
@@ -106,8 +112,11 @@ nothing uses), or tick Staff on an existing account.
 Sent through `MAILERS["default"]`: the console in development, SMTP in
 production (`EMAIL_HOST`, `EMAIL_PORT`, `EMAIL_HOST_USER`,
 `EMAIL_HOST_PASSWORD`, `DEFAULT_FROM_EMAIL`). Views only enqueue
-`send_sign_in_email`; `TASKS` uses the immediate backend, which runs it in
-the request. Swap in a queue-backed backend and a worker when volume needs it.
+`send_sign_in_email`; `TASKS` uses `apps.core.task_backends.ThreadBackend`,
+which sends it on a thread of its own, so the page answers while the mail
+relay is still talking. A failed send is logged (`django.tasks`, ERROR).
+Tests run tasks inline, so mail is in the outbox before the response. Swap in
+a queue-backed backend and a worker when volume needs it.
 
 `purge_sign_in_requests --commit` deletes expired requests; it runs on each
 deploy (render.yaml).

@@ -19,7 +19,8 @@
   function enhance(input) {
     const form = input.form;
     const length = Number(input.dataset.codeLength) || 6;
-    const label = input.id ? document.querySelector('label[for="' + input.id + '"]') : null;
+    const label =
+      (input.id && document.querySelector('label[for="' + input.id + '"]')) || input.closest('label');
     const group = document.createElement('div');
     group.className = 'code-boxes';
     group.setAttribute('role', 'group');

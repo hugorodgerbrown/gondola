@@ -1,10 +1,13 @@
 """Tests for apps.public.views: the homepage, terms, privacy and help."""
 
+import re
 from typing import Any
 
 import pytest
 from django.test import Client
 from django.urls import reverse
+
+from apps.public import views
 
 pytestmark = pytest.mark.django_db
 
@@ -64,12 +67,67 @@ def test_home_gives_the_mcp_connector_address(client: Client, settings: Any) -> 
     assert 'data-copy="https://gondola.example/mcp"' in content
 
 
-def test_home_shows_when_signed_in(signed_in: Client) -> None:
-    """Signed in, the front page still shows, and its topbar offers the app."""
-    response = signed_in.get(reverse("public:home"))
-    assert response.status_code == 200
-    assert b"Start a group" in response.content
-    assert reverse("planning:map").encode() in response.content
+def primary_actions(content: str) -> list[tuple[str, str]]:
+    """The front page's primary actions, as (href, label): the block buttons."""
+    pattern = r'<a class="button button--block[^"]*" href="([^"]*)">([^<]*)</a>'
+    return [(match[1], match[2]) for match in re.finditer(pattern, content)]
+
+
+def test_home_has_one_promise(client: Client) -> None:
+    """One H1, and it is the promise, not the app's name (the header says that)."""
+    content = client.get(reverse("public:home")).content.decode()
+    assert content.count("<h1") == 1
+    assert '<h1 class="splash__title">Ski the same mountain.</h1>' in content
+
+
+def test_home_offers_one_way_in(client: Client) -> None:
+    """Signed out, both primary actions sign in and land on the groups, to start one."""
+    content = client.get(reverse("public:home")).content.decode()
+    groups = reverse("planning:group_list").replace("/", "%2F")
+    first_job = f"{reverse('accounts:sign_in')}?next={groups}"
+    assert primary_actions(content) == [(first_job, "Start a group")] * 2
+    assert "Create an account" not in content
+
+
+def test_home_opens_the_app_when_signed_in(signed_in: Client) -> None:
+    """Signed in, the page changes its offer, not its shape: everything opens the app."""
+    content = signed_in.get(reverse("public:home")).content.decode()
+    assert primary_actions(content) == [(reverse("planning:map"), "Open the app")] * 2
+    header = content[content.index("<header") : content.index("</header>")]
+    assert "Open the app" in header
+    assert "Sign in" not in content
+    assert "Start a group" not in content
+
+
+def test_home_links_to_the_connector_steps(client: Client) -> None:
+    """The steps for Claude and ChatGPT live on the help page; the front page links there."""
+    content = client.get(reverse("public:home")).content.decode()
+    assert f'href="{reverse("public:help")}#use-with-ai"' in content
+
+
+def test_home_leaves_the_connector_out_without_mcp(client: Client, monkeypatch: Any) -> None:
+    """With no /mcp to add, the AI-chat section goes."""
+    monkeypatch.setattr(views, "mcp_url", lambda: "")
+    content = client.get(reverse("public:home")).content.decode()
+    assert 'class="chat"' not in content
+    assert "data-copy" not in content
+
+
+def test_help_gives_the_steps_for_claude_and_chatgpt(client: Client, settings: Any) -> None:
+    """The steps every Titan app shares, around the address to copy."""
+    settings.SITE_URL = "https://gondola.example"
+    content = client.get(reverse("public:help")).content.decode()
+    assert 'id="use-with-ai"' in content
+    assert "<h3>Claude</h3>" in content
+    assert "<h3>ChatGPT</h3>" in content
+    assert 'data-copy="https://gondola.example/mcp"' in content
+
+
+def test_help_leaves_the_steps_out_without_mcp(client: Client, monkeypatch: Any) -> None:
+    """No connector, no steps."""
+    monkeypatch.setattr(views, "mcp_url", lambda: "")
+    content = client.get(reverse("public:help")).content.decode()
+    assert 'id="use-with-ai"' not in content
 
 
 APP_PAGES = ["accounts:settings", "planning:calendar", "planning:group_list", "planning:map"]

@@ -140,6 +140,30 @@ never `id`, in URLs and anything a client sees.
 Run with no arguments, change nothing without `--commit`, respect
 `--verbosity`, and exit non-zero on any failure.
 
+## Linear
+
+Every Titan app has a Linear project, Gondola, in the Titan
+team (issue keys `RAS-`), and every change maps to an issue there: one
+issue per PR, one PR per issue. Why:
+[docs/decisions/every-change-starts-as-a-linear-issue.md](docs/decisions/every-change-starts-as-a-linear-issue.md).
+
+- If the project doesn't exist yet (a new app), create it in the Titan
+  team first, named after the app, then file the first issue in it.
+- The issue is the sign-off. Before writing code, Claude creates it in
+  the app's project with the scope: what changes, what doesn't, how
+  we'll know it's done, and the decision behind it. Work starts once the
+  person agrees the scope, not before.
+- If the scope changes during the work, say so on the issue before the
+  PR goes up, so the issue records what was built and why.
+- The PR title is `RAS-42: what it does` and its body starts
+  `Closes RAS-42`, so Linear links the two and closes the issue on merge.
+- Reversing an earlier decision is a new issue that links the old one
+  and says why it changed. Never rewrite the old issue: the history is
+  the point.
+- Dependabot's PRs are the one exception: they need no issue.
+- Without the Linear MCP server, say so and give the issue as Markdown
+  for the person to file; don't start unticketed work.
+
 ## Tests
 
 pytest + FactoryBoy (`tests/` mirrors `apps/`), Vitest for `static/js`
@@ -150,8 +174,22 @@ rules: [docs/testing.md](docs/testing.md).
 
 ## Before opening a PR
 
-Run `uv run tox` and fix every failure; it is exactly what CI runs.
-Record a non-obvious architectural choice in `docs/decisions/`.
+Run `uv run tox` and fix every failure; it is exactly what CI runs. Check the PR names its Linear
+issue (above). Record a non-obvious architectural choice in
+`docs/decisions/`.
+
+## Invariants
+
+1. No `mark_safe()` / `|safe` on content from outside the code.
+2. No inline script, style or event handler in a template.
+3. Every fragment view is `@require_htmx`; every outbox endpoint is
+   `@login_required_json`.
+4. No secrets in source.
+5. Email addresses are lower-cased before storage and lookup.
+6. Sign-in secrets (link tokens, codes) are stored only as hashes and
+   never logged.
+7. Who may connect an MCP client (`apps/mcp/policy.py`) only widens in a PR
+   that says so.
 
 ## Dependencies
 

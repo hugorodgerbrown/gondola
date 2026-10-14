@@ -8,11 +8,11 @@ import calendar
 import datetime
 from typing import Any
 
-from django.conf import settings
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import render
-from django.urls import reverse
 from django.views.decorators.http import require_GET
+
+from apps.public.connector import mcp_url
 
 # The front page's made-up month: day -> (kind, friends, resort code). "in" is
 # a day you said (blue); "friends" a day you haven't, where your group will be
@@ -62,8 +62,7 @@ def home(request: HttpRequest) -> HttpResponse:
     Signed in, it shows too (the account page links to it); its topbar then
     offers the app, and Start a group goes straight to the groups.
     """
-    mcp_url = settings.SITE_URL + reverse("mcp")
-    context = {"mcp_url": mcp_url, "demo_month": DEMO_MONTH, "demo_weeks": demo_weeks()}
+    context = {"mcp_url": mcp_url(), "demo_month": DEMO_MONTH, "demo_weeks": demo_weeks()}
     return render(request, "public/home.html", context)
 
 
@@ -81,5 +80,5 @@ def privacy(request: HttpRequest) -> HttpResponse:
 
 @require_GET
 def help_page(request: HttpRequest) -> HttpResponse:
-    """Help: signing in, passkeys, groups, days, installing the app, offline."""
-    return render(request, "public/help.html")
+    """Help: signing in, passkeys, groups, days, the app, offline and AI chats."""
+    return render(request, "public/help.html", {"mcp_url": mcp_url()})

@@ -2111,8 +2111,14 @@ a.mday.mday--in.mday--picked:hover {
   margin: var(--space-2xl) 0 0;
 }
 
+.prose h3 {
+  font-size: var(--type-md);
+  margin: var(--space-lg) 0 0;
+}
+
 .prose p,
-.prose ul {
+.prose ul,
+.prose ol {
   margin: var(--space-sm) 0 0;
 }
 

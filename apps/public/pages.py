@@ -17,6 +17,7 @@ from django.template.loader import render_to_string
 from django.urls import reverse
 
 from apps.core.analytics import SCRIPT
+from apps.public.connector import mcp_url
 from apps.pwa.context_processors import identity
 
 
@@ -43,6 +44,7 @@ def page_as_markdown(name: str) -> dict[str, str]:
     context = {
         "pwa": identity(),
         "analytics": {"domain": settings.FIVEBAR_DOMAIN, "script": SCRIPT, "path": ""},
+        "mcp_url": mcp_url(),
     }
     html = render_to_string(page.template, context)
     return {
@@ -56,7 +58,8 @@ def to_markdown(html: str) -> str:
     """Convert the small HTML the public pages use to Markdown.
 
     Headings, paragraphs, lists, bold and links: anything else keeps only
-    its text. Relative links become absolute, against ``SITE_URL``.
+    its text, and buttons (a page's copy buttons) drop out. Relative links
+    become absolute, against ``SITE_URL``.
     """
     parser = _MarkdownParser()
     parser.feed(html)
@@ -74,10 +77,13 @@ class _MarkdownParser(HTMLParser):
         self.blocks: list[str] = []
         self.current: list[str] | None = None
         self.href: str | None = None
+        self.in_button = False
 
     def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
         """Open a block, or mark up text inside one."""
-        if tag in self._BLOCKS:
+        if tag == "button":
+            self.in_button = True
+        elif tag in self._BLOCKS:
             self.current = [self._BLOCKS[tag]]
         elif tag in ("strong", "b") and self.current is not None:
             self.current.append("**")
@@ -87,6 +93,9 @@ class _MarkdownParser(HTMLParser):
 
     def handle_endtag(self, tag: str) -> None:
         """Close a block, or the markup inside one."""
+        if tag == "button":
+            self.in_button = False
+            return
         if self.current is None:
             return
         if tag in self._BLOCKS:
@@ -102,7 +111,7 @@ class _MarkdownParser(HTMLParser):
 
     def handle_data(self, data: str) -> None:
         """Keep text that sits inside a block."""
-        if self.current is not None:
+        if self.current is not None and not self.in_button:
             self.current.append(data)
 
     def markdown(self) -> str:

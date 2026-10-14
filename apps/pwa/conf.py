@@ -38,6 +38,7 @@ PRECACHE_STATIC = [
     "js/pwa.js",
     "js/app.js",
     "js/plans.js",
+    "js/day_select.js",
     "icons/icon-192.png",
     "img/logo.svg",
 ]

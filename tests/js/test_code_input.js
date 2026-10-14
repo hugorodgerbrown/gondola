@@ -57,6 +57,13 @@ describe('code boxes', () => {
     expect(submitted).not.toHaveBeenCalled();
   });
 
+  it('points a wrapping label at the first box', () => {
+    document.body.innerHTML = `
+      <form><label>Code <input id="wrapped" type="text" name="code" data-code-input></label></form>`;
+    const wrapped = CodeInput.enhance(document.getElementById('wrapped'));
+    expect(document.querySelector('label').htmlFor).toBe(wrapped[0].id);
+  });
+
   it('holds back a short code and goes to the first empty box', () => {
     type(boxes[0], '1');
     const event = new Event('submit', { cancelable: true });

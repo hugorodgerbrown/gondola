@@ -1,9 +1,8 @@
 """apps/accounts/tasks.py — Background tasks for accounts: the sign-in email.
 
 Views enqueue; they never send mail themselves, so a slow mail server
-can't hold a request (``settings.TASKS`` chooses where the task runs).
-Ported from the Titan template, with Gondola's HTML email alongside the
-text one.
+can't hold a request (settings.TASKS chooses where the task runs: on a
+thread of its own, apps.core.task_backends.ThreadBackend).
 """
 
 from django.conf import settings

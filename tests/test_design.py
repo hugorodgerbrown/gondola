@@ -184,6 +184,17 @@ def test_shadows_are_tokens_or_rings() -> None:
     assert not found, "use a --shadow-* token: " + "; ".join(found)
 
 
+# --- Mobile first -----------------------------------------------------------
+
+
+def test_wider_screens_add_rather_than_narrow_ones_take_away() -> None:
+    """The base styles are the phone's: a media query adds min-width, never max-width."""
+    found = sorted(
+        {at for d in DECLARATIONS for at in d.context if re.search(r"max-(?:device-)?width", at)}
+    )
+    assert not found, "write the phone's styles first, then add min-width: " + "; ".join(found)
+
+
 # --- Limits --------------------------------------------------------------
 
 
