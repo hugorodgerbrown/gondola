@@ -1,12 +1,20 @@
 {% extends "public_base.html" %}
+{# The front page, in the shape every Titan app shares (Titan DESIGN.md §12). Gondola is the model for it. #}
+{% block share_title %}Ski the same mountain.{% endblock %}
+{% block share_description %}Say which resort you'll be in. See which friends will be there, weeks before the group chat works it out.{% endblock %}
 {% block content %}
   {% url 'planning:group_list' as groups_url %}
+  {# Signed in, the page changes its offer, not its shape: both actions open the app. #}
   <section class="splash">
     <span class="eyebrow">For skiing with friends</span>
     <h1 class="splash__title">Ski the same mountain.</h1>
     <p class="splash__lede">Say which resort you'll be in. See which friends will be there, weeks before the group chat works it out.</p>
-    <a class="button button--block button--light" href="{% url 'accounts:sign_in' %}?next={{ groups_url|urlencode:'' }}">Start a group</a>
-    <p class="splash__note">Free. Sign in with your email, no password.</p>
+    {% if user.is_authenticated %}
+      <a class="button button--block button--light" href="{% url 'planning:map' %}">Open the app</a>
+    {% else %}
+      <a class="button button--block button--light" href="{% url 'accounts:sign_in' %}?next={{ groups_url|urlencode:'' }}">Start a group</a>
+      <p class="splash__note">Free. Sign in with your email, no password.</p>
+    {% endif %}
     <svg class="splash__ridge" viewBox="0 0 412 64" preserveAspectRatio="none" aria-hidden="true"><path d="M0 64V40l58-24 38 16 54-28 54 34 42-16 54 22 52-30 60 22v28z"/></svg>
   </section>
 
@@ -14,10 +22,11 @@
 
   {% include "public/_how_it_works.html" %}
 
+  {% if mcp_url %}
   <section class="card card--padded" aria-labelledby="ask">
     <span class="eyebrow">Or just ask</span>
     <h2 id="ask" class="title">Plan from your AI chat</h2>
-    <p class="lede">Connect Gondola to Claude and ask in plain words. It tells you how many friends will be where, and fills in your days. Names stay in the app.</p>
+    <p class="lede">Connect Gondola to Claude or ChatGPT and ask in plain words. It tells you how many friends will be where, and fills in your days. Names stay in the app.</p>
     <div class="chat">
       <p class="chat__you">Who's in Verbier next weekend?</p>
       <p class="chat__reply">2 friends on Saturday and 3 on Sunday. Gondola keeps names private: open your calendar to see who.</p>
@@ -39,7 +48,9 @@
         <span class="copy-field__done">{% include "includes/icons/check.html" %}</span>
       </button>
     </div>
+    <p class="small"><a href="{% url 'public:help' %}#use-with-ai">How to add it to Claude or ChatGPT</a></p>
   </section>
+  {% endif %}
 
   <div class="card facts">
     <p><strong>200+</strong><span>Swiss resorts</span></p>
@@ -49,6 +60,10 @@
 
   <section class="stack centred">
     <h2 class="title">Your season, in one place</h2>
-    <a class="button button--block" href="{% url 'accounts:sign_in' %}?next={{ groups_url|urlencode:'' }}">Start a group</a>
+    {% if user.is_authenticated %}
+      <a class="button button--block" href="{% url 'planning:map' %}">Open the app</a>
+    {% else %}
+      <a class="button button--block" href="{% url 'accounts:sign_in' %}?next={{ groups_url|urlencode:'' }}">Start a group</a>
+    {% endif %}
   </section>
 {% endblock %}
