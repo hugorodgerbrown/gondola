@@ -48,7 +48,7 @@ def test_the_footer_links_to_help_terms_and_privacy() -> None:
 def test_a_link_can_name_part_of_a_page(monkeypatch: Any) -> None:
     """A "#fragment" after the URL name is kept on the link."""
     monkeypatch.setattr(conf, "LINKS", [("Use with Claude", "public:home#mcp")])
-    assert footer_links() == [("Use with Claude", reverse("public:home") + "#mcp")]
+    assert footer_links()[0] == ("Use with Claude", reverse("public:home") + "#mcp")
 
 
 @pytest.mark.parametrize("url_name", ["public:help", "accounts:settings"])
@@ -62,4 +62,15 @@ def test_the_top_left_mark_goes_home(signed_in: Client, url_name: str) -> None:
 def test_link_labels_are_escaped(monkeypatch: Any) -> None:
     """A label is text, never markup."""
     monkeypatch.setattr(conf, "LINKS", [("<b>Help</b>", "public:help")])
-    assert footer_anchors() == [f'<a href="{reverse("public:help")}">&lt;b&gt;Help&lt;/b&gt;</a>']
+    assert footer_anchors()[0] == f'<a href="{reverse("public:help")}">&lt;b&gt;Help&lt;/b&gt;</a>'
+
+
+@pytest.mark.parametrize("url_name", ["public:home", "public:help", "public:privacy"])
+def test_the_contact_address_is_on_the_footer_help_and_privacy(
+    client: Client, url_name: str
+) -> None:
+    """The footer ends with Contact; help and the privacy notice give the address too."""
+    content = client.get(reverse(url_name)).content.decode()
+    link = f'href="mailto:{conf.CONTACT_EMAIL}"'
+    assert content.count(link) == (1 if url_name == "public:home" else 2)
+    assert footer_links()[-1] == ("Contact", f"mailto:{conf.CONTACT_EMAIL}")

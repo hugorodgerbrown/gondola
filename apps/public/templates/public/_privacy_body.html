@@ -1,4 +1,5 @@
 {# The privacy notice: shared by the page and apps.public.pages (the MCP tools). #}
+{% load site_footer %}
 <p class="notice">Draft: to be reviewed before it is relied on.</p>
 <h1>Privacy notice</h1>
 <p class="meta">Last updated: 15 October 2026</p>
@@ -11,7 +12,7 @@
   <li><strong>Sign-in requests</strong>: when you ask for a sign-in email, the address, when you asked, and whether you used it, even if you never make an account. Expired requests are deleted each time we update the service.</li>
   <li><strong>Passkeys</strong>: a public key for each one you add, its name, and when it was last used. Your device keeps the private key; we never see it, or your face or fingerprint.</li>
   <li><strong>Connected apps</strong>: if you connect an assistant such as Claude, which one, and the access you gave it. You can disconnect it at any time.</li>
-  <li><strong>Server logs</strong>: the address of each page asked for and the IP address that asked, kept by our hosting provider for a limited time.</li>
+  <li><strong>Server logs</strong>: the address of each page asked for and the IP address that asked, kept by our hosting provider for 14 days.</li>
   <li><strong>Abuse limits</strong>: to stop sign-in emails being sent in bulk, a count of requests from each IP address and to each email address, stored as a one-way code and cleared within an hour.</li>
 </ul>
 <h2>On your device</h2>
@@ -28,3 +29,5 @@
 <p>The people in your groups see your name and your days. If you connect an assistant such as Claude, it receives your own days and how many of your friends will be in each resort on each day, never their names; if a friend connects one, the same goes for you. Our hosting and email providers{% if analytics.domain %}, and fivebar for visitor counts,{% endif %} process data on our behalf. Pages load their fonts from Google Fonts, and the map is drawn from swisstopo, the Swiss federal mapping service; both see your IP address and browser when they send them. We don't sell your data or share it with anyone else.</p>
 <h2>Your rights</h2>
 <p>You can delete your account from your account page. That deletes your days, takes you out of every group, disconnects any assistant you connected, and deletes the groups you started, for everyone in them. You can also ask us for a copy of your data.</p>
+<h2>Contact</h2>
+<p>Write to {% contact_link %} about your data, this notice or anything else.</p>

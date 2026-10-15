@@ -1,4 +1,4 @@
-"""``{% site_footer %}`` and ``{% site_links %}``: the site's links (apps/public/conf.py).
+"""``{% site_footer %}``, ``{% site_links %}`` and ``{% contact_link %}`` (apps/public/conf.py).
 
 The website ends with the footer; the app has none, and shows the same
 links on its account page (DESIGN.md).
@@ -21,11 +21,12 @@ register = template.Library()
 
 
 def footer_links() -> list[tuple[str, str]]:
-    """Return the footer's links as (label, URL), fragments kept."""
+    """Return the footer's links as (label, URL), fragments kept, then Contact."""
     links = []
     for label, target in conf.LINKS:
         name, _, fragment = target.partition("#")
         links.append((label, reverse(name) + (f"#{fragment}" if fragment else "")))
+    links.append(("Contact", f"mailto:{conf.CONTACT_EMAIL}"))
     return links
 
 
@@ -57,3 +58,9 @@ def site_footer() -> dict[str, Any]:
 def site_links() -> dict[str, Any]:
     """Draw the same links as a list, for the app's account page."""
     return _context()
+
+
+@register.simple_tag
+def contact_link() -> SafeString:
+    """Return the contact address as an escaped ``mailto:`` link, for page text."""
+    return format_html('<a href="mailto:{}">{}</a>', conf.CONTACT_EMAIL, conf.CONTACT_EMAIL)

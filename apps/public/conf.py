@@ -9,6 +9,9 @@ the project template from its answers; edit freely.
 # The footer's copyright line: "© <this year> <holder>. All rights reserved."
 COPYRIGHT_HOLDER = "ultraniche.ai"
 
+# Where people write to us: the footer, help and the privacy notice.
+CONTACT_EMAIL = "gondola@ultraniche.ai"
+
 # The links, in order: (label, URL name). A "#fragment" after the
 # name links to a part of that page, as "Use with Claude" does: the help
 # page's steps for Claude and ChatGPT (DESIGN.md, "The front page").
