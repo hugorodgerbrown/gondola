@@ -1,18 +1,21 @@
 {# The privacy notice: shared by the page and apps.public.pages (the MCP tools). #}
 <p class="notice">Draft: to be reviewed before it is relied on.</p>
 <h1>Privacy notice</h1>
-<p class="meta">Last updated: 13 October 2026</p>
+<p class="meta">Last updated: 15 October 2026</p>
 <h2>What we keep</h2>
 <ul>
-  <li><strong>Your email address</strong>, to identify your account and send you sign-in links and codes.</li>
+  <li><strong>Your email address</strong>, to identify your account and to email you (below).</li>
   <li><strong>Your name</strong>, as you typed it, which the people in your groups see.</li>
   <li><strong>Your groups</strong>: which you belong to and which you started.</li>
   <li><strong>Your days</strong>: which resort you said you'll be in on which day. Everyone in your groups sees them.</li>
+  <li><strong>Sign-in requests</strong>: when you ask for a sign-in email, the address, when you asked, and whether you used it, even if you never make an account. Expired requests are deleted each time we update the service.</li>
   <li><strong>Passkeys</strong>: a public key for each one you add, its name, and when it was last used. Your device keeps the private key; we never see it, or your face or fingerprint.</li>
   <li><strong>Connected apps</strong>: if you connect an assistant such as Claude, which one, and the access you gave it. You can disconnect it at any time.</li>
+  <li><strong>Server logs</strong>: the address of each page asked for and the IP address that asked, kept by our hosting provider for a limited time.</li>
+  <li><strong>Abuse limits</strong>: to stop sign-in emails being sent in bulk, a count of requests from each IP address and to each email address, stored as a one-way code and cleared within an hour.</li>
 </ul>
 <h2>On your device</h2>
-<p>The app stores pages you've opened, so they open without a connection. Signing out removes them.</p>
+<p>The app keeps copies of pages you've opened, so they open without a connection, and any change you make offline until it's sent. Signing out removes the copies of your pages. A change not yet sent stays on the device, and is sent only if you sign back in.</p>
 <h2>Cookies</h2>
 <p>One cookie keeps you signed in, and one protects forms from forgery. There are no analytics or advertising cookies.</p>
 {% if analytics.domain %}
@@ -20,8 +23,8 @@
 <p>We count visits with <strong>fivebar</strong>, which sets no cookies. For each page you open it receives the page, the page you came from, your browser, device type and country, and a few events such as creating an account. It keeps daily totals only, which can't be traced back to you; your IP address and browser details tell visitors apart for one day and are not kept. Addresses that hold an invite, a sign-in link or a group are counted without it. See <a href="https://fiveb.ar/privacy">fivebar's privacy policy</a>.</p>
 {% endif %}
 <h2>Emails</h2>
-<p>We email you the sign-in links and codes you ask for, and, unless you turn it off, a note the evening before a day you have plans, saying where your friends will be. Every evening email has a link to stop them.</p>
+<p>We email you the sign-in links and codes you ask for. Unless you turn it off, we may also send a note the evening before a day you have plans, saying where your friends will be. Every evening email has a link to stop them.</p>
 <h2>Who else sees it</h2>
-<p>The people in your groups see your name and your days. If you connect an assistant such as Claude, it receives your own days and how many of your friends will be in each resort on each day, never their names; if a friend connects one, the same goes for you. Our hosting and email providers{% if analytics.domain %}, and fivebar for visitor counts,{% endif %} process data on our behalf. We don't sell it or share it with anyone else.</p>
+<p>The people in your groups see your name and your days. If you connect an assistant such as Claude, it receives your own days and how many of your friends will be in each resort on each day, never their names; if a friend connects one, the same goes for you. Our hosting and email providers{% if analytics.domain %}, and fivebar for visitor counts,{% endif %} process data on our behalf. Pages load their fonts from Google Fonts, and the map is drawn from swisstopo, the Swiss federal mapping service; both see your IP address and browser when they send them. We don't sell your data or share it with anyone else.</p>
 <h2>Your rights</h2>
-<p>You can delete your account from your account page, which deletes your days and the groups you started. You can also ask us for a copy of your data.</p>
+<p>You can delete your account from your account page. That deletes your days, takes you out of every group, disconnects any assistant you connected, and deletes the groups you started, for everyone in them. You can also ask us for a copy of your data.</p>
