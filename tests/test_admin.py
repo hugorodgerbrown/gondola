@@ -10,6 +10,7 @@ from tests.factories import (
     MembershipFactory,
     PasskeyFactory,
     PlanDayFactory,
+    ReviewerAccountFactory,
     SignInRequestFactory,
     UserFactory,
 )
@@ -32,11 +33,12 @@ def staff_client(client: Client) -> Client:
     PlanDayFactory.create()
     PasskeyFactory.create()
     SignInRequestFactory.create()
+    ReviewerAccountFactory.create()
     return client
 
 
 def test_every_app_model_is_registered() -> None:
-    assert len(MODELS) == 8
+    assert len(MODELS) == 9
 
 
 @pytest.mark.django_db

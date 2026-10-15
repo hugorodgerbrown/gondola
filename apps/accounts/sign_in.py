@@ -20,7 +20,7 @@ from django.db.models import F
 from django.utils import timezone
 from django.utils.crypto import salted_hmac
 
-from apps.accounts.models import SignInRequest, User, normalise_email
+from apps.accounts.models import ReviewerAccount, SignInRequest, User, normalise_email
 from apps.core.tokens import make_token
 
 logger = logging.getLogger(__name__)
@@ -40,17 +40,27 @@ def _hash_code(request_uuid: str, code: str) -> str:
     ).hexdigest()
 
 
+def reviewer_code(email: str) -> str | None:
+    """Return the fixed code if ``email`` is a reviewer account's, else None.
+
+    Reviewers have no inbox to read, so their address is sent no email and
+    signs in with the code staff set up in the admin (see docs/accounts.md).
+    """
+    return ReviewerAccount.objects.for_email(email).values_list("code", flat=True).first()
+
+
 def issue(email: str, next_url: str = "") -> tuple[SignInRequest, str, str]:
     """Create a sign-in request for ``email``; return it with its link token and code.
 
     Earlier unused requests for the same address stop working, so only the
     newest email in someone's inbox signs them in. The database allows one
     unused request per address: when two are issued at once, the loser of
-    that race retries, closing the winner's request in turn.
+    that race retries, closing the winner's request in turn. A reviewer
+    account's address gets its fixed code (``reviewer_code``).
     """
     email = normalise_email(email)
     token = make_token()
-    code = f"{secrets.randbelow(10**CODE_DIGITS):0{CODE_DIGITS}d}"
+    code = reviewer_code(email) or f"{secrets.randbelow(10**CODE_DIGITS):0{CODE_DIGITS}d}"
     for attempt in range(3):
         now = timezone.now()
         request = SignInRequest(
