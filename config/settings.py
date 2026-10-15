@@ -14,7 +14,12 @@ import dj_database_url
 from decouple import Csv, config
 from django.core.exceptions import ImproperlyConfigured
 from django.utils.csp import CSP
-from mcp_auth.conf import oauth2_settings
+from mcp_auth.conf import (
+    CHATGPT_REDIRECT_URI_PATTERNS,
+    DEFAULT_CONSENT_FORM_ACTION,
+    DEFAULT_REDIRECT_URI_PATTERNS,
+    oauth2_settings,
+)
 
 from apps.core import analytics
 
@@ -245,6 +250,11 @@ SESSION_COOKIE_AGE = 60 * 60 * 24 * 90
 SIGN_IN_MAX_AGE_SECONDS = 60 * 30
 SIGN_IN_MAX_CODE_ATTEMPTS = 5
 
+# Gondola keeps email addresses: it emails people after they sign in (the
+# evening email), so it doesn't take the template's keyed addresses and
+# needs no ACCOUNTS_EMAIL_KEY. See
+# docs/decisions/gondola-keeps-email-addresses.md.
+
 # Passkeys (WebAuthn). The relying party is this site's host name; a passkey
 # only works on the host it was made for. Both default to SITE_URL, so
 # SITE_URL must be the address people use.
@@ -314,14 +324,24 @@ LOGGING = {
     "loggers": {"django.db.backends": {"level": "WARNING"}},
 }
 
-# OAuth 2.1 for the MCP endpoint, so Claude can add Gondola as a connector.
-# The shared Titan preset: PKCE, rotating refresh tokens, DCR and CIMD, held
-# to Claude's callbacks and loopback. Any active account may connect: a
-# token only ever does what that person can do in the app.
+# OAuth 2.1 for the MCP endpoint, so Claude and ChatGPT can add Gondola as a
+# connector (the help page gives the steps). The shared Titan preset: PKCE,
+# rotating refresh tokens, DCR and CIMD (ChatGPT's signed with its own key),
+# held to the callbacks below. Any active account may connect: a token only
+# ever does what that person can do in the app.
 OAUTH2_PROVIDER = oauth2_settings(
     resource_name=SITE_NAME,
     scope_description="See your groups' plans and change your own days",
 )
-MCP_AUTH = {"CAN_CONNECT": "mcp_auth.policy.active_user"}
+MCP_AUTH = {
+    "CAN_CONNECT": "mcp_auth.policy.active_user",
+    # ChatGPT's callbacks as well as Claude's and loopback.
+    "REDIRECT_URI_PATTERNS": DEFAULT_REDIRECT_URI_PATTERNS + CHATGPT_REDIRECT_URI_PATTERNS,
+    "CONSENT_FORM_ACTION": [
+        *DEFAULT_CONSENT_FORM_ACTION,
+        "https://chatgpt.com",
+        "https://platform.openai.com",
+    ],
+}
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"

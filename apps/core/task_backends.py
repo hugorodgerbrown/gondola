@@ -44,7 +44,12 @@ class ThreadBackend(ImmediateBackend):
             args=(task_result,),
             name=f"task-{task_result.id}",
         )
-        thread.start()
+        try:
+            thread.start()
+        except RuntimeError:
+            # The system refused a new thread: give the slot back and run it here.
+            _slots.release()
+            super()._execute_task(task_result)  # type: ignore[misc]
 
     def _run(self, task_result: TaskResult) -> None:
         """Run the task as ImmediateBackend would, then close this thread's connections."""

@@ -119,7 +119,9 @@ def sign_in_view(request: HttpRequest) -> HttpResponse:
         else:
             sign_in_request, token, code = sign_in.issue(email, next_url)
             link = request.build_absolute_uri(reverse("accounts:sign_in_link", args=[token]))
-            send_sign_in_email.enqueue(email=email, link=link, code=code)
+            # A reviewer account has no inbox: the reviewer types its fixed code.
+            if sign_in.reviewer_code(email) is None:
+                send_sign_in_email.enqueue(email=email, link=link, code=code)
             request.session[SESSION_REQUEST] = str(sign_in_request.uuid)
             request.session[SESSION_EMAIL] = email
             if settings.DEBUG:

@@ -398,7 +398,8 @@ textarea {
 
 /* --- Buttons and controls ----------------------------------------------- */
 
-.button {
+.button,
+.mcp-auth form button {
   display: inline-grid;
   place-items: center;
   min-height: 48px;
@@ -427,7 +428,8 @@ textarea {
   width: 100%;
 }
 
-.button--secondary {
+.button--secondary,
+.mcp-auth .mcp-auth-cancel {
   background: var(--card);
   color: var(--text-1);
   border: 1px solid var(--rule-strong);
@@ -487,6 +489,27 @@ textarea {
   text-decoration: underline;
   cursor: pointer;
   font-size: var(--type-sm);
+}
+
+/* mcp_auth's consent page (templates/mcp_auth/): its buttons carry no
+   classes, so they share .button and .button--secondary's rules above. */
+.mcp-auth form button {
+  width: 100%;
+  margin-top: var(--space-sm);
+}
+
+.mcp-auth .mcp-auth-account p {
+  color: var(--text-2);
+  font-size: var(--type-sm);
+}
+
+.mcp-auth .mcp-auth-account button {
+  display: inline;
+  padding: 0;
+  background: none;
+  color: var(--text-1);
+  font: inherit;
+  text-decoration: underline;
 }
 
 .actions {

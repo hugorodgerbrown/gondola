@@ -107,6 +107,27 @@ def test_a_task_past_the_limit_runs_in_the_caller(monkeypatch: pytest.MonkeyPatc
     join(f"task-{held.id}")
 
 
+class RefusedThread(threading.Thread):
+    """A thread the system refuses to start, as when it is out of threads."""
+
+    def start(self) -> None:
+        """Refuse, as ``threading.Thread.start`` does when no thread can be made."""
+        raise RuntimeError("can't start new thread")
+
+
+def test_a_refused_thread_runs_the_task_here_and_frees_its_slot(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A thread that can't start costs no slot: the task runs in the caller instead."""
+    slots = threading.BoundedSemaphore(1)
+    monkeypatch.setattr("apps.core.task_backends._slots", slots)
+    monkeypatch.setattr("apps.core.task_backends.threading.Thread", RefusedThread)
+    result = note_caller.enqueue()
+    assert result.status == TaskResultStatus.SUCCESSFUL
+    assert seen["caller"] is threading.current_thread()
+    assert slots.acquire(blocking=False)
+
+
 @pytest.mark.django_db
 def test_the_sign_in_email_is_sent_off_the_request(
     client: Client, monkeypatch: pytest.MonkeyPatch

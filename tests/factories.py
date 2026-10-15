@@ -11,7 +11,7 @@ import factory
 from django.utils import timezone
 from factory.django import DjangoModelFactory
 
-from apps.accounts.models import Passkey, SignInRequest, User
+from apps.accounts.models import Passkey, ReviewerAccount, SignInRequest, User
 from apps.groups.models import Group, Membership, PlanDay
 from apps.resorts.models import Pass, Resort
 
@@ -56,6 +56,17 @@ class PasskeyFactory(DjangoModelFactory[Passkey]):
     credential_id = factory.Sequence(lambda n: f"credential-{n}")
     public_key = b"public-key"
     name = "Synced passkey"
+
+
+class ReviewerAccountFactory(DjangoModelFactory[ReviewerAccount]):
+    """A reviewer account; its code is made on save."""
+
+    class Meta:
+        """Factory metadata."""
+
+        model = ReviewerAccount
+
+    email = factory.Sequence(lambda n: f"reviewer{n}@example.com")
 
 
 class PassFactory(DjangoModelFactory[Pass]):

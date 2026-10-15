@@ -1,4 +1,5 @@
 {# Help: shared by the page and apps.public.pages (the MCP tools). #}
+{% load site_footer %}
 <h1>Help</h1>
 <h2>Signing in</h2>
 <p>There are no passwords. Enter your email address on the <a href="{% url 'accounts:sign_in' %}">sign-in page</a> and we'll email you a link and a six-digit code. Open the link, or type the code on the page that asked for it; either works once, for 30 minutes. Using {{ pwa.name }} from your iPhone's home screen? Type the code: a link opens in Safari, which signs in Safari rather than the app. The first time you sign in, this creates your account and asks for the name your friends will see.</p>
@@ -7,7 +8,7 @@
 <h2>Groups</h2>
 <p>Start a group from Groups and send its invite link to your group chat. Anyone with the link can join, and everyone in the group sees each other's names and days. The owner can reset the link, which stops the old one working, and can remove people. Anyone else can leave a group whenever they like; the owner deletes it instead.</p>
 <h2>Saying where you'll be</h2>
-<p>On the Calendar, tap a day (or select several) and pick the resort you'll be in. A day you haven't said is simply undecided. If a resort is missing, tell us and we'll add it.</p>
+<p>On the Calendar, tap a day (or select several) and pick the resort you'll be in. A day you haven't said is simply undecided. If a resort is missing, write to {% contact_link %} and we'll add it.</p>
 <h2>Seeing who's where</h2>
 <p>The Map shows every resort, with how many friends will be there on the day you pick; tap one to see who. On the Calendar, tap one of your groups to add, in pale blue, where its people will be on the days you haven't said. Each group's Who's where shows everyone in it, a week at a time.</p>
 <h2>The evening email</h2>

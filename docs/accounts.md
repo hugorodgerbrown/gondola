@@ -8,7 +8,7 @@ Titan template; the differences are at the bottom.
 ```
                  ┌──────────── /sign-in/ ────────────┐
                  │  email ──▶ SignInRequest (hashes)  │──▶ email: link + 6-digit code
-                 │  passkey button / autofill         │
+                 │  passkey button                    │
                  └──────┬─────────────────────┬──────┘
           link, any browser                code, this browser only
   /sign-in/link/<token>/ ── Continue (POST)    /sign-in/code/ ── POST code
@@ -30,7 +30,7 @@ Titan template; the differences are at the bottom.
 | `apps/accounts/passkeys.py` | WebAuthn options and verification (py_webauthn) |
 | `apps/accounts/views.py` | Sign-in, code, link, welcome, sign-out, account and passkey endpoints |
 | `apps/accounts/tasks.py` | `send_sign_in_email`, enqueued by the view (`django.tasks`) |
-| `apps/accounts/models.py` | `User`, `SignInRequest`, `Passkey` |
+| `apps/accounts/models.py` | `User`, `SignInRequest`, `Passkey`, `ReviewerAccount` |
 | `apps/accounts/services.py` | The evening email's opt-out link |
 | `apps/core/redirects.py` | `safe_next`: only same-site paths survive |
 | `static/js/passkeys.js`, `webauthn_json.js` | The browser side of both ceremonies |
@@ -43,6 +43,10 @@ Titan template; the differences are at the bottom.
   creates the account (the lowercased address, no usable password, no name
   yet). Nothing about an address is stored before then except the pending
   request.
+- **The address is kept.** Gondola emails people after they sign in (the
+  evening email), so the account and the request hold the lowercased
+  address. It doesn't take the template's keyed addresses, and needs no
+  `ACCOUNTS_EMAIL_KEY`. Why: docs/decisions/gondola-keeps-email-addresses.md.
 - **Link and code, either once.** Each email carries a link and a six-digit
   code, valid for `SIGN_IN_MAX_AGE_SECONDS` (30 minutes). Asking again ends
   the earlier request, so only the newest email works. Only hashes are
@@ -107,6 +111,31 @@ or passkey like everyone else, and the admin opens for an account with
 `is_staff`. Make one with `createsuperuser` (it asks for a password, which
 nothing uses), or tick Staff on an existing account.
 
+## Reviewer accounts
+
+App directories (OpenAI's for ChatGPT, Anthropic's for Claude) review an
+app by signing in to a test account, and refuse one that needs an inbox, an
+SMS or any other verification step. A reviewer account is an address that
+signs in with a fixed code instead:
+
+1. In the admin, add a **Reviewer account** with an address that has no
+   mailbox behind it, such as `reviewer@gondola.ultraniche.ai`. Its six-digit
+   code is made when you save it.
+2. Give the reviewers the address, the code, and: "Enter the email on the
+   sign-in page, then type the code on the next page. No email is sent."
+3. After the review, select the account and run **Give the selected
+   accounts a new code**, or delete it.
+
+- **Nothing else changes.** The reviewer uses `/sign-in/` and
+  `/sign-in/code/` like anyone else. `sign_in.issue()` gives that address's
+  request the fixed code, and the view sends it no email. The account
+  itself is made on first sign-in, as for anyone.
+- **Same limits.** Five wrong codes end a request, and an address gets five
+  requests an hour, so the code can't be guessed in any useful time.
+- **The code is kept as it is,** not hashed like an emailed code, so staff
+  can read it in the admin. It is a shared test credential for an account
+  with no one's data in it, not a person's secret.
+
 ## Email
 
 Sent through `MAILERS["default"]`: the console in development, SMTP in
@@ -133,6 +162,9 @@ device and are sent only if the same user signs back in.
 - Its own `User`, keyed on email, with a display name, the evening email
   and the tour (docs/decisions/gondola-keeps-its-own-user-model.md). So
   `user_for` finds people by email, not username.
+- It keeps the email address, not the template's key and masked address,
+  because it sends the evening email
+  (docs/decisions/gondola-keeps-email-addresses.md).
 - Addresses are `/sign-in/…` and `/sign-out/`, as before, not `/signin/`.
 - Links and codes last 30 minutes, not 15.
 - The first sign-in goes through the welcome, passkey and tour pages.
