@@ -116,6 +116,7 @@ docs/              accounts, pwa, security, performance, testing, the onboarding
                    decisions/
 ```
 
+<<<<<<< before updating
 ## Connecting Claude (MCP)
 
 Gondola serves an MCP endpoint at `/mcp`, so Claude can read and change
@@ -139,6 +140,12 @@ never names (docs/decisions/mcp-never-names-friends.md). The tools:
 Locally, mint a token for the only superuser and call it with curl
 (mcp-auth 0.1.2's `--username` looks up a `username` field, which
 Gondola's email-keyed `User` doesn't have):
+=======
+Add `https://<your host>/mcp` as a custom connector in Claude. Who may
+connect is `apps/mcp/policy.py` (staff only to start); the consent page
+signs people in through the normal email sign-in and names the account
+by its masked address. For a local token:
+>>>>>>> after updating
 
 ```bash
 TOKEN=$(uv run python manage.py mint_mcp_token --commit -v 0)

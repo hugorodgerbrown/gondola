@@ -194,6 +194,7 @@ def test_code_guesses_are_rate_limited(client: Client) -> None:
 # ---------- the first sign-in ----------
 
 
+<<<<<<< before updating
 def test_full_sign_up_flow(client: Client) -> None:
     request_email(client, "Hugo@Example.com", "/app/days/")
     _, code = emailed()
@@ -239,6 +240,17 @@ def test_welcome_requires_a_name(client: Client) -> None:
 
 
 # ---------- the admin ----------
+=======
+def test_sign_out_goes_straight_home(signed_in: Client) -> None:
+    """Signing out ends the session without asking the browser to clear its cache.
+
+    Clear-Site-Data held the redirect for many seconds in Chrome.
+    """
+    response = signed_in.post(reverse("accounts:sign_out"))
+    assert response["Location"] == reverse("public:home")
+    assert not response.has_header("Clear-Site-Data")
+    assert signed_in_user(signed_in) is None
+>>>>>>> after updating
 
 
 def test_admin_sign_in_is_the_normal_sign_in(client: Client) -> None:

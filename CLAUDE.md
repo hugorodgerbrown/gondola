@@ -46,6 +46,7 @@ Python 3.14 / Django 6.1, pinned in `pyproject.toml`.
 ```
 config/          settings (one module, env-driven), urls, wsgi/asgi
 apps/core/       BaseModel, IdempotencyMiddleware + IdempotencyRecord,
+                 PrivatePagesMiddleware (signed-in pages never cached),
                  decorators (require_htmx, login_required_json), rate
                  limits, tokens, analytics (fivebar goals), livez,
                  healthz and the CSRF failure page
@@ -59,7 +60,9 @@ apps/accounts/   Gondola's own User (docs/decisions/), sign-in by emailed
 apps/resorts/    the Swiss resorts, imported from apps/resorts/data
 apps/groups/     groups, plan days, the calendar, board and map
 apps/tour/       the onboarding tour on a private demo group
-apps/mcp/        the MCP endpoint (/mcp) and its tools; auth is mcp-auth
+apps/mcp/        the MCP endpoint (/mcp) and its tools; auth is mcp-auth;
+                 events.py counts each tool call in fivebar as a server
+                 event while FIVEBAR_DOMAIN and FIVEBAR_TOKEN are set
 apps/design/     the design page (/app/design/, staff only): every token
                  and every component state (DESIGN.md)
 templates/       base.html (the app, /app/), public_base.html, includes

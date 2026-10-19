@@ -6,8 +6,21 @@ import pytest
 from django.core.exceptions import ValidationError
 from django.utils import timezone
 
+<<<<<<< before updating
 from apps.accounts.models import SignInRequest, User, normalise_email
 from tests.factories import SignInRequestFactory, UserFactory
+=======
+from apps.accounts.checks import email_key_is_set
+from apps.accounts.models import (
+    Passkey,
+    SignInRequest,
+    User,
+    account_name,
+    email_key,
+    mask_email,
+)
+from tests.factories import PasskeyFactory, SignInRequestFactory, UserFactory
+>>>>>>> after updating
 
 pytestmark = pytest.mark.django_db
 
@@ -86,8 +99,21 @@ def test_sign_in_request_querysets() -> None:
     assert used not in SignInRequest.objects.live()
 
 
+<<<<<<< before updating
 def test_sign_in_request_to_string() -> None:
     request = SignInRequestFactory.create(email="a@example.com")
     assert str(request) == "Sign-in for a@example.com (unused)"
     request.used_at = timezone.now()
     assert request.to_string() == "Sign-in for a@example.com (used)"
+=======
+def test_user_to_string() -> None:
+    """An account reads as its masked address, or its username without one."""
+    assert str(UserFactory.create(address="walker@example.com")) == "w•••@example.com"
+    assert str(UserFactory.create(username="admin", masked_email="")) == "admin"
+
+
+def test_the_consent_page_names_the_masked_address() -> None:
+    """mcp-auth's consent page names an account by its masked address, never its key."""
+    user = UserFactory.create(address="walker@example.com")
+    assert account_name(user) == "w•••@example.com"
+>>>>>>> after updating

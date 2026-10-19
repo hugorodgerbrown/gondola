@@ -95,6 +95,7 @@ SILENCED_SYSTEM_CHECKS = [
     "oauth2_provider.W008",
 ]
 
+<<<<<<< before updating
 # Visitor counts and goals by fivebar, under the site's own domain: the host
 # SITE_URL names, so production needs nothing extra. Off when SITE_URL is
 # local, or when FIVEBAR_DOMAIN is set to something else (empty turns it
@@ -122,6 +123,14 @@ MAP_SOURCES: list[str] = config(
     ),
     cast=Csv(),
 )
+=======
+# Visitor counts by fivebar: off unless set, to the domain the site was
+# added to fivebar under (titan sets it at go-live). See apps/core/analytics.py.
+FIVEBAR_DOMAIN: str = config("FIVEBAR_DOMAIN", default="")
+# A fivebar token made to send events and nothing else: with FIVEBAR_DOMAIN,
+# each MCP tool call is counted as a server event. See apps/mcp/events.py.
+FIVEBAR_TOKEN: str = config("FIVEBAR_TOKEN", default="")
+>>>>>>> after updating
 
 # Content Security Policy: everything from this origin, nothing inline.
 # There is no inline <script> anywhere; the launch-screen gate is a tiny
@@ -183,6 +192,8 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     # After authentication: the replay fingerprint includes the user.
     "apps.core.idempotency.IdempotencyMiddleware",
+    # After authentication: signed-in pages are never cached.
+    "apps.core.private_pages.PrivatePagesMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     # After auth and messages: scopes the request to the demo while touring.
     "apps.tour.middleware.TourMiddleware",
@@ -334,7 +345,13 @@ OAUTH2_PROVIDER = oauth2_settings(
     scope_description="See your groups' plans and change your own days",
 )
 MCP_AUTH = {
+<<<<<<< before updating
     "CAN_CONNECT": "mcp_auth.policy.active_user",
+=======
+    "CAN_CONNECT": "apps.mcp.policy.staff_only",
+    # The consent page's "Signed in as": the masked address, not the key.
+    "ACCOUNT_NAME": "apps.accounts.models.account_name",
+>>>>>>> after updating
     # ChatGPT's callbacks as well as Claude's and loopback.
     "REDIRECT_URI_PATTERNS": DEFAULT_REDIRECT_URI_PATTERNS + CHATGPT_REDIRECT_URI_PATTERNS,
     "CONSENT_FORM_ACTION": [
@@ -343,5 +360,8 @@ MCP_AUTH = {
         "https://platform.openai.com",
     ],
 }
+# The token OpenAI's platform issues to verify the domain before ChatGPT's
+# app directory lists the MCP server: off (a 404) unless set.
+OPENAI_APPS_CHALLENGE: str = config("OPENAI_APPS_CHALLENGE", default="")
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"

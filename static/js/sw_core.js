@@ -44,6 +44,7 @@
   }
 
   /**
+<<<<<<< before updating
    * The key a page's response is cached under. An htmx request for the same
    * URL gets a fragment (a sheet) where a navigation gets the whole page, so
    * the two are kept apart: the fragment under the URL plus ``__htmx=1``.
@@ -58,11 +59,32 @@
   }
 
   /** True when a response can be stored and served later. */
+=======
+   * True when a response can be stored and served later. Signed-in pages are
+   * no-store so the browser's own cache never holds them; the server marks the
+   * ones this worker may still keep (apps/core/private_pages.py), since
+   * pwa.js deletes this cache before signing out.
+   */
+>>>>>>> after updating
   function isStorable(response) {
     if (!response || !response.ok || response.redirected || response.type !== 'basic') return false;
+    if (response.headers.get('Offline-Copy') === 'allowed') return true;
     const cacheControl = response.headers.get('Cache-Control') || '';
     return !/no-store/i.test(cacheControl);
   }
 
+<<<<<<< before updating
   self.SwCore = Object.freeze({ cacheNames, isStaleCache, route, pageCacheKey, isStorable });
+=======
+  /**
+   * Whether a page's response says the session that cached it is gone: it
+   * was sent on to sign-in, or refused. Its cached copy must go too, or an
+   * offline visit would still show the old private page.
+   */
+  function isSignedOut(response) {
+    return response.redirected || response.status === 401 || response.status === 403;
+  }
+
+  self.SwCore = Object.freeze({ cacheNames, isStaleCache, route, isStorable, isSignedOut });
+>>>>>>> after updating
 })();

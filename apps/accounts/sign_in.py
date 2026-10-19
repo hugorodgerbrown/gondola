@@ -15,8 +15,14 @@ import secrets
 from datetime import timedelta
 
 from django.conf import settings
+<<<<<<< before updating
 from django.db import IntegrityError, transaction
 from django.db.models import F
+=======
+from django.contrib.auth import get_user_model
+from django.db import IntegrityError, transaction
+from django.db.models import F, Q
+>>>>>>> after updating
 from django.utils import timezone
 from django.utils.crypto import salted_hmac
 
@@ -26,6 +32,8 @@ from apps.core.tokens import make_token
 logger = logging.getLogger(__name__)
 
 CODE_DIGITS = 6
+# Tries at storing a request when others for the address land at once.
+ISSUE_ATTEMPTS = 5
 
 
 def _hash_token(token: str) -> str:
@@ -61,8 +69,29 @@ def issue(email: str, next_url: str = "") -> tuple[SignInRequest, str, str]:
     email = normalise_email(email)
     token = make_token()
     code = reviewer_code(email) or f"{secrets.randbelow(10**CODE_DIGITS):0{CODE_DIGITS}d}"
+<<<<<<< before updating
     for attempt in range(3):
         now = timezone.now()
+=======
+    # The database allows one unused request per address. Requests at the
+    # same moment all find nothing to retire; each one that collides tries
+    # again and retires the winner, so the newest still wins.
+    for attempt in range(ISSUE_ATTEMPTS):
+        try:
+            request = _replace_request(email, token, code, next_url)
+            break
+        except IntegrityError:
+            if attempt == ISSUE_ATTEMPTS - 1:
+                raise
+    return request, token, code
+
+
+def _replace_request(email: str, token: str, code: str, next_url: str) -> SignInRequest:
+    """Retire ``email``'s unused requests and store a new one, in one transaction."""
+    now = timezone.now()
+    with transaction.atomic():
+        SignInRequest.objects.for_email(email).unused().update(used_at=now)
+>>>>>>> after updating
         request = SignInRequest(
             email=email,
             token_hash=_hash_token(token),
@@ -70,6 +99,7 @@ def issue(email: str, next_url: str = "") -> tuple[SignInRequest, str, str]:
             expires_at=now + timedelta(seconds=settings.SIGN_IN_MAX_AGE_SECONDS),
         )
         request.code_hash = _hash_code(str(request.uuid), code)
+<<<<<<< before updating
         try:
             with transaction.atomic():
                 SignInRequest.objects.for_email(email).filter(used_at__isnull=True).update(
@@ -83,6 +113,10 @@ def issue(email: str, next_url: str = "") -> tuple[SignInRequest, str, str]:
             continue
         return request, token, code
     raise AssertionError("unreachable")  # pragma: no cover
+=======
+        request.save()
+    return request
+>>>>>>> after updating
 
 
 def _claim(request: SignInRequest) -> bool:

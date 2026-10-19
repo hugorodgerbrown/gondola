@@ -152,6 +152,7 @@ deploy (render.yaml).
 
 ## Signing out
 
+<<<<<<< before updating
 `POST /sign-out/`. `pwa.js` deletes the service worker's cached pages and
 the recorded user before the form posts, so the next person on the device
 can't open the last one's pages offline. Unsent outbox rows stay on the
@@ -171,3 +172,13 @@ device and are sent only if the same user signs back in.
 - The email has an HTML part as well as text.
 - Sign-out sends no `Clear-Site-Data`: Chrome on Android held the redirect
   while it cleared the cache, so the button looked dead.
+=======
+`POST /signout/`. `pwa.js` deletes the service worker's cached pages and
+the recorded user before the form posts, so the next person on the device
+can't open the last one's pages offline. Every signed-in page is sent
+`no-store` (`apps/core/private_pages.py`), so Back can't show it from the
+browser's cache; app pages also carry `Offline-Copy: allowed`, which lets the
+service worker keep its own copy. Don't send `Clear-Site-Data: "cache"`: Chrome walks its whole
+disk cache before following the redirect, which held sign-out for ~25 s. Unsent outbox rows stay on the device and are
+sent only if the same user signs back in.
+>>>>>>> after updating
