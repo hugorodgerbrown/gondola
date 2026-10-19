@@ -154,7 +154,10 @@ deploy (render.yaml).
 
 `POST /sign-out/`. `pwa.js` deletes the service worker's cached pages and
 the recorded user before the form posts, so the next person on the device
-can't open the last one's pages offline. Unsent outbox rows stay on the
+can't open the last one's pages offline. Every signed-in page is sent
+`no-store` (`apps/core/private_pages.py`), so Back can't show it from the
+browser's cache; app pages also carry `Offline-Copy: allowed`, which lets the
+service worker keep its own copy. Unsent outbox rows stay on the
 device and are sent only if the same user signs back in.
 
 ## Where Gondola differs from the template

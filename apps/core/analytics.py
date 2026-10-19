@@ -3,7 +3,9 @@
 On under SITE_URL's host unless that is local; ``FIVEBAR_DOMAIN`` overrides
 it, and empty turns it off (config/settings.py). Then every page carries
 fivebar's tag (``templates/includes/_analytics.html``): the script counts each page by
-itself, with no cookies. Ported from the Titan template.
+itself, with no cookies. MCP tool calls, which have no page, are sent
+from the server as events instead (apps/mcp/events.py). Ported from the
+Titan template.
 
 A page whose address holds a secret or an id (an invite token, a group's
 uuid) is counted under its route instead, with the values named, e.g.
@@ -20,7 +22,7 @@ about the person.
 from __future__ import annotations
 
 import re
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from django.conf import settings
 
@@ -74,7 +76,15 @@ def counted_path(request: HttpRequest) -> str:
     return "/" + _CONVERTER.sub(r":\1", match.route)
 
 
-def analytics(request: HttpRequest) -> dict[str, dict[str, object]]:
+def counts_mcp() -> bool:
+    """Whether MCP tool calls are sent to fivebar (apps/mcp/events.py).
+
+    ``FIVEBAR_TOKEN`` is only a setting in a project with the MCP endpoint.
+    """
+    return bool(settings.FIVEBAR_DOMAIN and getattr(settings, "FIVEBAR_TOKEN", ""))
+
+
+def analytics(request: HttpRequest) -> dict[str, dict[str, Any]]:
     """Expose fivebar's settings to every template as ``analytics``.
 
     ``events`` is a function, so only the template that reads it (the full
@@ -92,5 +102,6 @@ def analytics(request: HttpRequest) -> dict[str, dict[str, object]]:
             "script": SCRIPT,
             "path": counted_path(request) if domain else "",
             "events": events,
+            "counts_mcp": counts_mcp(),
         }
     }

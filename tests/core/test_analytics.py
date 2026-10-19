@@ -6,7 +6,7 @@ import pytest
 from django.test import Client, RequestFactory
 from django.urls import resolve, reverse
 
-from apps.core.analytics import SCRIPT, counted_path, pending, record
+from apps.core.analytics import SCRIPT, counted_path, counts_mcp, pending, record
 from tests.factories import UserFactory
 
 pytestmark = pytest.mark.django_db
@@ -62,3 +62,21 @@ def test_too_much_data_is_refused() -> None:
     request.session = {}  # type: ignore[assignment]
     with pytest.raises(ValueError, match="at most 8"):
         record(request, "Big", **{f"k{n}": n for n in range(9)})
+
+
+def test_mcp_calls_are_counted_only_with_a_domain_and_a_token(settings: object) -> None:
+    settings.FIVEBAR_DOMAIN = ""  # type: ignore[attr-defined]
+    settings.FIVEBAR_TOKEN = "send-only"  # type: ignore[attr-defined]
+    assert counts_mcp() is False
+    settings.FIVEBAR_DOMAIN = "gondola.ultraniche.ai"  # type: ignore[attr-defined]
+    assert counts_mcp() is True
+    settings.FIVEBAR_TOKEN = ""  # type: ignore[attr-defined]
+    assert counts_mcp() is False
+
+
+@pytest.mark.usefixtures("fivebar")
+def test_privacy_names_mcp_counting_only_while_it_is_on(client: Client, settings: object) -> None:
+    settings.FIVEBAR_TOKEN = ""  # type: ignore[attr-defined]
+    assert b"uses one of our tools" not in client.get(reverse("public:privacy")).content
+    settings.FIVEBAR_TOKEN = "send-only"  # type: ignore[attr-defined]
+    assert b"uses one of our tools" in client.get(reverse("public:privacy")).content

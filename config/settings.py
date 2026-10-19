@@ -101,6 +101,9 @@ SILENCED_SYSTEM_CHECKS = [
 # off). See apps/core/analytics.py.
 _fivebar_default = _site_host if _site_host not in {None, "localhost", "127.0.0.1"} else ""
 FIVEBAR_DOMAIN: str = config("FIVEBAR_DOMAIN", default=_fivebar_default or "")
+# A fivebar token made to send events and nothing else: with FIVEBAR_DOMAIN,
+# each MCP tool call is counted as a server event. See apps/mcp/events.py.
+FIVEBAR_TOKEN: str = config("FIVEBAR_TOKEN", default="")
 
 # The basemap. Any MapLibre style URL; empty draws the built-in plain map
 # (Switzerland's outline only), which is also the fallback when it fails.
@@ -183,6 +186,8 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     # After authentication: the replay fingerprint includes the user.
     "apps.core.idempotency.IdempotencyMiddleware",
+    # After authentication: signed-in pages are never cached.
+    "apps.core.private_pages.PrivatePagesMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     # After auth and messages: scopes the request to the demo while touring.
     "apps.tour.middleware.TourMiddleware",
@@ -343,5 +348,8 @@ MCP_AUTH = {
         "https://platform.openai.com",
     ],
 }
+# The token OpenAI's platform issues to verify the domain before ChatGPT's
+# app directory lists the MCP server: off (a 404) unless set.
+OPENAI_APPS_CHALLENGE: str = config("OPENAI_APPS_CHALLENGE", default="")
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"

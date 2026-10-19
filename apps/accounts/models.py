@@ -178,6 +178,10 @@ class Passkey(BaseModel):
 class SignInRequestQuerySet(models.QuerySet["SignInRequest"]):
     """Custom queryset for SignInRequest."""
 
+    def unused(self) -> SignInRequestQuerySet:
+        """Return requests not yet used or retired, expired or not."""
+        return self.filter(used_at__isnull=True)
+
     def live(self) -> SignInRequestQuerySet:
         """Return requests that are unused and unexpired."""
         return self.filter(used_at__isnull=True, expires_at__gt=timezone.now())

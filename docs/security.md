@@ -6,6 +6,7 @@ What is on by default, and what checks it.
 | --- | --- | --- |
 | HTTPS redirect, HSTS, secure cookies (when `DJANGO_DEBUG=0`) | `config/settings.py` | `tox -e checks` (`check --deploy --fail-level WARNING`) |
 | CSP: this origin, plus Google Fonts, the basemap's hosts and `blob:` for the map, and `https://fiveb.ar` while `FIVEBAR_DOMAIN` is set; no inline script or style, no eval | `SECURE_CSP` | `tests/test_security.py`, `tests/core/test_analytics.py` |
+| MCP tool calls counted in fivebar with a send-only token, off the request path; only the tool's name, the outcome, the app's name and a keyed hash of the user's id leave the app | `apps/mcp/events.py` | `tests/mcp/test_events.py` |
 | Clickjacking, sniffing, referrer, COOP headers | settings + middleware | `tests/test_security.py` |
 | CSRF on every form and outbox write (token read at send time) | Django + `outbox.js` | `tests/core/test_views.py` |
 | No passwords for people: sign-in by a single-use emailed link or code, or a passkey; staff passwords are validated | `apps/accounts/` | `tests/accounts/` |
@@ -16,6 +17,7 @@ What is on by default, and what checks it.
 | The admin has no password form: staff sign in like everyone else | `admin_login` | `tests/accounts/test_views.py` |
 | Signing out drops cached pages on the device, including one cached mid-sign-out; unsent writes stay, sent only as the user who made them | `pwa.js` (`data-sign-out`), `sw_worker.js`, `outbox.js` | `tests/js/test_sw_worker.js`, `tests/js/test_outbox.js`; the form's clean-up by hand |
 | The design page is staff only: signed out goes to sign-in, signed in without staff gets a 404 | `apps/design/views.py` | `tests/design/` |
+| Signed-in pages are sent `no-store`, so Back after sign-out can't show one from the browser's cache | `apps/core/private_pages.py` | `tests/core/test_private_pages.py` |
 | Each keyed write runs at most once, per user, per body | `apps/core/idempotency.py` | `tests/core/test_idempotency.py` |
 | Signed-out writes get 401, never a redirect | `login_required_json` | `tests/core/test_decorators.py` |
 | Python security lint (bandit rules) | ruff `S` | `tox -e lint` |

@@ -14,7 +14,7 @@ from django.contrib import admin
 from django.urls import include, path
 
 from apps.accounts.views import admin_login
-from apps.mcp.views import mcp
+from apps.mcp.views import mcp, openai_apps_challenge
 
 admin.site.site_header = settings.SITE_NAME
 admin.site.site_title = settings.SITE_NAME
@@ -35,4 +35,6 @@ urlpatterns = [
     path("", include("apps.tour.urls")),
     path("", include("mcp_auth.urls")),
     path("mcp", mcp, name="mcp"),
+    # OpenAI's domain check for ChatGPT's app directory.
+    path(".well-known/openai-apps-challenge", openai_apps_challenge, name="openai-apps-challenge"),
 ]
