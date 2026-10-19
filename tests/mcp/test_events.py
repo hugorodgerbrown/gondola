@@ -65,21 +65,20 @@ def call(user: Any, name: str, arguments: dict[str, Any], client: str = "claude"
 @pytest.mark.django_db
 @pytest.mark.usefixtures("on")
 def test_a_tool_call_sends_one_event(sent: list[dict[str, Any]]) -> None:
-    """The event names the tool, the app and a hashed caller, and nothing the person wrote."""
+    """The event names the tool, the app and a hashed caller."""
     user = UserFactory.create()
-    call(user, "add_note", {"text": "a private thought"})
+    call(user, "help", {})
     [request] = sent
     assert request["url"] == "https://fiveb.ar/api/events"
     assert request["headers"]["Authorization"] == f"Bearer {TOKEN}"
     assert request["timeout"] == events.TIMEOUT
     assert request["body"] == {
         "site": DOMAIN,
-        "name": "/mcp/add_note",
+        "name": "/mcp/help",
         "id": events.caller_id(user),
         "client": "claude",
         "props": {"outcome": "ok"},
     }
-    assert "private" not in json.dumps(request["body"])
 
 
 @pytest.mark.django_db
@@ -96,12 +95,13 @@ def test_the_caller_id_is_stable_per_user_and_not_the_id() -> None:
 @pytest.mark.django_db
 @pytest.mark.usefixtures("on")
 def test_a_tool_error_is_counted_as_an_error(sent: list[dict[str, Any]]) -> None:
-    """A ToolError still answers, and counts with outcome "error"."""
-    result = call(UserFactory.create(), "list_notes", {"limit": 0}, client="")
+    """A ToolError counts with outcome "error", and nothing the person wrote is sent."""
+    result = call(UserFactory.create(), "my_days", {"from": "a private thought"}, client="")
     assert result["isError"]
     [request] = sent
     assert request["body"]["props"] == {"outcome": "error"}
     assert "client" not in request["body"]
+    assert "private" not in json.dumps(request["body"])
 
 
 @pytest.mark.django_db
@@ -110,7 +110,7 @@ def test_a_tool_error_is_counted_as_an_error(sent: list[dict[str, Any]]) -> None
     ("method", "params"),
     [
         ("tools/call", {"name": "no_such_tool"}),
-        ("tools/call", {"name": "list_notes", "arguments": "not an object"}),
+        ("tools/call", {"name": "my_days", "arguments": "not an object"}),
         ("tools/call", {"name": "help", "arguments": []}),
         ("tools/list", {}),
         ("initialize", {}),

@@ -38,7 +38,7 @@ ENDPOINT = f"{ORIGIN}/api/events"
 TIMEOUT = 2  # seconds; fivebar answers well inside it, and nothing waits on it
 OK = "ok"
 ERROR = "error"
-# Every tool's event is named under this, e.g. /mcp/add_note.
+# Every tool's event is named under this, e.g. /mcp/my_days.
 PREFIX = "/mcp/"
 
 

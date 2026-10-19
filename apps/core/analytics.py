@@ -1,10 +1,11 @@
-<<<<<<< before updating
 """apps/core/analytics.py — Visitor counts and goals by fivebar (https://fiveb.ar).
 
 On under SITE_URL's host unless that is local; ``FIVEBAR_DOMAIN`` overrides
 it, and empty turns it off (config/settings.py). Then every page carries
 fivebar's tag (``templates/includes/_analytics.html``): the script counts each page by
-itself, with no cookies. Ported from the Titan template.
+itself, with no cookies. MCP tool calls, which have no page, are sent
+from the server as events instead (apps/mcp/events.py). Ported from the
+Titan template.
 
 A page whose address holds a secret or an id (an invite token, a group's
 uuid) is counted under its route instead, with the values named, e.g.
@@ -16,26 +17,6 @@ it waits in the session until the next full page, which hands it to
 isn't lost. A click that is itself the event carries ``data-tally`` in the
 template instead. Event data is a few plain words or flags: never anything
 about the person.
-=======
-"""Visitor counts by fivebar (https://fiveb.ar): cookieless web analytics.
-
-Off unless ``FIVEBAR_DOMAIN`` is set (titan sets it at go-live to the
-app's domain). Then every page, public or in the app, carries fivebar's
-tag in its ``<head>`` (``templates/includes/_analytics.html``) and the CSP
-lets its script load and send. There is no package: the script counts
-each page by itself. MCP tool calls, which have no page, are sent from
-the server as events instead (apps/mcp/events.py).
-
-A page whose address holds a secret or an id (an emailed sign-in link's
-token, a record's uuid) is counted under its route instead, with the
-values named, e.g. ``/signin/link/:token/``, so nothing private reaches
-fivebar.
-
-fivebar counts pages by itself. An event (an account's first sign-in) is
-marked by ending a redirect's address with a fragment, which
-``static/js/analytics.js`` sends as the event and takes out of the address.
-See docs/decisions/visitors-are-counted-by-fivebar.md.
->>>>>>> after updating
 """
 
 from __future__ import annotations
@@ -95,14 +76,6 @@ def counted_path(request: HttpRequest) -> str:
     return "/" + _CONVERTER.sub(r":\1", match.route)
 
 
-<<<<<<< before updating
-def analytics(request: HttpRequest) -> dict[str, dict[str, object]]:
-    """Expose fivebar's settings to every template as ``analytics``.
-
-    ``events`` is a function, so only the template that reads it (the full
-    page, not an HTMX fragment) takes the queued events.
-    """
-=======
 def counts_mcp() -> bool:
     """Whether MCP tool calls are sent to fivebar (apps/mcp/events.py).
 
@@ -112,8 +85,11 @@ def counts_mcp() -> bool:
 
 
 def analytics(request: HttpRequest) -> dict[str, dict[str, Any]]:
-    """Expose fivebar's settings to every template as ``analytics``."""
->>>>>>> after updating
+    """Expose fivebar's settings to every template as ``analytics``.
+
+    ``events`` is a function, so only the template that reads it (the full
+    page, not an HTMX fragment) takes the queued events.
+    """
     domain = settings.FIVEBAR_DOMAIN
 
     def events() -> list[list[object]]:
@@ -125,10 +101,7 @@ def analytics(request: HttpRequest) -> dict[str, dict[str, Any]]:
             "domain": domain,
             "script": SCRIPT,
             "path": counted_path(request) if domain else "",
-<<<<<<< before updating
             "events": events,
-=======
             "counts_mcp": counts_mcp(),
->>>>>>> after updating
         }
     }

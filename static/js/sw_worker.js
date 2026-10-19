@@ -76,14 +76,8 @@ async function fromPage(event) {
   const cache = await caches.open(names.pages);
   let keep;
   const network = fetch(request).then((response) => {
-<<<<<<< before updating
-    if (SwCore.isStorable(response)) {
-      event.waitUntil(cache.put(key, response.clone()));
-    }
-=======
-    if (SwCore.isStorable(response)) keep = cache.put(request, response.clone());
+    if (SwCore.isStorable(response)) keep = cache.put(key, response.clone());
     else if (SwCore.isSignedOut(response)) keep = forgetPages();
->>>>>>> after updating
     return response;
   });
   // Registered now, while the event is live: a cached copy may answer first,

@@ -1,9 +1,5 @@
-<<<<<<< before updating
-// Tests for static/js/sw_worker.js: re-caching a page never outlives a sign-out,
+// Tests for static/js/sw_worker.js: a cached page never outlives a sign-out,
 // and a sheet fragment never stands in for its page.
-=======
-// Tests for static/js/sw_worker.js: a cached page never outlives a sign-out.
->>>>>>> after updating
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import '../../static/js/idb.js';
@@ -15,10 +11,7 @@ const { AppDB } = self;
 const stored = new Map();
 let onMessage;
 let onFetch;
-<<<<<<< before updating
-const keyOf = (key) => (key instanceof Request ? key.url : String(key));
-=======
->>>>>>> after updating
+const keyOf = (key) => String(key.url ?? key);
 
 beforeAll(async () => {
   self.SW_CONFIG = {
@@ -42,15 +35,9 @@ beforeEach(async () => {
   stored.clear();
   vi.stubGlobal('caches', {
     open: async () => ({
-<<<<<<< before updating
       put: async (url, response) => stored.set(keyOf(url), response),
       delete: async (url) => stored.delete(keyOf(url)),
       match: async (url) => stored.get(keyOf(url)),
-=======
-      put: async (url, response) => stored.set(String(url.url ?? url), response),
-      delete: async (url) => stored.delete(String(url.url ?? url)),
-      match: async (url) => stored.get(String(url.url ?? url)),
->>>>>>> after updating
     }),
     delete: async () => stored.clear(),
   });
@@ -96,7 +83,6 @@ describe('cache-page', () => {
   });
 });
 
-<<<<<<< before updating
 
 describe('fetch', () => {
   const URL = self.location.origin + '/app/days/2026-12-14/';
@@ -135,7 +121,9 @@ describe('fetch', () => {
     };
     expect(await get({}, offline)).toBe('page');
     expect(await get({ 'HX-Request': 'true' }, offline)).toBe('fragment');
-=======
+  });
+});
+
 /** Navigate to /app/ through the worker's fetch handler and wait for it to finish. */
 async function visit(response) {
   vi.stubGlobal('fetch', vi.fn(async () => response));
@@ -191,6 +179,5 @@ describe('page fetch', () => {
     stored.set(cachedUrl(), page());
     await visit({ ...page(), ok: false, status: 500 });
     expect(stored.has(cachedUrl())).toBe(true);
->>>>>>> after updating
   });
 });

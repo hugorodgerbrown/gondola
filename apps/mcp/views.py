@@ -4,16 +4,13 @@ Stateless and synchronous: every request is a POST answered with one JSON
 body, so it runs under gunicorn's sync workers like the rest of the site.
 There is no server-to-client stream; GET answers 405 as the spec allows.
 Authentication is mcp_auth's ``@mcp_endpoint``: a bearer token bound to
-<<<<<<< before updating
-this URL, or a 401 that starts OAuth discovery. Ported from the Titan
-template, without its MCP Apps resources (no tool has a view yet).
-=======
 this URL, or a 401 that starts OAuth discovery. Each tool call is counted
 in fivebar once it has answered, while fivebar is on (apps/mcp/events.py).
+Ported from the Titan template, without its MCP Apps resources (no tool
+has a view yet).
 
 The OpenAI apps challenge lives here too: ChatGPT's app directory checks
 the domain before it lists the MCP server.
->>>>>>> after updating
 """
 
 import json
@@ -21,17 +18,10 @@ import logging
 from typing import Any
 
 from django.conf import settings
-<<<<<<< before updating
-from django.http import HttpRequest, HttpResponse, JsonResponse
-from mcp_auth.resource import mcp_endpoint
-
-=======
 from django.http import Http404, HttpRequest, HttpResponse, JsonResponse
 from mcp_auth.resource import mcp_endpoint
 
 from apps.mcp import events
-from apps.mcp.resources import MIME_TYPE, RESOURCES, ResourceNotFound, read_resource
->>>>>>> after updating
 from apps.mcp.tools import TOOLS, ToolError
 
 logger = logging.getLogger(__name__)
@@ -133,34 +123,9 @@ def _dispatch(user: Any, method: str, params: Any, client: str = "") -> dict[str
         case "tools/list":
             return {"tools": [t.describe() for t in TOOLS.values()]}
         case "tools/call":
-<<<<<<< before updating
-            return _call_tool(user, params)
-=======
             return _call_tool(user, params, client)
-        case "resources/list":
-            return {"resources": [r.describe() for r in RESOURCES.values()]}
-        case "resources/templates/list":
-            return {"resourceTemplates": []}
-        case "resources/read":
-            return _read_resource(params)
->>>>>>> after updating
         case _:
             raise RpcError(METHOD_NOT_FOUND, f"Method not found: {method}")
-
-
-<<<<<<< before updating
-def _call_tool(user: Any, params: dict[str, Any]) -> dict[str, Any]:
-    """Run one tool; a ToolError becomes an isError result the model can read."""
-=======
-def _read_resource(params: dict[str, Any]) -> dict[str, Any]:
-    """Return one ui:// resource; the same for every user, as it holds no data."""
-    uri = params.get("uri")
-    if not isinstance(uri, str):
-        raise RpcError(INVALID_PARAMS, "uri must be a string")
-    try:
-        return read_resource(uri)
-    except ResourceNotFound:
-        raise RpcError(RESOURCE_NOT_FOUND, f"Resource not found: {uri}") from None
 
 
 def _call_tool(user: Any, params: dict[str, Any], client: str = "") -> dict[str, Any]:
@@ -169,7 +134,6 @@ def _call_tool(user: Any, params: dict[str, Any], client: str = "") -> dict[str,
     A call to a listed tool is counted in fivebar, answered or failed; one
     to an unknown name or with bad arguments is not.
     """
->>>>>>> after updating
     name = params.get("name")
     tool = TOOLS.get(name) if isinstance(name, str) else None
     if tool is None:

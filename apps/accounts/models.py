@@ -124,23 +124,9 @@ class User(BaseModel, AbstractBaseUser, PermissionsMixin):
         """Return the display name, falling back to the email."""
         return self.display_name or self.email
 
-<<<<<<< before updating
     def get_short_name(self) -> str:
         """Return the name shown in compact places such as the board."""
         return self.to_string()
-=======
-def account_name(user: Any) -> str:
-    """Return how mcp-auth's consent page names ``user``: its masked address.
-
-    ``MCP_AUTH["ACCOUNT_NAME"]`` points here, so the page never shows the
-    key that is the username.
-    """
-    return str(user)
-
-
-class UserQuerySet(models.QuerySet["User"]):
-    """Queries over accounts."""
->>>>>>> after updating
 
     def get_full_name(self) -> str:
         """Return the name shown in full."""
@@ -239,18 +225,10 @@ class SignInRequest(BaseModel):
 
         ordering = ["-created_at"]
         constraints = [
-<<<<<<< before updating
             models.UniqueConstraint(
                 fields=["email"],
                 condition=models.Q(used_at__isnull=True),
                 name="one_open_sign_in_request_per_email",
-=======
-            # Only the newest email for an address works (sign_in.issue).
-            models.UniqueConstraint(
-                fields=["email_key"],
-                condition=models.Q(used_at__isnull=True),
-                name="one_unused_sign_in_per_address",
->>>>>>> after updating
             )
         ]
 

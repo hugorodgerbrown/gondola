@@ -179,20 +179,6 @@ def sign_in_link(request: HttpRequest, token: str) -> HttpResponse:
     return _complete_sign_in(request, redeemed)
 
 
-<<<<<<< before updating
-=======
-@require_POST
-def sign_out(request: HttpRequest) -> HttpResponse:
-    """Sign out and leave the app.
-
-    pwa.js clears the service worker's page cache before the form posts;
-    other signed-in pages are never cached (apps/core/private_pages.py).
-    """
-    logout(request)
-    return redirect(settings.LOGOUT_REDIRECT_URL)
-
-
->>>>>>> after updating
 def admin_login(request: HttpRequest) -> HttpResponse:
     """Send the admin's password form to the normal sign-in.
 
