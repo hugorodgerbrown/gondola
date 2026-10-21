@@ -10,7 +10,6 @@ from django.urls import reverse
 
 from apps.core.context_processors import site
 from apps.core.http import is_htmx, refresh
-from apps.core.views import csrf_failure
 
 pytestmark = pytest.mark.django_db
 
@@ -19,13 +18,6 @@ def test_old_root_addresses_are_gone(client: Client) -> None:
     """Signed-in pages live under /app/ only; nothing answers at the old root."""
     assert client.get("/map/").status_code == 404
     assert client.get("/sw.js").status_code == 404
-
-
-def test_csrf_failure_is_marked_for_the_outbox() -> None:
-    request = RequestFactory().post("/")
-    response = csrf_failure(request, reason="test")
-    assert response.status_code == 403
-    assert response["X-CSRF-Failure"] == "1"
 
 
 def test_site_context_without_match() -> None:

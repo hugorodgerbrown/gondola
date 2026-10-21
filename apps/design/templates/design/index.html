@@ -470,6 +470,16 @@
     </div>
   </section>
 
+  <section class="heading" aria-labelledby="ds-errors">
+    <span class="eyebrow" id="ds-errors">Error pages</span>
+    <p class="small muted">One card for every error, its copy from apps/core/errors.py (DESIGN.md, "Error pages"). 403, CSRF and 404 sit on the website's frame; 400 and 500 on a standalone page that needs no request. Open one to see it whole, with its real status.</p>
+    {% for kind, page in error_pages.items %}
+      <p class="eyebrow">{{ kind }}{% if page.site %}, on the website's frame{% else %}, standalone{% endif %}</p>
+      {% include "errors/_error_card.html" %}
+      <p><a href="{% url 'design:error_preview' kind %}">Open the {{ kind }} page</a></p>
+    {% endfor %}
+  </section>
+
   <section class="heading" aria-labelledby="ds-footer">
     <span class="eyebrow" id="ds-footer">Site footer and links</span>
     <p class="small muted">The website's pages end with the footer (includes/_footer.html). The app has none: the account page lists the same links.</p>

@@ -49,7 +49,8 @@ apps/core/       BaseModel, IdempotencyMiddleware + IdempotencyRecord,
                  PrivatePagesMiddleware (signed-in pages never cached),
                  decorators (require_htmx, login_required_json), rate
                  limits, tokens, analytics (fivebar goals), livez,
-                 healthz and the CSRF failure page
+                 healthz; errors.py is the error pages (400/403/404/500,
+                 CSRF), as JSON, text or HTML (DESIGN.md, "Error pages")
 apps/public/     the public pages: /, /terms/, /privacy/, /help/; the terms,
                  privacy and help bodies are each one _<name>_body.html,
                  also served as Markdown (the MCP tools)
@@ -65,7 +66,8 @@ apps/mcp/        the MCP endpoint (/mcp) and its tools; auth is mcp-auth;
                  event while FIVEBAR_DOMAIN and FIVEBAR_TOKEN are set
 apps/design/     the design page (/app/design/, staff only): every token
                  and every component state (DESIGN.md)
-templates/       base.html (the app, /app/), public_base.html, includes
+templates/       base.html (the app, /app/), public_base.html, includes,
+                 errors/ (the error card, its site and standalone pages)
 static/js/       plain JavaScript, classic scripts, no build step
 static/css/      app.css: the design system, tokens on :root and
                  components below (DESIGN.md)

@@ -150,7 +150,7 @@ SECURE_CSP = {
     "frame-ancestors": [CSP.NONE],
 }
 # Marks CSRF refusals, so a refused keyed write isn't stored as answered.
-CSRF_FAILURE_VIEW = "apps.core.views.csrf_failure"
+CSRF_FAILURE_VIEW = "apps.core.errors.csrf_failure"
 SECURE_REFERRER_POLICY = "same-origin"
 SECURE_CROSS_ORIGIN_OPENER_POLICY = "same-origin"
 
