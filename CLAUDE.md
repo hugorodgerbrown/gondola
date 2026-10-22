@@ -119,6 +119,9 @@ Never run a bare `pytest`; use `uv run`. Dependencies: `uv add` /
 
 ### Views and templates
 
+- Render pages with `apps.core.shortcuts.render`, not Django's: it puts the
+  response's status in the context as `http_status`, which fivebar's tag
+  sends as `data-status` so Safari's 4xx and 5xx pages count as errors.
 - Signed-in pages live under `/app/` (the installed app's scope) and
   extend `base.html`; public pages (front page, sign-in, invite links)
   sit outside it and extend `public_base.html`. Read

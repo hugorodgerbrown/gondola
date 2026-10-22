@@ -26,6 +26,7 @@ def test_every_page_carries_the_tag(client: Client) -> None:
     content = client.get("/").content
     assert b'data-domain="gondola.ultraniche.ai"' in content
     assert SCRIPT.encode() in content
+    assert b'data-status="200"' in content
     assert b"js/analytics.js" in content
 
 
