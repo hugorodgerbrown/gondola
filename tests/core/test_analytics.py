@@ -39,11 +39,23 @@ def test_a_page_with_a_token_is_counted_under_its_route(client: Client) -> None:
 
 def test_counted_path_names_the_values() -> None:
     request = RequestFactory().get("/i/abc/")
-    assert counted_path(request) == ""  # no match resolved yet
     request.resolver_match = resolve("/i/abc/")
     assert counted_path(request) == "/i/:token/"
     request.resolver_match = resolve("/app/days/")
     assert counted_path(request) == ""
+
+
+def test_counted_path_without_a_resolved_route() -> None:
+    factory = RequestFactory()
+    assert counted_path(factory.get("/i/abc/")) == "/i/:token/"
+    assert counted_path(factory.get("/app/days/")) == ""
+    assert counted_path(factory.get("/i/abc/extra")) == "/i/:unmatched/"
+
+
+def test_an_unmatched_first_segment_is_sent_only_when_a_route_begins_with_it() -> None:
+    factory = RequestFactory()
+    assert counted_path(factory.get("/secret-token/extra")) == "/:unmatched/"
+    assert counted_path(factory.get("/secret-token/")) == "/:unmatched/"
 
 
 @pytest.mark.usefixtures("fivebar")
