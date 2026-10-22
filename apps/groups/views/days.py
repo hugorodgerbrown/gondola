@@ -31,7 +31,6 @@ from urllib.parse import urlencode
 
 from django.contrib.auth.decorators import login_required
 from django.http import Http404, HttpRequest, HttpResponse, JsonResponse
-from django.shortcuts import render
 from django.urls import reverse
 from django.utils import timezone
 from django.views.decorators.http import require_GET, require_POST
@@ -40,6 +39,7 @@ from apps.accounts.models import User
 from apps.core.analytics import record
 from apps.core.decorators import login_required_json
 from apps.core.http import refresh, render_sheet
+from apps.core.shortcuts import render
 from apps.resorts.models import Resort
 from apps.resorts.search import search_resorts
 

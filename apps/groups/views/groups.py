@@ -12,11 +12,12 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.db.models import Count
 from django.http import HttpRequest, HttpResponse
-from django.shortcuts import get_object_or_404, redirect, render
+from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse
 from django.views.decorators.http import require_POST
 
 from apps.accounts.models import User
+from apps.core.shortcuts import render
 from apps.public.views import DEMO_MONTH, demo_weeks
 from apps.tour.session import after_join
 

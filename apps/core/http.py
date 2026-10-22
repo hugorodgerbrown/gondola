@@ -8,7 +8,9 @@ every screen still works without JavaScript and from a bookmark.
 from __future__ import annotations
 
 from django.http import HttpRequest, HttpResponse
-from django.shortcuts import redirect, render
+from django.shortcuts import redirect
+
+from apps.core.shortcuts import render
 
 
 def is_htmx(request: HttpRequest) -> bool:

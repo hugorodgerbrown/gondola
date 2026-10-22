@@ -606,6 +606,15 @@ def test_reset_invite_kills_old_link(client: Client, crew: Crew) -> None:
     assert client.post(reverse("planning:join", kwargs={"token": old})).status_code == 404
 
 
+def test_a_dead_invite_tells_fivebar_it_is_a_404(client: Client, settings: object) -> None:
+    """Safari reports no status, so the tag carries it (https://fiveb.ar/docs/error-pages)."""
+    settings.FIVEBAR_DOMAIN = "gondola.ultraniche.ai"  # type: ignore[attr-defined]
+    page = client.get(reverse("planning:invite", kwargs={"token": "gone"}))
+    assert page.status_code == 404
+    assert b'data-status="404"' in page.content
+    assert b'data-path="/i/:token/"' in page.content
+
+
 # --- board ---------------------------------------------------------------------------
 
 
