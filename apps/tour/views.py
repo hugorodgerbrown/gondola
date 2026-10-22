@@ -17,11 +17,12 @@ from __future__ import annotations
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.http import HttpRequest, HttpResponse
-from django.shortcuts import redirect, render
+from django.shortcuts import redirect
 from django.views.decorators.http import require_GET, require_POST
 
 from apps.core.analytics import record
 from apps.core.redirects import safe_next
+from apps.core.shortcuts import render
 from apps.groups.views.helpers import current_user
 
 from . import session

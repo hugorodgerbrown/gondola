@@ -13,11 +13,12 @@ import uuid
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.http import HttpRequest, HttpResponse, JsonResponse
-from django.shortcuts import get_object_or_404, render
+from django.shortcuts import get_object_or_404
 from django.urls import reverse
 from django.views.decorators.http import require_GET, require_POST
 
 from apps.core.http import refresh, render_sheet
+from apps.core.shortcuts import render
 from apps.resorts.models import Pass, Resort
 
 from ..models import Group

@@ -4,8 +4,9 @@ from __future__ import annotations
 
 from django.contrib.auth.decorators import login_required
 from django.http import HttpRequest, HttpResponse
-from django.shortcuts import render
 from django.views.decorators.http import require_GET
+
+from apps.core.shortcuts import render
 
 from ..services.board import build_board
 from .helpers import current_user, member_group, parse_day

@@ -9,9 +9,9 @@ import datetime
 from typing import Any
 
 from django.http import HttpRequest, HttpResponse
-from django.shortcuts import render
 from django.views.decorators.http import require_GET
 
+from apps.core.shortcuts import render
 from apps.public.connector import mcp_url
 
 # The front page's made-up month: day -> (kind, friends, resort code). "in" is
