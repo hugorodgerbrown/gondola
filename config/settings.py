@@ -68,6 +68,10 @@ if DEBUG:
 # The product name shown in the header, page titles and emails.
 SITE_NAME: str = config("SITE_NAME", default="Gondola")
 
+# Where security.txt (/.well-known/security.txt, RFC 9116) sends
+# vulnerability reports: a mailto: or https: URI.
+SECURITY_CONTACT: str = config("SECURITY_CONTACT", default="mailto:sec@ultraniche.ai")
+
 # The deployed commit, for cache names that change on every deploy. Render
 # sets RENDER_GIT_COMMIT on each build.
 APP_VERSION: str = config("RENDER_GIT_COMMIT", default="dev")[:12]

@@ -49,7 +49,7 @@ apps/core/       BaseModel, IdempotencyMiddleware + IdempotencyRecord,
                  PrivatePagesMiddleware (signed-in pages never cached),
                  decorators (require_htmx, login_required_json), rate
                  limits, tokens, analytics (fivebar goals), livez,
-                 healthz; errors.py is the error pages (400/403/404/500,
+                 healthz, /.well-known/security.txt; errors.py is the error pages (400/403/404/500,
                  CSRF), as JSON, text or HTML (DESIGN.md, "Error pages")
 apps/public/     the public pages: /, /terms/, /privacy/, /help/; the terms,
                  privacy and help bodies are each one _<name>_body.html,
