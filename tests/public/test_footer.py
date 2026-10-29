@@ -65,12 +65,20 @@ def test_link_labels_are_escaped(monkeypatch: Any) -> None:
     assert footer_anchors()[0] == f'<a href="{reverse("public:help")}">&lt;b&gt;Help&lt;/b&gt;</a>'
 
 
-@pytest.mark.parametrize("url_name", ["public:home", "public:help", "public:privacy"])
-def test_the_contact_address_is_on_the_footer_help_and_privacy(
+@pytest.mark.parametrize(
+    "url_name", ["public:home", "public:help", "public:privacy", "public:terms"]
+)
+def test_the_contact_address_is_on_the_footer_help_privacy_and_terms(
     client: Client, url_name: str
 ) -> None:
-    """The footer ends with Contact; help and the privacy notice give the address too."""
+    """The footer ends with Contact; help, the privacy notice and the terms give the address too."""
     content = client.get(reverse(url_name)).content.decode()
     link = f'href="mailto:{conf.CONTACT_EMAIL}"'
     assert content.count(link) == (1 if url_name == "public:home" else 2)
     assert footer_links()[-1] == ("Contact", f"mailto:{conf.CONTACT_EMAIL}")
+
+
+@pytest.mark.parametrize("url_name", ["public:privacy", "public:terms"])
+def test_the_privacy_notice_and_terms_are_not_drafts(client: Client, url_name: str) -> None:
+    """Both are signed off: neither says it is a draft."""
+    assert "Draft" not in client.get(reverse(url_name)).content.decode()
