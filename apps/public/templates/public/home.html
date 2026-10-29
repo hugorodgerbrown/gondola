@@ -1,13 +1,13 @@
 {% extends "public_base.html" %}
 {# The front page, in the shape every Titan app shares (Titan DESIGN.md §12). Gondola is the model for it. #}
-{% block share_title %}Ski the same mountain.{% endblock %}
+{% block share_title %}Let's meet on the mountain.{% endblock %}
 {% block share_description %}Say which resort you'll be in. See which friends will be there, weeks before the group chat works it out.{% endblock %}
 {% block content %}
   {% url 'planning:group_list' as groups_url %}
   {# Signed in, the page changes its offer, not its shape: both actions open the app. #}
   <section class="splash">
     <span class="eyebrow">For skiing with friends</span>
-    <h1 class="splash__title">Ski the same mountain.</h1>
+    <h1 class="splash__title">Let's meet on the mountain.</h1>
     <p class="splash__lede">Say which resort you'll be in. See which friends will be there, weeks before the group chat works it out.</p>
     {% if user.is_authenticated %}
       <a class="button button--block button--light" href="{% url 'planning:map' %}">Open the app</a>
