@@ -77,7 +77,7 @@ def test_home_has_one_promise(client: Client) -> None:
     """One H1, and it is the promise, not the app's name (the header says that)."""
     content = client.get(reverse("public:home")).content.decode()
     assert content.count("<h1") == 1
-    assert '<h1 class="splash__title">Ski the same mountain.</h1>' in content
+    assert '<h1 class="splash__title">Let\'s meet on the mountain.</h1>' in content
 
 
 def test_home_offers_one_way_in(client: Client) -> None:
