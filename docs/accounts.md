@@ -171,6 +171,11 @@ device and are sent only if the same user signs back in.
 - Addresses are `/sign-in/…` and `/sign-out/`, as before, not `/signin/`.
 - Links and codes last 30 minutes, not 15.
 - The first sign-in goes through the welcome, passkey and tour pages.
-- The email has an HTML part as well as text.
+- The email is the template's one-time code email, in Gondola's colours
+  (`templates/accounts/emails/`), and says 30 minutes.
+- Account deletion is Gondola's own (`views.delete_account`, which deletes
+  the user and lets the cascade take the rest), not the template's
+  `deletion.py`: Gondola had it first, and it also deletes the groups a
+  person started.
 - Sign-out sends no `Clear-Site-Data`: Chrome on Android held the redirect
   while it cleared the cache, so the button looked dead.

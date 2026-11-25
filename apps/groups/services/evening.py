@@ -125,8 +125,8 @@ def send_digest(digest: Digest) -> None:
     }
     send_mail(
         subject=digest.subject,
-        message=render_to_string("groups/email/evening.txt", context),
-        html_message=render_to_string("groups/email/evening.html", context),
+        message=render_to_string("groups/emails/evening.txt", context),
+        html_message=render_to_string("groups/emails/evening.html", context),
         from_email=None,
         recipient_list=[digest.user.email],
     )

@@ -1,0 +1,19 @@
+{% comment %}The HTML part of the sign-in email: the same five things as sign_in.txt.
+   Inline styles only, because mail clients ignore stylesheets (DESIGN.md,
+   "The sign-in email"). Gondola's colours: the page, card, ink and muted text.
+   The link is built in code from SITE_URL and a token, never from input, so
+   semgrep's var-in-href is silenced on that line.{% endcomment %}
+<!doctype html>
+<html lang="en-GB">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>Your one-time verification code</title></head>
+<body style="margin:0;padding:24px;background:#f2f0ec;font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;color:#1a1916;font-size:16px;line-height:1.5">
+<div style="max-width:480px;margin:0 auto;background:#ffffff;border-radius:12px;padding:24px">
+<p style="margin:0 0 8px;font-size:20px;font-weight:600">Your one-time verification code</p>
+<p style="margin:0 0 16px;font-family:ui-monospace,Menlo,monospace;font-size:32px;font-weight:700;letter-spacing:0.15em">{{ code }}</p>
+<p style="margin:0 0 24px">Expires in {{ minutes }} minutes.</p>
+{# nosemgrep: generic.html-templates.security.var-in-href.var-in-href #}
+<p style="margin:0 0 24px"><a href="{{ link }}" style="display:inline-block;padding:14px 20px;border-radius:8px;background:#1a1916;color:#ffffff;font-weight:600;text-decoration:none">Sign in with this code</a></p>
+<p style="margin:0;color:#6b6860;font-size:14px">Didn't ask for it? Ignore this email.</p>
+</div>
+</body>
+</html>

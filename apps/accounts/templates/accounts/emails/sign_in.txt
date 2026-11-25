@@ -1,0 +1,11 @@
+{% autoescape off %}Your one-time verification code:
+
+{{ code }}
+
+Expires in {{ minutes }} minutes.
+
+Or sign in with this link:
+{{ link }}
+
+Didn't ask for it? Ignore this email.
+{% endautoescape %}
