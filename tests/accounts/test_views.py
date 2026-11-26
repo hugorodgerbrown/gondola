@@ -7,11 +7,13 @@ from urllib.parse import urlencode, urlsplit
 import pytest
 from django.core import mail
 from django.core.cache import cache
+from django.core.mail import EmailMultiAlternatives
 from django.test import Client
 from django.urls import reverse
 
 from apps.accounts.models import SignInRequest, User
 from apps.accounts.services import make_unsubscribe_token
+from apps.accounts.tasks import otp_token_header
 from tests.factories import UserFactory
 
 pytestmark = pytest.mark.django_db
@@ -69,7 +71,7 @@ def test_sign_in_emails_a_link_and_a_code(client: Client) -> None:
     assert isinstance(message, mail.EmailMultiAlternatives)
     assert message.to == ["walker@example.com"]
     _, code = emailed()
-    assert message.subject == f"Your Gondola sign-in code is {code}"
+    assert message.subject == f"Your one-time Gondola verification code: {code}"
     assert code in str(message.alternatives[0][0])
     page = client.get(CODE)
     assert b"walker@example.com" in page.content
@@ -82,6 +84,43 @@ def test_debug_shows_the_link_on_the_code_page(client: Client, settings: Any) ->
     settings.DEBUG = True
     request_email(client)
     assert b"Open the sign-in link" in client.get(CODE).content
+
+
+def test_the_email_is_a_one_time_code_with_the_link_as_a_shortcut(client: Client) -> None:
+    """Text and HTML both lead with the code, then the link; mail apps see a code email."""
+    request_email(client)
+    message = mail.outbox[0]
+    assert isinstance(message, EmailMultiAlternatives)
+    link, code = emailed()
+    text = str(message.body)
+    assert text.startswith(f"Your one-time verification code:\n\n{code}\n")
+    assert text.index(code) < text.index(link)
+    assert "Expires in 30 minutes." in text
+    assert "Didn't ask for it? Ignore this email." in text
+    [(content, mimetype)] = message.alternatives
+    html = str(content)
+    assert mimetype == "text/html"
+    assert "Your one-time verification code" in html
+    assert html.index(code) < html.index(link) < html.index("Sign in with this code")
+    assert "Didn't ask for it? Ignore this email." in html
+    assert "comment" not in html
+    assert message.extra_headers["OTP-Token"] == otp_token_header(code)
+
+
+@pytest.mark.parametrize(
+    ("site_url", "origin"),
+    [
+        ("https://Example.com", "https://example.com"),
+        ("https://example.com:443", "https://example.com"),
+        ("http://localhost:8000", "http://localhost:8000"),
+    ],
+)
+def test_otp_token_names_the_code_and_the_sites_origin(
+    settings: Any, site_url: str, origin: str
+) -> None:
+    """The draft wants a lower-case origin with any default port left out."""
+    settings.SITE_URL = site_url
+    assert otp_token_header("012345") == f'"012345"; origin="{origin}"'
 
 
 def test_a_bad_email_is_refused(client: Client) -> None:

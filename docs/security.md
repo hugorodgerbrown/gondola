@@ -23,12 +23,21 @@ What is on by default, and what checks it.
 | Signed-out writes get 401, never a redirect | `login_required_json` | `tests/core/test_decorators.py` |
 | Python security lint (bandit rules) | ruff `S` | `tox -e lint` |
 | Static analysis: Django, Python, JS, security-audit packs | semgrep | `tox -e sast` (CI and weekly) |
-| Known CVEs in runtime Python deps and npm packages | pip-audit, npm audit | `tox -e audit` (CI and weekly) |
+| Known CVEs in runtime Python deps and npm packages | pip-audit, npm audit (`bin/npm-audit`) | `tox -e audit` (CI and weekly) |
 | Secrets in commits | gitleaks | pre-commit and CI |
 | Dependency updates | Dependabot (uv, npm, actions) | weekly PRs |
 | MCP: OAuth 2.1, PKCE, audience-bound tokens; any active account, acting only as itself through its groups | `mcp-auth`, `apps/mcp/` | `tests/mcp/` |
 | MCP never names a friend: other people come back as counts only | `apps/mcp/tools.py` | `tests/mcp/test_tools.py` |
 | Group-mates only: a person's friends are found through `Group.objects.for_user`, which hides demo groups | `apps/groups/` | `tests/groups/`, `tests/tour/` |
+
+## npm advisories
+
+`tox -e audit` fails on any high or critical npm advisory. `npm audit` can't
+set one aside, so `bin/npm-audit` runs it and skips only the advisories in
+its `EXCEPTIONS`, each named by GHSA id with why it can't reach production
+and when it was added. The npm packages are test tooling (vitest, jsdom):
+the app ships plain JavaScript with no build step. Add an exception only
+when no fixed release exists, and remove it in the PR that takes the fix.
 
 ## Invariants
 
